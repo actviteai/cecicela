@@ -107,6 +107,15 @@ test('fonts come from Cloudflare: no tracked file loads Google Fonts', () => {
     return text.includes(google) || text.includes(['fonts.', 'gstatic.com'].join(''));
   });
   assert.deepEqual(hits, []);
-  const banner = fs.readFileSync(path.join(BRAND, 'source', 'social-banner.html'), 'utf8');
-  for (const href of banner.match(/href="https?:[^"]+"/g) || []) assert.match(href, /^href="https:\/\/cdnjs\.cloudflare\.com\//, href);
+  for (const rel of files.filter((f) => f.endsWith('.html'))) {
+    const html = fs.readFileSync(path.join(REPO, rel), 'utf8');
+    for (const tag of html.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g) || []) {
+      assert.match(tag, /href="https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/fontsource-[a-z-]+\/\d+\.\d+\.\d+\//, `${rel}: ${tag}`);
+    }
+  }
+});
+
+test('the graph player names a system monospace fallback after its Cloudflare font', () => {
+  const player = fs.readFileSync(path.join(REPO, 'chat/src/graph-player.html'), 'utf8');
+  assert.match(player, /font: 14px\/1\.2 "JetBrains Mono", ui-monospace,[^;]*monospace;/);
 });
