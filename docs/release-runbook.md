@@ -18,9 +18,11 @@ Then retire what they replace. Archive the old GitHub repositories. Deprecate th
 ## Rules for this session
 
 - **Repository rules.** Follow [AGENTS.md](../AGENTS.md):
-  - Never commit on `main`; use a worktree and a pull request.
+  - `main` is the default branch, and the primary checkout stays on it.
+  - Never commit on `main`. Every change follows the same cycle, and section 0.2 spells it out: new worktree, then branch and commits in the worktree, then push, then a pull request, then merge to `main`, then fast-forward the primary checkout and remove the worktree.
   - Push as `actviteai`, and prefix `gh` with `GH_TOKEN=$(gh auth token --user actviteai)`.
   - If authentication fails, stop and say so.
+- **The checkout.** `<cecicela checkout>` below means the primary checkout: the folder this session started in, which section 0.1 prints.
 - **GitHub accounts.** Kiff's `gh` is logged in to two accounts: `actviteai` (active) and `coldcanuk`.
   - Never run `gh auth switch`. Pick the account per command, with `GH_TOKEN=$(gh auth token --user <account>)`.
   - Everything under `actviteai/*` uses `actviteai`.
@@ -42,15 +44,66 @@ Then retire what they replace. Archive the old GitHub repositories. Deprecate th
 
 ## 0. Kiff and igloo
 
-**The cecicela checkout.** The maintainer keeps repositories under a `git_actvite_com` folder; Kiff's shell showed `…/git_actvite_com/runners`. Find the folder, confirm the cecicela path with the maintainer, and use that path wherever this runbook says `<cecicela checkout>`:
+### 0.1 Repair the checkout on Kiff
+
+On 2026-10-25 the checkout on Kiff was still on `feat/monorepo`. That branch's remote copy is gone (it was merged and deleted on GitHub), so `git pull` said *"no such ref was fetched"*. Put the checkout back on `main` before anything else.
+
+Look first. This changes nothing:
 
 ```bash
-find ~ -maxdepth 5 -type d -name git_actvite_com 2>/dev/null; for d in $(find ~ -maxdepth 5 -type d -name git_actvite_com 2>/dev/null); do ls -d "$d"/cecicela 2>/dev/null; done
+git rev-parse --show-toplevel                      # the primary checkout: <cecicela checkout> from here on
+git remote -v; git status --short --branch
+git fetch --prune origin
+git branch -vv                                     # feat/monorepo shows [origin/feat/monorepo: gone]
+git worktree list
+git log --oneline origin/main..feat/monorepo       # commits on feat/monorepo that main does not have
 ```
 
-If there is no `cecicela` folder there, ask before cloning `https://github.com/actviteai/cecicela` into it.
+Decide from what you see:
 
-**The route to igloo.** Find out which route works:
+- **`git status` shows uncommitted changes:** stop. Show them to the maintainer, and do not stash, reset, or discard anything. Ask what to keep. Anything worth keeping becomes its own worktree, branch, and pull request, as in 0.2.
+- **`origin/main..feat/monorepo` is empty:** every commit is already in `main`. Continue below.
+- **`origin/main..feat/monorepo` lists commits:** they may be squash-merged copies of work already in `main`, or real unmerged work. Show the list and ask. Never delete them on your own.
+
+Then put the checkout on `main`:
+
+```bash
+git switch main && git pull --ff-only origin main && git status --short --branch     # "## main...origin/main", nothing else
+```
+
+- If `--ff-only` refuses, local `main` has commits that are not on GitHub. Stop, show `git log --oneline origin/main..main`, and ask.
+- Ask, then delete the stale local branch: `git branch -d feat/monorepo`. Use `-d`, never `-D`. `-d` refuses to delete unmerged work; if it refuses, stop and ask.
+- Also clean up worktrees whose folders are already gone: `git worktree prune`. It touches nothing else.
+
+Do not change the remote URL or the credential configuration (AGENTS.md).
+
+### 0.2 How every change in this runbook lands
+
+Every change in this runbook lands through this cycle:
+
+```bash
+cd <cecicela checkout> && git fetch origin && git worktree add -b <type>/<task> .worktrees/<task> origin/main
+cd .worktrees/<task> && npm ci --no-audit --no-fund
+# edit; npm run sync when a source changed; npm test
+git add <files> && git commit -m "<message>" && git push -u origin HEAD
+GH_TOKEN=$(gh auth token --user actviteai) gh pr create --repo actviteai/cecicela --base main --head <type>/<task> --fill
+```
+
+Wait for CI to pass, then ask, then merge:
+`GH_TOKEN=$(gh auth token --user actviteai) gh pr merge <type>/<task> --repo actviteai/cecicela --merge`
+
+Then bring the primary checkout up to date and clean up:
+
+```bash
+cd <cecicela checkout> && git switch main && git pull --ff-only origin main \
+ && git worktree remove .worktrees/<task> && git branch -d <type>/<task> && git fetch --prune origin
+```
+
+`git worktree remove` refuses when the worktree has uncommitted changes. Never add `--force`; ask instead.
+
+### 0.3 The route to igloo
+
+Find out which route works:
 
 ```bash
 IG=debian@igloo.onerelay.app
@@ -60,7 +113,9 @@ ssh -o BatchMode=yes -o ConnectTimeout=8 "$IG" hostname && echo "route: direct" 
 
 Both must print `igloo`. Every igloo block below starts with `IG=debian@igloo.onerelay.app; J=""`. If only the athena route worked, change that to `J="-J athena.local"`. `ssh` and `scp` both take `$J`.
 
-**What igloo has.** Check the tools and read the scripts:
+### 0.4 What igloo has
+
+Check the tools and read the scripts:
 
 ```bash
 IG=debian@igloo.onerelay.app; J=""
@@ -124,15 +179,18 @@ GitHub repositories to archive:
    If it is still open, show the maintainer its state and CI results, and ask whether to merge:
    `GH_TOKEN=$(gh auth token --user actviteai) gh pr merge 3 --repo actviteai/cecicela --merge`
 
-   After the merge, the branch `fix/audit-2026-10-25` is stale; it holds the same commit as #3. Ask before deleting it:
+   After the merge, the branch `fix/audit-2026-10-25` is stale on GitHub: it holds the same commit as #3. Ask before deleting it:
    `GH_TOKEN=$(gh auth token --user actviteai) gh api -X DELETE repos/actviteai/cecicela/git/refs/heads/fix/audit-2026-10-25`
 
-2. Update the checkout (section 0 found it), and make a fresh worktree for the release.
+2. Fast-forward the primary checkout, then open the release worktree. This is 0.2's cycle, with the task `release` and the branch `release/1.0.0`:
 
    ```bash
-   cd <cecicela checkout> && git fetch origin && git worktree add -b release/1.0.0 .worktrees/release origin/main
+   cd <cecicela checkout> && git switch main && git pull --ff-only origin main \
+    && git worktree add -b release/1.0.0 .worktrees/release origin/main
    cd .worktrees/release && npm ci --no-audit --no-fund && npm test     # must end "npm test: all suites passed"
    ```
+
+   Sections 3 and 4 run inside `.worktrees/release`.
 
 ## 3. Blocker: the cela eval baseline
 
@@ -213,19 +271,22 @@ Expected output:
 - `cela --version` prints `1.0.0`.
 - `trouble voices resolve` prints `source: defaults`, then the four default names: the archivist, the detective, the kernel maintainer, the physicist who specialises in time.
 
-Then commit and open the release pull request:
+Then finish 0.2's cycle for `release/1.0.0`, in the release worktree:
 
-1. Commit the eval results and any stamp changes on `release/1.0.0`.
-2. Push the branch.
-3. Open the pull request: `GH_TOKEN=$(gh auth token --user actviteai) gh pr create --repo actviteai/cecicela --base main --head release/1.0.0 --fill`
-4. Wait for CI, then ask to merge.
+```bash
+git add packages/cela/eval/results/1.0.0 && git add -u && git status --short
+git commit -m "release: cela 1.0.0 eval baseline (matches rdapq v2.0.0)" && git push -u origin HEAD
+GH_TOKEN=$(gh auth token --user actviteai) gh pr create --repo actviteai/cecicela --base main --head release/1.0.0 --fill
+```
+
+Wait for CI, then ask to merge with `gh pr merge release/1.0.0 --repo actviteai/cecicela --merge`. Once it is merged, remove the worktree as 0.2 says: `git worktree remove .worktrees/release`, then `git branch -d release/1.0.0`. Section 5 works in the primary checkout on `main`.
 
 ## 5. Tag
 
 After the merge, from an up-to-date `main`, check that the tagged code builds the same bytes as the tarballs you smoke-tested:
 
 ```bash
-cd <cecicela checkout> && git switch main && git pull --ff-only \
+cd <cecicela checkout> && git switch main && git pull --ff-only origin main \
  && npm ci --no-audit --no-fund && node scripts/release.js --offline --skip-tests >/dev/null \
  && sha256sum dist/tarballs/*.tgz | diff - /tmp/cecicela-1.0.0.sha256 && echo "same bytes"
 ```
