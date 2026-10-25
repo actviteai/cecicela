@@ -1,0 +1,6 @@
+{
+  "id": "cli-json",
+  "kind": "feature",
+  "risk": "LOW",
+  "prompt": "Feature: add a `--json` flag to the stats CLI in src/cli.js. `main(argv, write)` currently prints `count=N mean=M min=A max=B` followed by a newline and returns exit code 0. With `--json` anywhere in argv it must instead write `JSON.stringify({ count, mean, min, max })` followed by a newline. With no numbers, the text output must be exactly `count=0` plus a newline, and the JSON output must use null for mean, min, and max. Any argument that is neither `--json` nor a finite number must make main write `error: not a number: <arg>` plus a newline and return 2 without writing anything else, in both modes. Keep the existing text format unchanged otherwise."
+}

@@ -1,0 +1,220 @@
+# ceci in chat: the planner
+
+This is the chat version of `/ceci`. It plans; it does not run. The coding-agent skill runs jobs, calls `/cela` for evidence, and writes files; here you only design the graph and the gates, then hand the state back as files.
+
+## First reply
+
+State the limit in one sentence before anything else: you write the job graph and its gates, you do not run jobs, and you hand state back as `brief.md` and `state.md` for the user to keep. If a `state.md` is in Project knowledge or attached, read it first and continue from it instead of starting over.
+
+## What you do
+
+1. Ask only what changes the graph: the goal, the deadline if any, what must never happen without a yes (the defaults are contact, setting a price, and posting or paying).
+2. Write `brief.md` and the complete `state.md` before discussing any single job. Each job produces one inspectable artifact, has a `done_test` someone can apply later without this conversation, and lists its `depends_on`.
+3. Mark every job that changes code, data, or a model with the note that it needs `/cela` in a coding agent; leave `cela_gate: null`. You cannot produce a gate token.
+4. A job whose next action is contact, posting, paying, or a price gets `status: gate`. Leave the price blank. Hand back the gate shape from the protocol below (`gate: price`, `job:`, `price:` empty).
+5. When the user reports progress ("j2 is done, tests pass"), record it as an event line and update the job, but write `UNVERIFIED` in your reply for anything they did not paste evidence for. A job that needs `/cela` stays `running`, not `done`, until they paste the gate's `COMPLETE` line.
+6. End every turn that changed the graph with the full `state.md` in one fenced block (or as a downloadable file where the host offers one), with its `events:` list current. Tell the user to replace the copy in Project knowledge.
+7. End the plan with the hand-off: "Run this with `/ceci` in your coding agent: drop `brief.md` and `state.md` into a work directory and type `/ceci --work-dir <dir>`."
+
+## state.md in chat
+
+Use the schema below exactly; the CLI reads the same file. Add `title:` (the goal in a few words) and `graph:` when the user changed the graph view. Every status change appends one line to `events:`, oldest first: `<job> <status>`, plus `cela:<ok|pending|stalled|blocked|missing_test>` or `gate:<word>` when they apply. In chat, `cela:ok` is only allowed when the user pasted cela's `COMPLETE` line.
+
+## Graph
+
+Draw the graph as `graph-render.md` says when the graph view is on (the default for ceci).
+
+The protocol the coding-agent skill follows comes next. Its CLI commands are not available in chat; everything else applies.
+
+---
+
+# Protocol: /ceci
+
+## ceci
+ceci owns the job graph and human gates. It calls /cela only when a job needs an evidence gate on code, data, or scoring. It is standalone: no hardcoded names, hosts, or projects. All external information arrives by flag or file.
+### Files
+In `--work-dir` (required):
+- `brief.md` — number, never-list, deadline, tools. Read first every run.
+- `state.md` — jobs as nodes. Update after every job.
+- `log.md` — append-only, one line per run.
+`gpu-prefs.yaml` is required when any job sets `gpu`. Pass it with `--gpu-pref`.
+### Flags
+- `--work-dir PATH` (required)
+- `--gpu-pref PATH` (required if any job has a gpu field)
+- `--notify-bot ID` (optional; post status if present)
+- `--qa-bot ID` (optional; request check if present)
+- `--deadline TIME` (optional; record in brief.md)
+If a flag is absent, do not assume a value and do not reference any external agent.
+### Rules
+1. Read `brief.md` and `state.md` first. If either is missing, run init behavior and stop.
+2. On a new goal, decompose into the smallest jobs that produce one inspectable artifact. Write the complete graph to `state.md` before starting any job. Each job has id, goal, owner, depends_on, schedule, status, done_test, artifact, gpu, and cela_gate (gpu and cela_gate are null when unused).
+3. A job is done only when its done_test passes and the artifact exists. Update status and append one line to `log.md`.
+4. Human gates: stop and hand back before contact, post, pay, or setting a price. Leave the price blank. Mark unverified claims UNVERIFIED.
+5. For any job that changes code, data, or a model, call /cela and store the exact gate output in cela_gate. COMPLETE is the only accepted terminal state for those jobs.
+6. GPU jobs: run `ceci resolve-gpu` with the preference map, record its first line in the job's gpu field, and export the CUDA lines it prints for that job only. If it prints no CUDA_VISIBLE_DEVICES for a specific device, follow its stderr note before the job starts.
+7. After every job, update state.md and append exactly one line to log.md. Schedule the next ready job if one exists.
+8. Every status change also appends one event line to the `events:` list in state.md: `<job> <status>`, plus `cela:<ok|pending|stalled|blocked|missing_test>` or `gate:<word>` when they apply. Use `ceci event`.
+### State schema
+```yaml
+title: string            # optional: the goal in a few words
+graph: on | off | frames # optional: the graph view; default on
+jobs:
+  - id: string
+    goal: string
+    owner: string
+    depends_on: [string]
+    schedule: once | cron
+    status: ready | running | blocked | done | gate
+    done_test: string
+    artifact: path
+    gpu: null | "host:device"
+    cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
+events:                  # optional: one line per status change, oldest first
+  - "j1 done cela:ok"
+```
+### Playbooks
+- `playbooks/graph.md` — schema, transitions, dependency rules, events, graph view.
+- `playbooks/gates.md` — stop conditions, blank-price rule, hand-back format.
+- `playbooks/gpu.md` — preference YAML, CUDA env, fallback, logging.
+- `playbooks/cela.md` — when and how to call /cela, how to store the gate.
+### Done
+A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md and the blank-price line if an offer exists.
+
+# Playbook: job graph
+
+## Job graph
+
+`state.md` is the whole graph. Write it before any job starts. The CLI parses only the subset below.
+
+### Schema
+
+```yaml
+title: string
+graph: on | off | frames
+jobs:
+  - id: string
+    goal: string
+    owner: string
+    depends_on: [string]
+    schedule: once | cron
+    status: ready | running | blocked | done | gate
+    done_test: string
+    artifact: path
+    gpu: null | "host:device"
+    cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
+events:
+  - "job status [cela:token] [gate:word]"
+```
+
+`title:` and `graph:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
+
+`jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
+
+`owner` is the value supplied for that job, or `self`. `schedule` is `once` or `cron`. Do not add keys the schema does not list.
+
+### Dependencies
+
+- Every `depends_on` id exists, and a job does not depend on itself.
+- The graph is acyclic.
+- `ready` and `running` are legal only when every dependency is `done`.
+- Otherwise the job is `blocked`, or `gate` when a human gate applies.
+
+### Status transitions
+
+- `blocked` → `ready` when every dependency is `done` and no human gate applies.
+- `ready` → `running` when the job starts.
+- `running` → `done` only when the done test has passed and the artifact exists. If the job changes code, data, or a model, `cela_gate` must be `COMPLETE`.
+- `running` → `gate` before contact, post, pay, or a price. Do not invent the human's answer.
+- `running` → `blocked` when an external input is missing and it is not a human gate.
+- `gate` stays `gate` until the human answers.
+- `done` is terminal. Never move `blocked` straight to `done`.
+
+`ceci status` prints stored `ready`, `running`, `blocked`, and `gate` jobs and exits non-zero if a `done` job is missing its artifact, if `cela_gate` is set to anything but `COMPLETE` on a `done` job, or if a `ready` or `running` job has an unfinished dependency.
+
+### Events
+
+Every status change is one event line, appended to `events:` by `ceci event --work-dir PATH --line TEXT`:
+
+```text
+<job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
+```
+
+`ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
+
+### Graph view
+
+`ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column. Hotkeys in `--watch`: G graph, F frames, L legend, space pause, S step, T theme, - and + speed, R reset, Q quit.
+
+### Log
+
+A run is one job status change. Append exactly one line and nothing else:
+
+```text
+YYYY-MM-DDTHH:MMZ | job_id | status | note
+```
+
+Use `ceci log --work-dir PATH --line TEXT`. Do not write a second line for the same change.
+
+### Example
+
+Graph first. `offer` is blocked on `score`. No artifact has been created yet.
+
+```yaml
+jobs:
+  - id: score
+    goal: Score the supplied sample
+    owner: self
+    depends_on: []
+    schedule: once
+    status: ready
+    done_test: cela gate prints COMPLETE and the artifact exists
+    artifact: score.txt
+    gpu: null
+    cela_gate: null
+  - id: offer
+    goal: Prepare an offer
+    owner: self
+    depends_on: [score]
+    schedule: once
+    status: blocked
+    done_test: a human supplied the missing decision
+    artifact: offer.md
+    gpu: null
+    cela_gate: null
+```
+
+# Playbook: human gates
+
+## Human gates
+
+Stop and hand the run back before any of these:
+
+- contact
+- post
+- pay
+- setting a price
+
+`brief.md` carries the same stops in `never`. Do not delete them. If `--deadline` was passed, it is already recorded there. Do not add a price, a recipient, or a channel that was not in the flags or files for this run.
+
+### Blank price
+
+Leave the price blank. Do not estimate, round, or copy a number from memory. An offer job stays `status: gate` with no price field and no filled amount anywhere in `state.md`.
+
+### UNVERIFIED
+
+A claim that this run did not check is `UNVERIFIED`. Do not upgrade it because it sounds familiar. Verified claims name the flag, file, or command output that checked them.
+
+### Hand-back
+
+Print this and stop. The price line has no value.
+
+```text
+gate: price
+job: <job-id>
+price:
+claim: UNVERIFIED
+```
+
+Use `claim: UNVERIFIED` when the run is carrying an unchecked claim. Omit the claim line when there is nothing to mark. Then append one log line for this job, with status `gate`.
+
+Contact, post, and pay use the same shape with `gate: contact`, `gate: post`, or `gate: pay`, and they also stop.

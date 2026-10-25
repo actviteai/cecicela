@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cela-nat"
+version = "1.0.0"
+description = "cela for NVIDIA NeMo Agent Toolkit: a bundled engine runs the checks and names the verdict, so the agent never grades its own work."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11,<3.14"
+authors = [{ name = "actvite", email = "chuck@actvite.com" }]
+keywords = ["cela", "nemo-agent-toolkit", "nvidia-nat", "quality-gates", "coding-agent"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+# nat.plugin_api first shipped in nvidia-nat-core 1.8. Tested with 1.9.
+dependencies = ["nvidia-nat-core>=1.8,<2"]
+
+[project.optional-dependencies]
+# react_agent and tool_calling_agent, with the OpenAI-compatible and NIM LLM clients.
+agents = ["nvidia-nat-langchain[openai,nvidia]>=1.8,<2"]
+test = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.urls]
+Homepage = "https://github.com/actviteai/cecicela"
+Issues = "https://github.com/actviteai/cecicela/issues"
+
+# NeMo Agent Toolkit discovers plugins through this entry-point group.
+[project.entry-points."nat.plugins"]
+cela = "cela_nat.register"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cela_nat"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

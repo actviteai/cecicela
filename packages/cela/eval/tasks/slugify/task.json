@@ -1,0 +1,6 @@
+{
+  "id": "slugify",
+  "kind": "bugfix",
+  "risk": "LOW",
+  "prompt": "Bug report: `slugify` in src/slugify.js produces bad slugs. Required behavior: lowercase the text; strip accents (\u00e9 becomes e); turn every run of characters that are not a-z or 0-9 into a single hyphen; never start or end with a hyphen. Example: '  Cr\u00e8me Br\u00fbl\u00e9e -- Recipe! ' must become 'creme-brulee-recipe'. Fix the function."
+}

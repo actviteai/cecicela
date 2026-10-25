@@ -1,0 +1,22 @@
+# @actvite/cecicela
+
+> ceci plans this, cela proves that, trouble fixes what breaks.
+
+Installs the three ceciCela skills, and the `/cecicela` front door, into Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent.
+
+```bash
+npx --yes @actvite/cecicela install --all
+```
+
+| Command | Does |
+| --- | --- |
+| `cecicela install [--all\|--<harness> ...] [--only ceci,cela,trouble] [--force]` | Installs the skills; with no harness named, all nine |
+| `cecicela status` | Which skill is installed in which harness |
+| `cecicela update` | Reinstalls into every harness that already has any of them |
+| `cecicela --version` | The bundle version and the exact skill versions it carries |
+
+Then restart the agent session and type `/ceci` (plan a goal as a job graph), `/cela` (prove a change with a tool-measured gate), or `/trouble` (debug what earlier attempts did not fix). Not sure which? `/cecicela`. In Claude Code, plugin skills are namespaced: `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`.
+
+The skills come from their own packages, pinned exactly: [`@actvite/ceci`](https://www.npmjs.com/package/@actvite/ceci), [`@actvite/cela`](https://www.npmjs.com/package/@actvite/cela), and [`@actvite/trouble`](https://www.npmjs.com/package/@actvite/trouble). Docs, the plugin marketplace, and the chat versions: [github.com/actviteai/cecicela](https://github.com/actviteai/cecicela).
+
+GPL-3.0-or-later.

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "plugins": {
+    "cecicela": {
+      "version": "1.0.0",
+      "components": {
+        "skills": [
+          {
+            "name": "cecicela",
+            "description": "Front door for ceciCela. Use on /cecicela, or when the user is unsure whether to plan a goal (ceci), prove a change (cela), or debug what broke (trouble). Names the skill that fits and hands off."
+          },
+          {
+            "name": "ceci",
+            "description": "Parent skill that maintains a job graph (brief.md, state.md, log.md), enforces human gates, schedules work, places GPU jobs, and calls /cela for evidence. Invoke with /ceci."
+          },
+          {
+            "name": "cela",
+            "description": "Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself."
+          },
+          {
+            "name": "trouble",
+            "description": "Use on /trouble, troubleshoot, or stuck debug. Also: debug this, incident, let's Bayesian this, four minds, four roles, nothing I try is fixing this."
+          }
+        ]
+      }
+    },
+    "ceci": {
+      "version": "2.0.0",
+      "components": {
+        "skills": [
+          {
+            "name": "ceci",
+            "description": "Parent skill that maintains a job graph (brief.md, state.md, log.md), enforces human gates, schedules work, places GPU jobs, and calls /cela for evidence. Invoke with /ceci."
+          }
+        ]
+      }
+    },
+    "cela": {
+      "version": "1.0.0",
+      "components": {
+        "skills": [
+          {
+            "name": "cela",
+            "description": "Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself."
+          }
+        ]
+      }
+    },
+    "trouble": {
+      "version": "1.0.0",
+      "components": {
+        "skills": [
+          {
+            "name": "trouble",
+            "description": "Use on /trouble, troubleshoot, or stuck debug. Also: debug this, incident, let's Bayesian this, four minds, four roles, nothing I try is fixing this."
+          }
+        ]
+      }
+    }
+  }
+}

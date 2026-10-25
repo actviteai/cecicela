@@ -1,0 +1,84 @@
+'use strict';
+
+/**
+ * Generated, committed copies. Each target is
+ *
+ *   { out, why, modes, sweep, files: Map<rel, { text, exec } | { buffer, exec }> }
+ *
+ * `out` is relative to the repository root ('' for files written in place).
+ * `drift` lists stale, missing, unexpected, and symlinked files; `write`
+ * rewrites them. With `sweep: false` nothing else in `out` is touched.
+ * Ported from the sync-integrations.js scripts ceci and cela each carried.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { isExec, isLink, listFiles } = require('./fsx');
+
+const POSIX = process.platform !== 'win32';
+const lf = (text) => String(text).replace(/\r\n/g, '\n');
+
+function drift(root, targets, hint = 'npm run sync') {
+  const problems = [];
+  for (const target of targets) {
+    const dir = path.join(root, target.out);
+    if (target.out && isLink(dir)) {
+      problems.push(`${target.out} is a symlink; ${target.why}`);
+      continue;
+    }
+    const name = (rel) => (target.out ? `${target.out}/${rel}` : rel);
+    for (const [rel, want] of target.files) {
+      const file = path.join(dir, rel);
+      if (!fs.existsSync(file)) problems.push(`${name(rel)} is missing`);
+      else if (isLink(file)) problems.push(`${name(rel)} is a symlink; ${target.why}`);
+      else if (want.buffer ? !fs.readFileSync(file).equals(want.buffer) : lf(fs.readFileSync(file, 'utf8')) !== lf(want.text)) problems.push(`${name(rel)} is stale`);
+      else if (target.modes && POSIX && isExec(file) !== Boolean(want.exec)) problems.push(`${name(rel)} ${want.exec ? 'must' : 'must not'} be executable`);
+    }
+    if (target.sweep === false) continue;
+    for (const rel of listFiles(dir)) {
+      if (!target.files.has(rel)) problems.push(`${name(rel)} is not generated; remove it or run ${hint}`);
+    }
+  }
+  return problems;
+}
+
+function write(root, targets) {
+  const done = [];
+  for (const target of targets) {
+    const dir = path.join(root, target.out);
+    if (target.out && isLink(dir)) fs.unlinkSync(dir);
+    if (target.sweep !== false) {
+      for (const rel of listFiles(dir)) {
+        if (!target.files.has(rel)) fs.rmSync(path.join(dir, rel), { recursive: true, force: true });
+      }
+      pruneEmpty(dir);
+    }
+    for (const [rel, want] of target.files) {
+      const file = path.join(dir, rel);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      if (isLink(file)) fs.unlinkSync(file);
+      if (want.buffer) {
+        if (!fs.existsSync(file) || !fs.readFileSync(file).equals(want.buffer)) fs.writeFileSync(file, want.buffer);
+      } else if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== want.text) fs.writeFileSync(file, want.text);
+      if (target.modes && POSIX) fs.chmodSync(file, want.exec ? 0o755 : 0o644);
+    }
+    done.push({ out: target.out || '<root>', count: target.files.size });
+  }
+  return done;
+}
+
+function pruneEmpty(dir) {
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return;
+  for (const name of fs.readdirSync(dir)) {
+    const sub = path.join(dir, name);
+    if (!isLink(sub) && fs.statSync(sub).isDirectory()) {
+      pruneEmpty(sub);
+      if (fs.readdirSync(sub).length === 0) fs.rmdirSync(sub);
+    }
+  }
+}
+
+/** JSON as written to disk: two-space indent, trailing newline. */
+const json = (data) => `${JSON.stringify(data, null, 2)}\n`;
+
+module.exports = { drift, json, lf, write };

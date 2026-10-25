@@ -1,0 +1,139 @@
+# ==============================================================================
+# ceciCela Repository .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# ceci, cela, and trouble runtime state
+# ------------------------------------------------------------------------------
+# Work directories (brief.md, state.md, log.md), gate state, and role names are per-run.
+.ceci/
+.cela/
+.trouble/
+
+# ------------------------------------------------------------------------------
+# Git worktrees (AGENTS.md: every task runs in .worktrees/<task>)
+# ------------------------------------------------------------------------------
+.worktrees/
+git-worktrees/
+
+# ------------------------------------------------------------------------------
+# Secrets & credentials (never commit)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+.npmrc
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+credentials.json
+auth.json
+token.txt
+secrets.json
+
+# ------------------------------------------------------------------------------
+# AI agent & harness artifacts
+# ------------------------------------------------------------------------------
+# Agent harness folders are local to each machine and never committed.
+# Install the skill with `ceci install` or a plugin marketplace instead.
+.claude/
+.grok/
+# .agents/ is ignored except the Codex plugin catalog npm run sync generates.
+.agents/*
+!.agents/plugins/
+.agent/
+.codex/
+.copilot/
+*.claude.json
+.cline/
+.goose/
+/.clinerules
+/.goosehints
+
+# Hermes
+.hermes/
+
+# Cursor, Windsurf
+.cursor/
+.windsurf/
+
+# ------------------------------------------------------------------------------
+# Operating system artifacts
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.fuse_hidden*
+.nfs*
+
+# ------------------------------------------------------------------------------
+# Editors & IDEs
+# ------------------------------------------------------------------------------
+.idea/
+*.iml
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ------------------------------------------------------------------------------
+# Node / npm
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+*.tgz
+coverage/
+.nyc_output/
+
+# ------------------------------------------------------------------------------
+# Python (packages/cela/nemo)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# ------------------------------------------------------------------------------
+# Build output & temporary files
+# ------------------------------------------------------------------------------
+dist/
+build/
+# Microsoft 365 Agents Toolkit output and per-user env files
+chat/m365/appPackage/build/
+chat/m365/env/.env.*.user
+out/
+.cache/
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.log
+
+# The Agents Toolkit dev environment file holds no secrets; npm run chat:build generates it.
+!chat/m365/env/.env.dev

@@ -1,0 +1,6 @@
+{
+  "id": "date-range",
+  "kind": "bugfix",
+  "risk": "LOW",
+  "prompt": "Bug report: `dateRange(start, end)` in src/range.js drops the last day. It takes two 'YYYY-MM-DD' strings and must return every calendar date from start to end, inclusive of both, as 'YYYY-MM-DD' strings. It must work across month, year, and leap-day boundaries in any machine timezone, return [] when end is before start, and throw a TypeError when either argument is not a valid 'YYYY-MM-DD' date (for example '2024-13-01' or 'soon'). Fix it."
+}

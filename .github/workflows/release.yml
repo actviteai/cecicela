@@ -1,0 +1,29 @@
+name: release
+
+# Verifies a release tag such as cela@1.0.0 or cecicela@1.0.1. This workflow
+# never publishes and holds no npm token: a maintainer runs `npm run release`,
+# then publishes the staged tarballs by hand with npm two-factor authentication.
+on:
+  push:
+    tags: ['cecicela@*', 'ceci@*', 'cela@*', 'trouble@*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - name: Tag matches the package version
+        run: |
+          name="${GITHUB_REF_NAME%@*}"
+          version="${GITHUB_REF_NAME#*@}"
+          test "$(node -p "require('./packages/${name}/package.json').version")" = "${version}"

@@ -1,0 +1,57 @@
+{
+  "name": "@actvite/trouble",
+  "version": "1.0.0",
+  "description": "Four-roles debug protocol for stuck incidents and debug loops: verbatim evidence, Bayesian ranking of hypotheses, and no fix until four configurable roles unanimously agree. Ends with a machine-parseable TROUBLE_VERDICT. Claude Code, Codex, Grok, Copilot, Cline, Goose, Cursor, Antigravity, and Hermes. Invoke with /trouble.",
+  "type": "commonjs",
+  "main": "lib/skill.js",
+  "bin": {
+    "trouble": "bin/trouble.js"
+  },
+  "author": {
+    "name": "actvite",
+    "email": "chuck@actvite.com",
+    "url": "https://actvite.com"
+  },
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/actviteai/cecicela/tree/main/packages/trouble#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actviteai/cecicela.git",
+    "directory": "packages/trouble"
+  },
+  "bugs": {
+    "url": "https://github.com/actviteai/cecicela/issues"
+  },
+  "keywords": [
+    "trouble",
+    "cecicela",
+    "debugging",
+    "troubleshooting",
+    "incident-response",
+    "root-cause-analysis",
+    "bayesian",
+    "four-roles",
+    "agent-skills",
+    "claude-code",
+    "codex",
+    "grok",
+    "copilot"
+  ],
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "skill",
+    "!**/*.test.js",
+    "!**/__pycache__",
+    "!**/*.py[cod]"
+  ]
+}

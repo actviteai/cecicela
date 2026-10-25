@@ -1,0 +1,56 @@
+{
+  "name": "@actvite/cela",
+  "version": "1.0.0",
+  "description": "The evidence gate of ceciCela: an evidence-first protocol and skill for AI coding agents. A bundled tool runs the checks and names the result, so the model never grades itself. Claude Code, Codex, Grok, Copilot, Antigravity, Goose, Cline, Cursor, Hermes, and NeMo. Invoke with /cela.",
+  "type": "commonjs",
+  "main": "lib/skill.js",
+  "bin": {
+    "cela": "bin/cela.js"
+  },
+  "author": {
+    "name": "actvite",
+    "email": "chuck@actvite.com",
+    "url": "https://actvite.com"
+  },
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/actviteai/cecicela/tree/main/packages/cela#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actviteai/cecicela.git",
+    "directory": "packages/cela"
+  },
+  "bugs": {
+    "url": "https://github.com/actviteai/cecicela/issues"
+  },
+  "keywords": [
+    "cela",
+    "cecicela",
+    "ai-agent",
+    "coding-agent",
+    "agent-skills",
+    "quality-gates",
+    "evidence-first",
+    "claude-code",
+    "codex",
+    "cursor"
+  ],
+  "scripts": {
+    "test": "node lib/check-static.js && node --test --test-concurrency=1 test/*.test.js",
+    "eval": "node eval/run.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "skill",
+    "bridges",
+    "!**/*.test.js",
+    "!**/__pycache__",
+    "!**/*.py[cod]"
+  ]
+}

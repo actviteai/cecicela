@@ -1,0 +1,6 @@
+{
+  "id": "money-cents",
+  "kind": "refactor",
+  "risk": "MODERATE",
+  "prompt": "Refactor src/cart.js so all arithmetic happens in integer cents, and percents and rates in integer basis points, making every result exact. The public API must not change: every function still takes and returns numbers in dollars. Prices have at most 2 decimal places; percents and rates have at most 4 decimal places. Every rounding step rounds half up to the nearest cent. The existing tests must keep passing, and no other file should need to change."
+}

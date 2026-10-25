@@ -1,0 +1,24 @@
+{
+  "name": "cecicela-monorepo",
+  "private": true,
+  "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. Monorepo for @actvite/cecicela, @actvite/ceci, @actvite/cela, and @actvite/trouble.",
+  "license": "GPL-3.0-or-later",
+  "workspaces": [
+    "packages/core",
+    "packages/cela",
+    "packages/trouble",
+    "packages/ceci",
+    "packages/cecicela"
+  ],
+  "scripts": {
+    "test": "node scripts/test.js",
+    "sync": "node scripts/sync.js",
+    "sync:check": "node scripts/sync.js --check",
+    "chat:build": "node scripts/sync.js --only vendor,chat",
+    "stamp": "node scripts/stamp.js",
+    "release": "node scripts/release.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

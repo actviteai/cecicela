@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.9/schema.json",
+  "version": "v1.9",
+  "name": "ceciCela",
+  "description": "Plan it, prove it, fix it. trouble runs a four-roles Bayesian debug protocol on a stuck bug; ceci plans a goal as a job graph with human gates; cela reviews whether a change is really done. The chat entry point to the ceciCela coding-agent skills.",
+  "instructions": "$[file('instruction.txt')]",
+  "conversation_starters": [
+    {
+      "title": "Stuck bug",
+      "text": "Nothing I try fixes this bug. Here is the error:"
+    },
+    {
+      "title": "Plan a goal",
+      "text": "Plan this goal as a job graph with gates:"
+    },
+    {
+      "title": "Is it done?",
+      "text": "Is this change really done? Here is the diff and the test output:"
+    }
+  ],
+  "capabilities": [
+    {
+      "name": "CodeInterpreter"
+    }
+  ],
+  "agent_skills": [
+    {
+      "folder": "./skills/ceci"
+    },
+    {
+      "folder": "./skills/cela"
+    },
+    {
+      "folder": "./skills/trouble"
+    },
+    {
+      "folder": "./skills/graph-view"
+    }
+  ],
+  "disclaimer": {
+    "text": "ceciCela in chat cannot read your files or run commands. trouble caps confidence at 6, ceci plans without running jobs, and cela reviews without measuring. The measured versions run in coding agents."
+  }
+}

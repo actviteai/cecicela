@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ceciCela graph player</title>
+<style>
+  :root { --fg: #33ff66; --dim: #1c8c3a; --bg: #041006; --glow: rgba(51, 255, 102, .35); }
+  :root[data-theme="amber"] { --fg: #ffb000; --dim: #9a6a00; --bg: #120b00; --glow: rgba(255, 176, 0, .35); }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body { display: flex; flex-direction: column; align-items: center; padding: 16px; font: 14px/1.2 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
+  .crt { position: relative; max-width: 100%; overflow-x: auto; }
+  .crt::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+  pre { margin: 0; padding: 8px 10px; font: inherit; white-space: pre; text-shadow: 0 0 4px var(--glow); }
+  .a-i { background: var(--fg); color: var(--bg); text-shadow: none; }
+  .a-b { font-weight: 700; }
+  .a-d { color: var(--dim); }
+  .a-p { font-weight: 700; }
+  .a-k { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: .15; } }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; justify-content: center; }
+  button { font: inherit; color: var(--fg); background: transparent; border: 1px solid var(--dim); padding: 2px 8px; cursor: pointer; }
+  button:hover, button:focus-visible { border-color: var(--fg); outline: none; }
+  @media (prefers-reduced-motion: reduce) { .a-k { animation: none; } }
+</style>
+</head>
+<body>
+<div class="crt"><pre id="screen" aria-live="off"></pre></div>
+<nav aria-label="player controls">
+  <button data-key="g">[G]raph</button><button data-key="f">[F]rames</button><button data-key="l">[L]egend</button>
+  <button data-key=" ">[SPC]pause</button><button data-key="s">[S]tep</button><button data-key="t">[T]heme</button>
+  <button data-key="-">[-]slower</button><button data-key="+">[+]faster</button><button data-key="r">[R]eset</button>
+</nav>
+<script>
+/*@@TUI@@*/
+</script>
+<script>
+// The model edits only STATE and EVENTS. Append one line per state change above the marker; never re-send this file.
+var STATE = /*@@STATE@@*/;
+var EVENTS = [
+/*@@EVENTS@@*/
+  // append new event lines above this one
+];
+
+var T = window.CeciTUI;
+var screenEl = document.getElementById('screen');
+var keys = { graph: null, legend: true, paused: false, theme: 'green', speed: 250 };
+var base = T.fromStateMd(STATE);
+base.events = EVENTS;
+var step = EVENTS.length;
+var tick = 0;
+var typed = 0;
+var reveal = base.graph === 'frames' ? 0 : undefined;
+
+function rewound(model) {
+  var touched = {};
+  model.events.forEach(function (line) {
+    var ev = T.parseEvent(line);
+    if (ev && ev.type === 'job') touched[ev.job] = true;
+  });
+  var copy = JSON.parse(JSON.stringify(model));
+  copy.events = model.events;
+  copy.jobs.forEach(function (job) {
+    if (!touched[job.id]) return;
+    job.status = job.depends_on.length ? 'blocked' : 'ready';
+    job.cela = null;
+  });
+  return copy;
+}
+
+function screen() {
+  var model = step === EVENTS.length && !keys.replay ? base : rewound(base);
+  var view = Object.assign({}, model, { legend: keys.legend });
+  if (keys.graph) view.graph = keys.graph;
+  var opts = { tick: tick, step: step };
+  if (typed !== null) opts.typed = typed;
+  if (reveal !== undefined) opts.reveal = reveal;
+  return T.render(view, opts);
+}
+
+function draw() {
+  screenEl.innerHTML = T.toHtml(screen());
+}
+
+function advance() {
+  if (!keys.paused) {
+    tick += 1;
+    if (reveal !== undefined) reveal = reveal >= T.W ? undefined : reveal + 4;
+    else if (typed !== null) typed = typed > 120 ? null : typed + 2;
+    else if (keys.replay && step < EVENTS.length && tick % 6 === 0) {
+      step += 1;
+      typed = 0;
+      if (step === EVENTS.length) keys.replay = false;
+    }
+  }
+  draw();
+  setTimeout(advance, keys.speed);
+}
+
+function press(key) {
+  var k = key.toLowerCase();
+  if (k === 'g') keys.graph = (keys.graph || base.graph) === 'off' ? 'on' : 'off';
+  else if (k === 'f') reveal = 0;
+  else if (k === 'l') keys.legend = !keys.legend;
+  else if (k === ' ') keys.paused = !keys.paused;
+  else if (k === 's') { tick += 1; if (keys.replay && step < EVENTS.length) { step += 1; typed = null; } }
+  else if (k === 't') {
+    keys.theme = keys.theme === 'green' ? 'amber' : 'green';
+    document.documentElement.setAttribute('data-theme', keys.theme);
+  } else if (k === '-') keys.speed = Math.min(2000, keys.speed * 2);
+  else if (k === '+' || k === '=') keys.speed = Math.max(60, Math.floor(keys.speed / 2));
+  else if (k === 'r') { keys.replay = true; step = 0; tick = 0; typed = null; keys.graph = null; }
+  else return false;
+  draw();
+  return true;
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (press(e.key)) e.preventDefault();
+});
+Array.prototype.forEach.call(document.querySelectorAll('button[data-key]'), function (b) {
+  b.addEventListener('click', function () { press(b.getAttribute('data-key')); });
+});
+typed = 0;
+draw();
+setTimeout(advance, keys.speed);
+</script>
+</body>
+</html>

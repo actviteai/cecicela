@@ -1,0 +1,6 @@
+hosts:
+  host-a:
+    "GPU-00000000-0000-0000-0000-00000000000a": { priority: 10, models: ["model-large"] }
+    "*": { priority: 1, models: ["model-small"] }
+  host-b:
+    "1": { priority: 5, models: ["model-large", "model-small"] }

@@ -1,0 +1,6 @@
+{
+  "id": "retry-backoff",
+  "kind": "bugfix",
+  "risk": "MODERATE",
+  "prompt": "Bug report: retry(fn, options) in src/retry.js misbehaves. Required behavior: call fn up to `attempts` times in total (default 3), passing the 1-based attempt number. Resolve with fn's value as soon as a call succeeds. After the nth failed attempt, wait baseMs * 2^(n-1) milliseconds (100, 200, 400, ... for the default baseMs of 100) using the injected `sleep` option, but never sleep after the last attempt. After the last failure, reject with the last error. Reject with a RangeError when attempts is not an integer of at least 1. Fix it."
+}

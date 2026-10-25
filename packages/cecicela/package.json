@@ -1,0 +1,64 @@
+{
+  "name": "@actvite/cecicela",
+  "version": "1.0.0",
+  "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. Installs the /ceci job-graph skill, the /cela evidence gate, and the /trouble four-roles debug protocol into Claude Code, Codex, Grok, Cline, Goose, Cursor, Copilot, Antigravity, and Hermes.",
+  "type": "commonjs",
+  "main": "lib/bundle.js",
+  "bin": {
+    "cecicela": "bin/cecicela.js"
+  },
+  "author": {
+    "name": "actvite",
+    "email": "chuck@actvite.com",
+    "url": "https://actvite.com"
+  },
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/actviteai/cecicela#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/actviteai/cecicela.git",
+    "directory": "packages/cecicela"
+  },
+  "bugs": {
+    "url": "https://github.com/actviteai/cecicela/issues"
+  },
+  "keywords": [
+    "cecicela",
+    "ceci",
+    "cela",
+    "trouble",
+    "agent-skills",
+    "job-graph",
+    "quality-gates",
+    "debugging",
+    "claude-code",
+    "codex",
+    "grok",
+    "copilot",
+    "cursor",
+    "hermes"
+  ],
+  "dependencies": {
+    "@actvite/ceci": "2.0.0",
+    "@actvite/cela": "1.0.0",
+    "@actvite/trouble": "1.0.0"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "skill",
+    "agents",
+    "!**/*.test.js",
+    "!**/__pycache__",
+    "!**/*.py[cod]"
+  ]
+}

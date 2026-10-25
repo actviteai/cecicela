@@ -1,0 +1,14 @@
+# The four roles of /trouble.
+#
+# To rename them, copy this file to .trouble/voices.yaml in your project, or to
+# ~/.trouble/voices.yaml for every project, and change the who: lines. who: is
+# the name and one-line character the voice speaks as.
+#
+# What each role does is the protocol, so it is not configurable: keep exactly
+# these four ids, add no others, and add no keys besides who:. A file that
+# breaks those rules is refused, and /trouble uses these defaults instead.
+voices:
+  keeper: {who: "the archivist"}
+  detective: {who: "the detective"}
+  maintainer: {who: "the kernel maintainer"}
+  physicist: {who: "the physicist who specialises in time"}

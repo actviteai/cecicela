@@ -1,0 +1,25 @@
+{
+  "name": "cecicela",
+  "version": "1.0.0",
+  "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. The /ceci job graph with human gates, the /cela evidence gate where a tool names the result, and the /trouble four-roles debug protocol, in one plugin.",
+  "author": {
+    "name": "actvite",
+    "email": "chuck@actvite.com",
+    "url": "https://actvite.com"
+  },
+  "homepage": "https://github.com/actviteai/cecicela",
+  "repository": "https://github.com/actviteai/cecicela",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "cecicela",
+    "ceci",
+    "cela",
+    "trouble",
+    "job-graph",
+    "quality-gates",
+    "evidence-first",
+    "debugging",
+    "agent-skills"
+  ],
+  "skills": "skills/"
+}

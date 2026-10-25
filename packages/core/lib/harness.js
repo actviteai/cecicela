@@ -1,0 +1,95 @@
+'use strict';
+
+/**
+ * The one table of coding-agent harnesses ceciCela installs into.
+ *
+ * Merged from ceci's install script and cela's installer. Each
+ * entry says where that harness reads user skills. A skill is written as a
+ * real directory `<dir>/<skill name>/` containing SKILL.md; symlinks are never
+ * published, because several harnesses copy the tree and drop links.
+ */
+
+const os = require('os');
+const path = require('path');
+
+const HERMES_CATEGORY = 'software-development';
+
+const HARNESSES = [
+  { id: 'claude', label: 'Anthropic Claude Code', home: 'claude', dirs: [['skills']] },
+  { id: 'grok', label: 'xAI Grok', home: 'grok', dirs: [['skills']] },
+  // Codex reads user skills from ~/.agents/skills (audited against the Codex skills docs).
+  { id: 'codex', label: 'OpenAI Codex', home: 'agents', dirs: [['skills']] },
+  { id: 'cline', label: 'Cline / Roo Code', home: 'cline', dirs: [['skills']] },
+  // Goose reads ~/.agents/skills, the folder Codex uses by default.
+  { id: 'goose', label: 'Block Goose', home: 'agents', dirs: [['skills']] },
+  { id: 'cursor', label: 'Cursor', home: 'cursor', dirs: [['skills']] },
+  { id: 'copilot', label: 'GitHub Copilot', home: 'copilot', dirs: [['skills']] },
+  { id: 'antigravity', label: 'Google Antigravity', home: 'gemini', dirs: [['antigravity-cli', 'skills'], ['config', 'skills']] },
+  { id: 'hermes', label: 'Nous Research Hermes Agent', home: 'hermes', dirs: [['skills', HERMES_CATEGORY]] },
+];
+
+const IDS = HARNESSES.map((h) => h.id);
+
+function byId(id) {
+  const found = HARNESSES.find((h) => h.id === id);
+  if (!found) throw new Error(`unknown harness ${id}`);
+  return found;
+}
+
+/** Hermes' default home: ~/.hermes, or %LOCALAPPDATA%\hermes on Windows. */
+function hermesHome(env, home, platform) {
+  if (env.HERMES_HOME) return env.HERMES_HOME;
+  if (platform === 'win32') return path.join(env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'), 'hermes');
+  return path.join(home, '.hermes');
+}
+
+/** Home directories, each overridable by its environment variable. */
+function homes(env = process.env, platform = process.platform) {
+  const home = env.HOME || env.USERPROFILE || os.homedir();
+  const agents = env.AGENTS_HOME || path.join(home, '.agents');
+  return {
+    home,
+    claude: env.CLAUDE_HOME || path.join(home, '.claude'),
+    grok: env.GROK_HOME || path.join(home, '.grok'),
+    cline: env.CLINE_HOME || path.join(home, '.cline'),
+    agents,
+    cursor: env.CURSOR_HOME || path.join(home, '.cursor'),
+    copilot: env.COPILOT_HOME || path.join(home, '.copilot'),
+    gemini: env.GEMINI_HOME || path.join(home, '.gemini'),
+    hermes: hermesHome(env, home, platform),
+  };
+}
+
+/** Every directory harness `id` reads skill `name` from. */
+function skillDests(id, h, name) {
+  const harness = byId(id);
+  return harness.dirs.map((parts) => path.join(h[harness.home], ...parts, name));
+}
+
+/** Parse --all and --<harness> selectors. Unknown flags are returned, not thrown. */
+function parseSelectors(argv) {
+  const picked = [];
+  const rest = [];
+  let all = false;
+  for (const arg of argv) {
+    if (arg === '--all') all = true;
+    else if (arg.startsWith('--') && IDS.includes(arg.slice(2))) {
+      if (!picked.includes(arg.slice(2))) picked.push(arg.slice(2));
+    } else rest.push(arg);
+  }
+  return { harnesses: all ? IDS.slice() : picked, all, rest };
+}
+
+function selectorHelp(name) {
+  const rows = HARNESSES.map((h) => {
+    const where = h.dirs.map((parts) => `~/${homeDir(h.home)}/${parts.join('/')}/${name}`).join(', ');
+    return `  --${h.id.padEnd(12)} ${where}`;
+  });
+  return `${rows.join('\n')}\n  --all          all ${HARNESSES.length}`;
+}
+
+function homeDir(key) {
+  return { claude: '.claude', grok: '.grok', cline: '.cline', agents: '.agents', cursor: '.cursor', copilot: '.copilot', gemini: '.gemini', hermes: '.hermes' }[key];
+}
+
+module.exports = { HARNESSES, HERMES_CATEGORY, IDS, byId, homes, parseSelectors, selectorHelp, skillDests };

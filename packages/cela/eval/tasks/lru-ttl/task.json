@@ -1,0 +1,6 @@
+{
+  "id": "lru-ttl",
+  "kind": "feature",
+  "risk": "MODERATE",
+  "prompt": "Feature: add optional time-to-live support to the LRU cache in src/lru.js. The constructor becomes `new LRU(max, { ttlMs, now } = {})`, where `now` is an optional clock function that defaults to Date.now. When ttlMs is set, an entry expires ttlMs after it was last written with set(). Expired entries behave as missing for get() and has(), are not counted by the size getter, and are never returned. get() must not extend an entry's lifetime; set() on an existing key resets it. Without ttlMs the cache must behave exactly as it does today, and the existing tests must keep passing."
+}

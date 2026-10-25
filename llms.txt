@@ -1,0 +1,23 @@
+# ceciCela
+
+> ceci plans this, cela proves that, trouble fixes what breaks. ceciCela is three agent skills for Claude Code, Codex, Grok, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent: /ceci turns a goal into a job graph with human gates before contact, posting, payment, or pricing; /cela is an evidence gate where a bundled tool runs the checks and names the result, so the model never grades itself; /trouble is a four-roles debug protocol with Bayesian ranking and a unanimous gate before any fix.
+
+Install all three for every harness: `npx --yes @actvite/cecicela install --all`. Each also installs alone: `npx --yes @actvite/ceci install --all`, `npx --yes @actvite/cela install --all`, `npx --yes @actvite/trouble install --all`. Zero dependencies, Node.js 22+, GPL-3.0-or-later.
+
+Claude Code plugin: `/plugin marketplace add actviteai/cecicela` then `/plugin install cecicela@cecicela` (skills are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`)
+Grok: `grok plugin marketplace add actviteai/cecicela` then `grok plugin install cecicela --trust`
+Copilot CLI: `copilot plugin marketplace add actviteai/cecicela` then `copilot plugin install cecicela@cecicela`
+Codex: `codex plugin marketplace add actviteai/cecicela`
+
+## Docs
+
+- [README](https://github.com/actviteai/cecicela/blob/main/README.md): install routes, the three skills, the chat packs, the graph view, releasing
+- [ceci](https://github.com/actviteai/cecicela/blob/main/packages/ceci/README.md): job graph, state.md, human gates, GPU placement, events, graph view
+- [cela](https://github.com/actviteai/cecicela/blob/main/packages/cela/README.md): the evidence gate, oracles, task log and memory, NeMo Agent Toolkit
+- [trouble](https://github.com/actviteai/cecicela/blob/main/packages/trouble/README.md): the four-roles protocol, renaming the roles, hosts
+- [Chat packs](https://github.com/actviteai/cecicela/tree/main/chat): ceciCela for ChatGPT, Claude, Grok, and Microsoft 365 Copilot
+
+## Optional
+
+- [npm: @actvite/cecicela](https://www.npmjs.com/package/@actvite/cecicela)
+- [Security policy](https://github.com/actviteai/cecicela/blob/main/SECURITY.md)

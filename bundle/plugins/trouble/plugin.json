@@ -1,0 +1,23 @@
+{
+  "name": "trouble",
+  "version": "1.0.0",
+  "description": "Stop looping on a bug you cannot close. /trouble is a four-roles debug protocol that collects verbatim evidence, ranks hypotheses with Bayesian math, and refuses a fix until the roles unanimously agree. Part of ceciCela.",
+  "author": {
+    "name": "actvite",
+    "email": "chuck@actvite.com",
+    "url": "https://actvite.com"
+  },
+  "homepage": "https://github.com/actviteai/cecicela",
+  "repository": "https://github.com/actviteai/cecicela",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "trouble",
+    "cecicela",
+    "debugging",
+    "troubleshooting",
+    "incident-response",
+    "bayesian",
+    "four-roles"
+  ],
+  "skills": "skills/"
+}
