@@ -648,3 +648,15 @@ test('outcome labels the task after the gate, current or archived, and export ca
   assert.equal(JSON.parse(cela(root, ['protocol', '--json']).out).outcomes.accepted, 'shipped as the gate measured it');
   assert.match(cela(root, ['protocol']).out, /outcome, set by the reviewer after the gate: accepted \(.*\); revised \(.*\); rejected \(discarded\)/);
 });
+
+test('the installed engine runs inside a "type": "module" project', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cela-esm-'));
+  fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}\n');
+  const skill = path.join(root, '.agents', 'skills', 'cela');
+  fs.mkdirSync(path.join(skill, 'tool'), { recursive: true });
+  fs.copyFileSync(TOOL, path.join(skill, 'tool', 'cela.js'));
+  fs.copyFileSync(path.join(__dirname, '..', 'skill', 'package.json'), path.join(skill, 'package.json'));
+  const res = spawnSync(process.execPath, [path.join(skill, 'tool', 'cela.js'), 'protocol'], { cwd: root, encoding: 'utf8' });
+  assert.doesNotMatch(res.stderr, /require is not defined/);
+  assert.equal(res.status, 0, res.stderr);
+});

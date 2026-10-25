@@ -20,6 +20,7 @@ test('npm pack includes the skill, bridges, vendored core, and no tests, eval, o
     'bin/cela.js',
     'skill/SKILL.md',
     'skill/tool/cela.js',
+    'skill/package.json',
     'skill/playbooks/audit.md',
     'lib/installer.js',
     'lib/skill.js',

@@ -49,7 +49,7 @@ trouble and cela keep the same title bar, log panel, and footer. trouble's centr
 | Grok | a Grok Studio window built once from `graph-player.html`, when it opens from this chat | edit in place: append the event line |
 | Microsoft 365 Copilot, or anywhere without a live HTML surface | the reply | the event line; the full 80x24 screen in a code block only when the graph's shape changed or the user asks |
 
-The player is about 10 KB. Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
+The player is about 23 KB (roughly 7,000 tokens). Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
 
 
 # Worked example: `graph frames` without a live surface

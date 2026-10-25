@@ -150,10 +150,11 @@ function statusRows(layout) {
 }
 
 function parseArgs(argv) {
-  const flags = { help: false, force: false, quiet: false, all: false, globalOnly: false, hook: false, repo: null, command: null, harnesses: [] };
+  const flags = { help: false, version: false, force: false, quiet: false, all: false, globalOnly: false, hook: false, repo: null, command: null, harnesses: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') flags.help = true;
+    else if (arg === '--version' || arg === '-v') flags.version = true;
     else if (arg === '--force') flags.force = true;
     else if (arg === '--quiet') flags.quiet = true;
     else if (arg === '--all') flags.all = true;
@@ -204,6 +205,7 @@ ${rows}
   --force          Replace existing harness files (keeps a .cela-backup)
   --quiet          Suppress the banner and per-file chatter
   --help, -h       Show this help message
+  --version, -v    Print the version
 
 There is no separate update command. Run install again with the same flags.
 Skill trees are replaced after the new copy verifies. Edited harness files
@@ -372,6 +374,10 @@ function runCli(argv, options = {}) {
   try {
     const version = readVersion(pkgRoot);
     const flags = parseArgs(argv);
+    if (flags.version) {
+      log(version);
+      return 0;
+    }
     if (flags.help) {
       if (!flags.quiet) log(banner(version).replace(/^\n/, ''));
       log(helpText(version).replace(/\n$/, ''));

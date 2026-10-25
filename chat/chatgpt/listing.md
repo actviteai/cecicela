@@ -1,4 +1,4 @@
-# ceciCela GPT listing
+# ceciCela listing (for the ChatGPT plugin, once public plugin submission opens)
 
 **Name:** ceciCela
 

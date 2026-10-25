@@ -215,7 +215,7 @@ Use `ceci log`. Do not append a second line for the same change, and do not writ
 
 ## CLI
 
-Run it as `ceci` after `npm install -g @actvite/ceci` (or `@actvite/cecicela`), as `npx --yes @actvite/ceci <command>`, or with Node from a checkout or an installed skill directory:
+Run it as `ceci` after `npm install -g @actvite/ceci` (installing the `@actvite/cecicela` bundle globally puts only `cecicela` on your PATH), as `npx --yes @actvite/ceci <command>`, or with Node from a checkout or an installed skill directory:
 
 ```bash
 node skill/tool/ceci.js <command> --work-dir PATH

@@ -13,11 +13,11 @@ Announce the protocol as it says, then state the limit in one sentence: you cann
 
 ## Role names
 
-The four roles are `keeper`, `detective`, `maintainer`, and `physicist`, with the default names in the protocol below (and in `voices.default.yaml`). If the user pastes a `voices:` block, check it before using it: exactly those four ids, each with only `who:`, one line of at most 80 characters. If it passes, use those names for this conversation. If it fails, say why in one line and use the defaults. Never change what a role does.
+The four roles are `keeper`, `detective`, `maintainer`, and `physicist`, with the default names in the protocol below (and in `voices.default.yaml` (in this skill)). If the user pastes a `voices:` block, check it before using it: exactly those four ids, each with only `who:`, one line of at most 80 characters. If it passes, use those names for this conversation. If it fails, say why in one line and use the defaults. Never change what a role does.
 
 ## Graph
 
-When the graph view is on (the default for trouble), the centre panel is the posterior bars and the four gate votes: emit `h <H#> <p> <label>` after each Bayesian update and `vote <role> <yes|no> <N>` at the gate. See `graph-render.md`.
+When the graph view is on (the default for trouble), the centre panel is the posterior bars and the four gate votes: emit `h <H#> <p> <label>` after each Bayesian update and `vote <role> <yes|no> <N>` at the gate. See the graph-view skill.
 
 When the user comes back with command output, quote it as new evidence and update the posteriors. If they need the fix applied and verified, hand off: "Run `/trouble` in your coding agent (`npx --yes @actvite/cecicela install --all`) to apply and verify it there."
 
@@ -71,7 +71,7 @@ inputs: # ask once if any of the three is missing; do not stall if the user alre
 
 roles: # the four voices; ids are fixed, display names are the user's
   ids: [keeper, detective, maintainer, physicist]
-  load: "tooled: run `node tool/voices.js resolve` from the project root and use the who: names it prints; untooled: a voices: block the user pasted in this conversation, else the defaults below"
+  load: "tooled: from the project root run `node <this skill's directory>/tool/voices.js resolve --project .` (or `trouble voices resolve` when trouble is on PATH) and use the who: names it prints; untooled: a voices: block the user pasted in this conversation, else the defaults below"
   may_change: who only, one line each; never add, drop, or rename an id, and never change does
   invalid: refuse the file, say why in one line, use the defaults
   in_text: name each voice by its who; the ids stay the keys below

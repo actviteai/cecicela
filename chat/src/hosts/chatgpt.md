@@ -1,23 +1,20 @@
 # ceciCela for ChatGPT: setup
 
-There are two routes: a Project for yourself, or the published GPT.
+Use a ChatGPT **Project**. That is the route for everyone, on every plan that has Projects.
 
-## A Project (any plan with Projects)
+OpenAI is retiring custom GPTs on **11 December 2026** (11 February 2027 for Enterprise workspaces with an approved deferral), and creating new GPTs is closing ahead of that. Their replacement is **plugins**: a GPT's instructions become a skill and its knowledge files become reference files. Do not build a new ceciCela GPT. A public ceciCela plugin follows once OpenAI's plugin submission is open; until then this kit is the ChatGPT route. Check https://help.openai.com/en/articles/20001519-custom-gpt-retirement-and-migration-faq before each release.
+
+## Build the Project
 
 1. Create a Project named **ceciCela**.
-2. Paste `INSTRUCTIONS.md` into the Project's instructions.
-3. Upload every file in `knowledge/` and `graph-player.html` as Project files.
-4. When the graph is on, ChatGPT builds the player once in a canvas and edits it in place each turn. Where canvas is not offered, it falls back to the text screen.
+2. Open the Project's settings and paste the whole of `INSTRUCTIONS.md` into its instructions.
+3. Add the files. ChatGPT takes at most 10 files per upload, so add them in two batches.
+   - Go, Plus, and higher plans: every file in `knowledge/` (including the four in `knowledge/examples/`) plus `graph-player.html`, 11 files.
+   - Free (5 files per Project): `trouble.chat.md`, `ceci.chat.md`, `cela.chat.md`, `graph-render.md`, `graph-player.html`. The defaults for trouble's roles are in `trouble.chat.md`, so `voices.default.yaml` is optional.
+4. Start a chat inside the Project. The first reply states its limits.
 
-## The ceciCela GPT (publisher steps)
+When the graph is on, ChatGPT builds the player once in a canvas and edits it in place each turn. Where canvas is not offered, it falls back to the text screen.
 
-Creating and publishing GPTs needs a workspace that allows it (Business, Enterprise, or Edu, as of this pack's build).
+To continue a ceci plan later, replace `state.md` in the Project's files with the latest copy ChatGPT gave you, or attach it to the new chat.
 
-1. In the actvite.com workspace, verify the `actvite.com` domain on the builder profile.
-2. Create a GPT. Copy the name, description, and conversation starters from `listing.md`.
-3. Paste `INSTRUCTIONS.md` into Instructions (it is under the 8,000-character limit; the build checks).
-4. Upload every file in `knowledge/` and `graph-player.html` as Knowledge. Enable Canvas and Code Interpreter.
-5. Share → GPT Store, category Programming. Fix anything the policy check flags.
-6. Re-publish after every `npm run chat:build` release.
-
-A GPT has no Project knowledge the user can write to: users attach their latest `state.md` at the start of a session to continue a plan.
+The full product, with the tools these chat versions only describe: `npx --yes @actvite/cecicela install --all`

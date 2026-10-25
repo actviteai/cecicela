@@ -73,10 +73,10 @@ The chat versions are the free entry point. A Project pack puts a router in the 
 
 | Host | What is published | Setup |
 | --- | --- | --- |
-| ChatGPT | the ceciCela GPT in the GPT Store, or a Project you build yourself | [chat/chatgpt/SETUP.md](chat/chatgpt/SETUP.md) |
+| ChatGPT | a setup kit for a ChatGPT Project (custom GPTs retire on 11 December 2026; a public plugin follows when OpenAI opens submission) | [chat/chatgpt/SETUP.md](chat/chatgpt/SETUP.md) |
 | Claude | a setup kit for a Claude Project, and the graph player as a public artifact | [chat/claude/SETUP.md](chat/claude/SETUP.md) |
 | Grok | a setup kit for a Grok Project (and a shared Project where Grok allows it) | [chat/grok/SETUP.md](chat/grok/SETUP.md) |
-| Microsoft 365 Copilot | a declarative agent for the Commercial Marketplace (Agents Toolkit project) | [chat/m365/SETUP.md](chat/m365/SETUP.md) |
+| Microsoft 365 Copilot | a declarative agent with custom skills (Agents Toolkit project), for Frontier tenants now and the Commercial Marketplace once Microsoft accepts skills there | [chat/m365/SETUP.md](chat/m365/SETUP.md) |
 
 In chat, trouble leads: it runs its `untooled` mode (no files, no commands, confidence capped at 6, the incident stays open until you run the check). ceci becomes a planner that hands `brief.md` and `state.md` back as files. cela becomes a review checklist that says plainly no tool ran and there is no gate. Each states its limits in its first reply, and each ends with the install line for the full product.
 

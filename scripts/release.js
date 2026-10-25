@@ -24,6 +24,7 @@ const { REPO, PUBLISHED, SKILLS, pkg } = require('./lib/repo');
 
 const WIN = process.platform === 'win32';
 const DIST = path.join(REPO, 'dist');
+const RDAPQ_NOTICE = 'rdap-q is now cela, part of ceciCela: npx @actvite/cecicela install --all';
 const npm = (args, opts = {}) => spawnSync('npm', args, { cwd: REPO, encoding: 'utf8', shell: WIN, ...opts });
 
 function parseArgs(argv) {
@@ -64,6 +65,9 @@ function bump(plan) {
     fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
     process.stdout.write(`bumped @actvite/${name} ${was} -> ${data.version}\n`);
   }
+  // Keep package-lock.json in step, or the next npm ci reads the old versions.
+  const lock = npm(['install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund']);
+  if (lock.status !== 0) throw new Error(`could not update package-lock.json: ${lock.stderr}`);
 }
 
 /** What npm knows: 'new name', 'new version', 'published', or 'unknown'. */
@@ -122,6 +126,16 @@ function writePlan(rows, tested) {
     '| --- | --- | --- | --- |',
     ...rows.map((r) => `| \`${pkg(r.name).name}\` | ${pkg(r.name).version} | ${r.reg.state}: ${r.reg.note} | \`${r.stage.file}\` (${r.stage.files.length} files, ${r.stage.size} bytes) |`),
     '',
+    '## Tag first',
+    '',
+    'Commit the stamped versions, tag every package that moves, and push. Wait for the `release` workflow to pass on the tags before publishing anything.',
+    '',
+    '```bash',
+    `git commit -am "release: ${order.map((r) => `${r.name} ${pkg(r.name).version}`).join(', ') || 'nothing new'}"`,
+    ...order.map((r) => `git tag ${r.name}@${pkg(r.name).version}`),
+    'git push origin HEAD --tags',
+    '```',
+    '',
     'Publish in this order, so each dependency exists before the package that needs it: cela, trouble, ceci, then cecicela. Check each with `npm view` before moving on. Use your npm account with two-factor authentication; npm asks for the one-time code.',
     '',
   ];
@@ -136,7 +150,9 @@ function writePlan(rows, tested) {
         : 'If `npm view` says the name does not exist, publish the placeholder first; otherwise skip it.', '');
       cmds.push(`npm publish ${r.placeholder} --access public --tag stage   # npm needs a tag for a prerelease version`);
     }
-    cmds.push(`npm publish ${r.stage.file} --access public`, `npm view ${p.name} versions dist-tags   # latest must be ${p.version}`);
+    cmds.push(`npm publish ${r.stage.file} --access public`);
+    if (r.placeholder) cmds.push(`npm dist-tag rm ${p.name} stage   # skip if npm says the tag does not exist`);
+    cmds.push(`npm view ${p.name} versions dist-tags   # latest must be ${p.version}`);
     lines.push('```bash', ...cmds, '```', '');
   });
   lines.push(
@@ -145,13 +161,14 @@ function writePlan(rows, tested) {
     'Deprecate the superseded packages (once all four are live):',
     '',
     '```bash',
-    'npm deprecate @actvite/rdapq "rdap-q is now cela, part of ceciCela: npm i -g @actvite/cecicela"',
-    'npm deprecate @actvite/ceci@1.x "superseded by @actvite/ceci 2.x in ceciCela"',
+    `npm deprecate @actvite/rdapq "${RDAPQ_NOTICE}"`,
+    `npm deprecate rdap-q "${RDAPQ_NOTICE}"   # the unscoped original`,
+    'npm deprecate "@actvite/ceci@<2.0.0" "superseded by @actvite/ceci 2.x in ceciCela: npx @actvite/cecicela install --all"',
     '# optional: hide each placeholder',
     ...rows.map((r) => `npm deprecate ${pkg(r.name).name}@0.0.0-stage "placeholder; install ${pkg(r.name).version} or later"`),
     '```',
     '',
-    'Then tag the release, replace each old repository\'s README with its notice in `docs/archive/`, and archive actviteai/ceci, actviteai/rdapq, and actviteai/trouble on GitHub.',
+    'Then replace each old repository\'s README with its notice in `docs/archive/`, and archive actviteai/ceci, actviteai/rdapq, and actviteai/trouble on GitHub.',
     '',
     '## Tarball contents',
     '',

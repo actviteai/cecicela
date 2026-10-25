@@ -100,6 +100,8 @@ function hermesFiles(skill) {
     const files = new Map();
     files.set('SKILL.md', { text: hermes.renderHub(fs.readFileSync(path.join(dir, 'SKILL.md'), 'utf8'), version('cela')), exec: false });
     files.set('scripts/cela.js', { text: fs.readFileSync(path.join(dir, 'tool', 'cela.js'), 'utf8'), exec: false });
+    // Keeps the engine CommonJS when an ancestor package.json sets "type": "module".
+    files.set('scripts/package.json', { text: fs.readFileSync(path.join(dir, 'package.json'), 'utf8'), exec: false });
     for (const name of fs.readdirSync(path.join(dir, 'playbooks')).sort()) {
       files.set(`references/${name}`, { text: fs.readFileSync(path.join(dir, 'playbooks', name), 'utf8'), exec: false });
     }

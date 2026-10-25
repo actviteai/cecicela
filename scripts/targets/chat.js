@@ -53,6 +53,20 @@ function section(md, heading) {
 const skill = (name, rel = 'SKILL.md') => read(REPO, 'packages', name, 'skill', rel);
 const demote = (md) => md.replace(/^(#{1,5}) /gm, '#$1 ');
 
+/** The audit checklist with every tool step turned into what the user pasted. */
+function chatAudit(md) {
+  const out = md
+    .replace('the last `T check`', 'the latest test output the user pasted')
+    .replace(/Fix what you find, then `T check` and `T gate` again\. Report the gate's verdict, not your own\./, 'List what you find, ask for the evidence that would close each item, and end with the REVIEW line. There is no verdict here: only the cela tool in a coding agent names one.');
+  if (/\bT (check|gate|protocol)\b|gate's verdict/.test(out)) throw new Error('chat cela checklist still names a tool step');
+  return out;
+}
+
+/** ceci's protocol without the commands chat cannot run. */
+function chatCeci(md) {
+  return md.replace(/^## Playbooks\n(?:- `playbooks\/.*\n)+/m, '');
+}
+
 function knowledge() {
   const files = new Map();
   files.set('ceci.chat.md', text([
@@ -62,7 +76,7 @@ function knowledge() {
     '',
     '# Protocol: /ceci',
     '',
-    demote(dropSection(body(skill('ceci')), 'CLI')).trim(),
+    demote(chatCeci(dropSection(body(skill('ceci')), 'CLI'))).trim(),
     '',
     '# Playbook: job graph',
     '',
@@ -80,11 +94,11 @@ function knowledge() {
     '',
     '# Reference: what the cela tool measures in a coding agent',
     '',
-    demote(section(body(skill('cela')), 'What the tool measures').replace(/^## What the tool measures\n/, '')).trim(),
+    demote(section(body(skill('cela')), 'What the tool measures').replace(/^## What the tool measures\n/, '')).replace(/ `T protocol` prints every scale\./, '').trim(),
     '',
     '# Reference: the audit checklist',
     '',
-    demote(skill('cela', 'playbooks/audit.md')).replace(/`T check` and `T gate`/g, 'the tool').trim(),
+    chatAudit(demote(skill('cela', 'playbooks/audit.md'))).trim(),
     '',
   ].join('\n')));
   files.set('trouble.chat.md', text([
@@ -150,7 +164,7 @@ function instructions(host) {
       .replace("Each one is a file in this Project's knowledge; read the file before you use its protocol, and follow it for that request only.", 'Each one is an agent skill of this agent (ceci, cela, trouble, and graph-view for drawing); load the skill before you use its protocol, and follow it for that request only.')
       .replace('| The user wants | Protocol | Knowledge file |', '| The user wants | Protocol | Agent skill |')
       .replace('`trouble.chat.md`', '`trouble`').replace('`ceci.chat.md`', '`ceci`').replace('`cela.chat.md`', '`cela`')
-      .replace("re-uploads `state.md` to this Project's knowledge, or attaches it", 'attaches `state.md`')
+      .replace("re-uploads `state.md` to this Project's knowledge, or attaches it,", 'attaches `state.md`')
       .replace('If a `state.md` is in knowledge or attached', 'If a `state.md` is attached')
       .replace('Validate it as `trouble.chat.md` says.', 'Validate it as the trouble skill says.')
       .replace('`graph-render.md` is the drawing rule set.', 'The graph-view skill is the drawing rule set.')
@@ -188,8 +202,16 @@ function hostFiles(host) {
   return files;
 }
 
+const M365_SKILL_LIMIT = 20000;
+
+/** A Copilot agent skill: no Project knowledge, no graph-render.md file, no live HTML surface. */
 function agentSkill(name, description, content) {
-  return text(`---\nname: ${name}\ndescription: ${JSON.stringify(description)}\n---\n\n${content.trim()}\n`);
+  const body = content.trim()
+    .replace(/`graph-render\.md`/g, 'the graph-view skill')
+    .replace(/Project knowledge/g, 'the conversation (the user attaches it)')
+    .replace(/`voices\.default\.yaml`/g, '`voices.default.yaml` (in this skill)');
+  if (body.length > M365_SKILL_LIMIT) throw new Error(`chat/m365: skill ${name} is ${body.length} characters; the limit is ${M365_SKILL_LIMIT}`);
+  return text(`---\nname: ${name}\ndescription: ${JSON.stringify(description)}\n---\n\n${body}\n`);
 }
 
 function m365Files() {
@@ -216,6 +238,7 @@ function m365Files() {
   files.set('appPackage/skills/ceci/SKILL.md', agentSkill('ceci', 'ceciCela planner: turns a goal into a job graph with human gates and hands state back as brief.md and state.md. Use when the user wants a goal planned.', k.get('ceci.chat.md').text));
   files.set('appPackage/skills/cela/SKILL.md', agentSkill('cela', 'ceciCela review checklist: reviews whether a pasted change is really done, without a tool and without a gate. Use when the user asks if a change is done.', k.get('cela.chat.md').text));
   files.set('appPackage/skills/trouble/SKILL.md', agentSkill('trouble', 'ceciCela four-roles debug protocol in untooled mode: verbatim evidence, Bayesian ranking, unanimous gate, TROUBLE_VERDICT. Use for a bug or incident earlier attempts did not fix.', k.get('trouble.chat.md').text));
+  files.set('appPackage/skills/trouble/voices.default.yaml', text(skill('trouble', 'voices.default.yaml')));
   files.set('appPackage/skills/graph-view/SKILL.md', agentSkill('graph-view', 'ceciCela graph view: the 80x24 ASCII screen rules and event lines for ceci, trouble, and cela. Use when the graph view is on.', `${k.get('graph-render.md').text}\n\n${k.get('examples/graph-frames.md').text}`));
   files.set('appPackage/manifest.json', text(core.gen.json({
     $schema: 'https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json',
@@ -224,26 +247,25 @@ function m365Files() {
     id: '${{TEAMS_APP_ID}}',
     developer: {
       name: 'actvite',
-      websiteUrl: 'https://actvite.com',
-      privacyUrl: 'https://actvite.com/privacy',
-      termsOfUseUrl: 'https://actvite.com/terms',
+      websiteUrl: 'https://www.actvite.com',
+      privacyUrl: 'https://www.actvite.com/privacy',
+      termsOfUseUrl: 'https://www.actvite.com/tos',
     },
     icons: { color: 'color.png', outline: 'outline.png' },
     name: { short: 'ceciCela${{APP_NAME_SUFFIX}}', full: 'ceciCela: plan it, prove it, fix it' },
     description: {
       short: 'Plan it, prove it, fix it: ceci, cela, and trouble in Copilot.',
-      full: 'ceciCela in Microsoft 365 Copilot. trouble runs a four-roles Bayesian debug protocol on a stuck bug and refuses a fix until all four roles agree. ceci turns a goal into a job graph with human gates before contact, posting, payment, or a price. cela reviews whether a change is really done. In chat they cannot read files or run commands, and they say so; the measured versions run in coding agents (npx @actvite/cecicela install --all).',
+      full: 'ceciCela in Microsoft 365 Copilot. trouble runs a four-roles Bayesian debug protocol on a stuck bug and refuses a fix until all four roles agree. ceci turns a goal into a job graph with human gates before contact, posting, payment, or a price. cela reviews whether a change is really done. In chat they cannot read files or run commands, and they say so; the measured versions run in coding agents (npx --yes @actvite/cecicela install --all).',
     },
     accentColor: '#111111',
     copilotAgents: { declarativeAgents: [{ id: 'declarativeAgent', file: 'declarativeAgent.json' }] },
-    permissions: ['identity', 'messageTeamMembers'],
     validDomains: [],
   })));
   // The brand seal (brand/): the full seal with 10% padding, and the figure alone, white on transparent.
   files.set('appPackage/color.png', { buffer: fs.readFileSync(path.join(REPO, 'brand', 'png', 'seal-192.png')), exec: false });
   files.set('appPackage/outline.png', { buffer: fs.readFileSync(path.join(REPO, 'brand', 'png', 'outline-32.png')), exec: false });
   files.set('m365agents.yml', text([
-    '# yaml-language-server: $schema=https://aka.ms/m365-agents-toolkits/v1.8/yaml.schema.json',
+    '# yaml-language-server: $schema=https://developer.microsoft.com/json-schemas/teams-toolkit/teamsapp-yaml/v1.8/yaml.schema.json',
     '# Generated by npm run chat:build. Provision with the Microsoft 365 Agents Toolkit: atk provision --env dev',
     'version: v1.8',
     'environmentFolderPath: ./env',
@@ -253,6 +275,9 @@ function m365Files() {
     '      name: ceciCela${{APP_NAME_SUFFIX}}',
     '    writeToEnvironmentFile:',
     '      teamsAppId: TEAMS_APP_ID',
+    '  - uses: teamsApp/validateManifest',
+    '    with:',
+    '      manifestPath: ./appPackage/manifest.json',
     '  - uses: teamsApp/zipAppPackage',
     '    with:',
     '      manifestPath: ./appPackage/manifest.json',

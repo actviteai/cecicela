@@ -27,7 +27,7 @@ The first reply of every run states, in one or two sentences, what this chat ver
 
 ## State
 
-Nothing persists between conversations except what the user keeps. ceci emits `state.md` (and `brief.md`) at the end of every turn that changes the graph; the user attaches `state.md`, to continue. If a `state.md` is attached, read it first and continue from it. Its `events:` list is the history.
+Nothing persists between conversations except what the user keeps. ceci emits `state.md` (and `brief.md`) at the end of every turn that changes the graph; the user attaches `state.md` to continue. If a `state.md` is attached, read it first and continue from it. Its `events:` list is the history.
 
 A `voices:` block the user pastes renames trouble's four roles for this conversation only. Validate it as the trouble skill says.
 

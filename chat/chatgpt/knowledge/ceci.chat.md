@@ -14,7 +14,7 @@ State the limit in one sentence before anything else: you write the job graph an
 4. A job whose next action is contact, posting, paying, or a price gets `status: gate`. Leave the price blank. Hand back the gate shape from the protocol below (`gate: price`, `job:`, `price:` empty).
 5. When the user reports progress ("j2 is done, tests pass"), record it as an event line and update the job, but write `UNVERIFIED` in your reply for anything they did not paste evidence for. A job that needs `/cela` stays `running`, not `done`, until they paste the gate's `COMPLETE` line.
 6. End every turn that changed the graph with the full `state.md` in one fenced block (or as a downloadable file where the host offers one), with its `events:` list current. Tell the user to replace the copy in Project knowledge.
-7. End the plan with the hand-off: "Run this with `/ceci` in your coding agent: drop `brief.md` and `state.md` into a work directory and type `/ceci --work-dir <dir>`."
+7. End the plan with the hand-off: "Run this with `/ceci` in your coding agent: drop `brief.md` and `state.md` into a work directory and type `/ceci --work-dir <dir>`. Install it with `npx --yes @actvite/cecicela install --all`."
 
 ## state.md in chat
 
@@ -24,7 +24,13 @@ Use the schema below exactly; the CLI reads the same file. Add `title:` (the goa
 
 Draw the graph as `graph-render.md` says when the graph view is on (the default for ceci).
 
-The protocol the coding-agent skill follows comes next. Its CLI commands are not available in chat; everything else applies.
+## Where the protocol below differs in chat
+
+- Rule 1: a first chat has no `brief.md` or `state.md`. Write them yourself from what the user said; do not stop.
+- Every `ceci <command>` the protocol names (`init`, `status`, `event`, `log`, `resolve-gpu`) is not available here. Do its job in text instead: write the event line into `events:` yourself, keep the log line in your reply, and leave `gpu:` for the coding agent to resolve.
+- The playbooks it mentions are already included below; there are no other files to open.
+
+The protocol the coding-agent skill follows comes next. Everything else in it applies.
 
 ---
 
@@ -72,11 +78,6 @@ jobs:
 events:                  # optional: one line per status change, oldest first
   - "j1 done cela:ok"
 ```
-### Playbooks
-- `playbooks/graph.md` — schema, transitions, dependency rules, events, graph view.
-- `playbooks/gates.md` — stop conditions, blank-price rule, hand-back format.
-- `playbooks/gpu.md` — preference YAML, CUDA env, fallback, logging.
-- `playbooks/cela.md` — when and how to call /cela, how to store the gate.
 ### Done
 A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md and the blank-price line if an offer exists.
 
