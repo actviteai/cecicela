@@ -61,7 +61,7 @@ copilot plugin install cecicela@cecicela
 codex plugin marketplace add actviteai/cecicela
 ```
 
-**What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, and `/cecicela:trouble`. The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
+**What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`, and the front door `/cecicela:cecicela` (a bare `/cecicela` comes from `cecicela install`). The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
 
 **Hermes Agent:** `hermes skills install https://raw.githubusercontent.com/actviteai/cecicela/main/bundle/hermes/ceci/SKILL.md` (and `cela`), or the hub path `actviteai/cecicela/bundle/hermes/trouble`.
 

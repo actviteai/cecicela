@@ -18,7 +18,7 @@ const path = require('path');
 const core = require('./core');
 const hermes = require('./hermes');
 
-const { copyTreeSafe, exists, publishTree, assertRegularFile, describePlace } = core.fsx;
+const { copyTreeSafe, exists, publishTree, assertRegularFile, describePlace, freeBackupName } = core.fsx;
 
 const NAME = 'cela';
 const TAG = 'cela';
@@ -96,7 +96,7 @@ function addStopHook(dest, force) {
   const ours = STOP_HOOK.hooks.Stop[0].hooks[0].command;
   const stop = (settings.hooks && Array.isArray(settings.hooks.Stop)) ? settings.hooks.Stop : [];
   if (stop.some((entry) => (entry.hooks || []).some((h) => h.command === ours))) return { action: 'unchanged', dest };
-  const backup = `${dest}.${TAG}-backup`;
+  const backup = freeBackupName(`${dest}.${TAG}-backup`);
   assertRegularFile(backup, backup);
   fs.writeFileSync(backup, current);
   settings.hooks = { ...(settings.hooks || {}), Stop: [...stop, STOP_HOOK.hooks.Stop[0]] };

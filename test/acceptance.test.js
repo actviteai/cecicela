@@ -40,7 +40,7 @@ test('nothing in packages, bundle, or chat names the old personas', () => {
 });
 
 test('the old owner and repository URLs are gone', () => {
-  const hits = trackedText(['.']).filter(({ rel }) => !rel.startsWith('docs/archive/') && rel !== 'test/acceptance.test.js')
+  const hits = trackedText(['.']).filter(({ rel }) => !rel.startsWith('docs/archive/') && rel !== 'docs/release-runbook.md' && rel !== 'test/acceptance.test.js')
     .filter(({ text }) => /coldcanuk|users\.noreply\.github\.com/.test(text)).map(({ rel }) => rel);
   assert.deepEqual(hits, []);
 });

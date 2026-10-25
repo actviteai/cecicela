@@ -71,6 +71,20 @@ function parseFlowMap(raw) {
   return out;
 }
 
+/** Drop a trailing `# comment`, but not a # inside quotes ("Agent #1"). */
+function stripComment(line) {
+  let quote = null;
+  for (let i = 0; i < line.length; i += 1) {
+    const c = line[i];
+    if (quote) {
+      if (c === '\\' && quote === '"') i += 1;
+      else if (c === quote) quote = null;
+    } else if (c === '"' || c === "'") quote = c;
+    else if (c === '#' && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i).replace(/\s+$/, '');
+  }
+  return line;
+}
+
 /** Parse a voices file into { id: { key: value } }. Throws on text it cannot read. */
 function parse(text) {
   const lines = String(text).replace(/\r\n/g, '\n').split('\n');
@@ -80,7 +94,7 @@ function parse(text) {
   lines.forEach((line, index) => {
     const n = index + 1;
     if (!line.trim() || /^\s*#/.test(line)) return;
-    const body = line.replace(/\s+#.*$/, '');
+    const body = stripComment(line);
     if (!seenRoot) {
       if (body.trim() !== 'voices:') throw new Error(`line ${n}: the file must start with voices:`);
       seenRoot = true;

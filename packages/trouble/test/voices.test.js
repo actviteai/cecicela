@@ -112,3 +112,16 @@ test('npm pack ships the skill and vendored core, not the tests', () => {
   assert.equal(pkg.name, '@actvite/trouble');
   assert.deepEqual(pkg.bin, { trouble: 'bin/trouble.js' });
 });
+
+test('a # inside quotes is part of the name, and a trailing comment is not', () => {
+  const roles = voices.parse([
+    'voices:',
+    '  keeper: {who: "Agent #1"}   # first',
+    '  detective: {who: "the detective"}',
+    '  maintainer: {who: "the kernel maintainer"}',
+    "  physicist: {who: 'room #42'}",
+    '',
+  ].join('\n'));
+  assert.equal(roles.keeper.who, 'Agent #1');
+  assert.equal(roles.physicist.who, 'room #42');
+});

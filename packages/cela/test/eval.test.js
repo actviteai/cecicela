@@ -80,3 +80,13 @@ test('terminalState reads gate verdicts, plus the legacy COMPLETE phrase in old 
   assert.deepEqual(terminalState('All oracles pass. Vibe Code Build complete.'), ['COMPLETE']);
   assert.deepEqual(terminalState('STATUS: DONE'), []);
 });
+
+test('compare looks at hidden pass/fail sets per task, agent, and condition', () => {
+  const { compare } = require('../eval/compare');
+  const row = (task, hiddenPass) => ({ task, agent: 'claude:m', condition: 'full', hiddenPass });
+  const same = compare([row('a', true), row('b', false)], [row('a', true), row('b', false), row('c', true)]);
+  assert.equal(same.changed.length, 0);
+  assert.deepEqual(same.onlyB, ['c | claude:m | full']);
+  const moved = compare([row('a', true)], [row('a', false)]);
+  assert.equal(moved.changed.length, 1);
+});

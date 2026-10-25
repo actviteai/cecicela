@@ -48,3 +48,14 @@ test('npm pack ships the CLI, the front door, the Copilot agent, and the vendore
   for (const want of ['LICENSE', 'README.md', 'bin/cecicela.js', 'lib/bundle.js', 'lib/core/index.js', 'skill/SKILL.md', 'agents/cecicela.agent.md']) assert.ok(files.includes(want), want);
   assert.deepEqual(files.filter((f) => f.startsWith('test/')), []);
 });
+
+test('update reinstalls only the skills each harness already has', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-update-'));
+  const env = { ...process.env, HOME: home, USERPROFILE: home };
+  assert.equal(run(['install', '--claude', '--only', 'trouble'], env).status, 0);
+  assert.equal(run(['update'], env).status, 0);
+  const skills = fs.readdirSync(path.join(home, '.claude', 'skills')).sort();
+  assert.ok(skills.includes('trouble'));
+  assert.ok(!skills.includes('ceci') && !skills.includes('cela'), skills.join(','));
+  assert.ok(!fs.existsSync(path.join(home, '.cela')), 'update must not install the cela core');
+});

@@ -167,11 +167,17 @@ function placeConfigFile(src, dest, { force = false, render, content, tag = 'cec
     fs.writeFileSync(sidecar, packaged);
     return { action: 'kept', dest, sidecar };
   }
-  const backup = `${dest}.${tag}-backup`;
+  const backup = freeBackupName(`${dest}.${tag}-backup`);
   assertRegularFile(backup, backup);
   fs.writeFileSync(backup, current);
   fs.writeFileSync(dest, packaged);
   return { action: 'replaced', dest, backup };
+}
+
+/** The first backup name not taken, so a second --force never overwrites the user's original. */
+function freeBackupName(base) {
+  if (!fs.existsSync(base)) return base;
+  for (let n = 2; ; n += 1) if (!fs.existsSync(`${base}-${n}`)) return `${base}-${n}`;
 }
 
 function describePlace(result) {
@@ -197,6 +203,7 @@ module.exports = {
   assertRegularFile,
   copyTreeSafe,
   describePlace,
+  freeBackupName,
   exists,
   isExec,
   isLink,

@@ -50,25 +50,31 @@ GitHub repositories to archive: `actviteai/ceci`, `actviteai/rdapq`, `actviteai/
 
 ## 3. Blocker: the cela eval baseline
 
-Plan §8: `packages/cela/eval/results/1.0.0/` must show the same per-task **pass/fail set** as the archived rdapq baseline. It does not exist yet. The eval drives real agents headless, so it costs money and needs the `claude` CLI signed in. Ask the maintainer before you start, and tell them the budget (the default is a $3 cap per run).
+Plan §8: `packages/cela/eval/results/1.0.0/` must show the same per-task **pass/fail set** as the archived rdapq baseline. It does not exist yet.
 
-```bash
-node packages/cela/eval/run.js --self-test                       # harness only, no agent
-node packages/cela/eval/run.js --agents claude:claude-sonnet-5-5 --conditions none,lean,full \
-  --out packages/cela/eval/results/1.0.0
-node packages/cela/eval/report.js packages/cela/eval/results/1.0.0 --write
-```
+**Which baseline.** The plan names rdapq 2.1.0, but `actviteai/rdapq` holds only `eval/results/baseline-1.3.1` and `eval/results/v2.0.0`. The v2.0.0 baseline is 64 runs: 8 tasks × conditions lean and full × agents claude-sonnet-5-5 and claude-haiku-4-5 × 2 reps. cela 1.0.0 is the 2.1.0 engine renamed, so compare against **v2.0.0** with the same matrix. Tell the maintainer that the plan's "2.1.0 baseline" does not exist, and ask them to accept v2.0.0 as the comparator.
 
-Then compare against the old baseline. `actviteai/rdapq` keeps its eval results (the archive notice mentions 1.3.1 and 2.0.0; the plan names 2.1.0). Clone it read-only, find the newest baseline, and compare the per-task pass/fail sets, not the scores:
+The eval drives real agents headless, so it costs money and needs the `claude` CLI signed in. Ask before you start, and quote the budget: 64 runs, each capped at $3 by default.
 
 ```bash
 git clone --depth 1 https://github.com/actviteai/rdapq /tmp/rdapq-baseline
-ls /tmp/rdapq-baseline/eval/results/
+head -c 400 /tmp/rdapq-baseline/eval/results/v2.0.0/results.jsonl    # confirm the agents and conditions it used
+
+cd packages/cela
+node eval/run.js --self-test                                           # harness only, no agent
+node eval/run.js --agents claude:claude-sonnet-5-5,claude:claude-haiku-4-5-20251001 \
+  --conditions lean,full --reps 2 --out eval/results/1.0.0
+node eval/report.js eval/results/1.0.0 --write
+node eval/compare.js /tmp/rdapq-baseline/eval/results/v2.0.0 eval/results/1.0.0
 ```
 
-- **Same pass set:** commit the results on `release/1.0.0`. Note in the commit which rdapq baseline you compared against.
-- **Different:** stop and show the maintainer the per-task diff. Do not release.
-- **No 2.1.0 baseline exists:** say so, compare against the newest one, and ask the maintainer to accept it. Then edit plan §8 and `docs/archive/rdapq.README.md` so they name the same baseline.
+Use the exact agent strings the baseline's `results.jsonl` records. If they differ from the ones above, match them, or `compare.js` finds no shared groups.
+
+`compare.js` exits 0 when no (task, agent, condition) group moved between passing and failing, where a group passes if most of its runs passed the hidden tests.
+
+- **Exit 0:** commit `eval/results/1.0.0/results.jsonl` and `report.md` on `release/1.0.0`. Name the baseline in the commit message.
+- **Exit 1:** stop. Show the maintainer the CHANGED lines. Do not release.
+- **No shared groups:** the agent strings differ. Fix the run, do not release.
 
 ## 4. Stage the release on Kiff
 
