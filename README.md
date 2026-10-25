@@ -1,3 +1,5 @@
+<p align="center"><img src="brand/seal.svg" width="200" alt="The ceciCela seal: two profiles back to back under one French hood, a plumb line between them, ringed by CECI and CELA"></p>
+
 # ceciCela
 
 [![ci](https://github.com/actviteai/cecicela/actions/workflows/ci.yml/badge.svg)](https://github.com/actviteai/cecicela/actions/workflows/ci.yml)
@@ -117,7 +119,7 @@ chat/          src/ (written by hand) -> pack/ and claude/, chatgpt/, grok/, m36
 scripts/       sync, test, stamp, release
 test/          repository tests: the bundle, the chat tier, the acceptance criteria
 docs/archive/  the notices that replace the old repositories' READMEs
-brand/         the seal, its exports, and their provenance
+brand/         the seal (SVG masters, PNG exports, the banner source) and its provenance
 ```
 
 `packages/core` is never published: `npm run sync` copies it into each package's `lib/core/`, so every npm tarball is self-contained. Everything generated is committed, and `npm test` fails when any of it drifts from its source.

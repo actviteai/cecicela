@@ -14,6 +14,6 @@ This folder is a Microsoft 365 Agents Toolkit project for a declarative agent (m
 2. Publisher verification (free; needs an Entra app registration tied to the partner account).
 3. `atk validate`, then package (`appPackage/build/appPackage.<env>.zip`).
 4. Partner Center listing: description, category "AI Apps and Agents", screenshots, and Terms of Use and Privacy Policy URLs. Submit; fix anything flagged in the Action Center.
-5. Replace the placeholder icons (`appPackage/color.png`, `appPackage/outline.png`) with the brand seal exports before submission.
+5. The icons are the brand seal: `appPackage/color.png` is `brand/png/seal-192.png` and `appPackage/outline.png` is `brand/png/outline-32.png`. Partner Center also asks for a 300×300 logo (`brand/png/seal-300.png`) and, in places, 216×216 (`brand/png/seal-216.png`).
 
 Re-run `npm run chat:build` at the repository root after changing any protocol; this folder is generated.
