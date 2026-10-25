@@ -33,7 +33,12 @@ At 32 px the full seal is mostly ring, so the small sizes use the figure without
 
 ## Fonts
 
-The lettering is Jost SemiBold. Every font this repository loads comes from Cloudflare's cdnjs ([fontsource-jost 5.3.0](https://cdnjs.com/libraries/fontsource-jost)), never Google Fonts; a test fails on a Google Fonts URL. The SVGs carry the letters as paths, so they load no font at all.
+The lettering is Jost SemiBold. Every font this repository loads comes from Cloudflare's cdnjs, never Google Fonts; a test fails on a Google Fonts URL or on any stylesheet link that is not a pinned cdnjs fontsource package. The SVGs carry the letters as paths, so they load no font at all.
+
+| Font | cdnjs package | Loaded by |
+| --- | --- | --- |
+| Jost 500, 600 | [fontsource-jost 5.3.0](https://cdnjs.com/libraries/fontsource-jost) | `source/social-banner.html` |
+| JetBrains Mono 400, 700 | [fontsource-jetbrains-mono 5.3.0](https://cdnjs.com/libraries/fontsource-jetbrains-mono) | the chat graph player (`chat/src/graph-player.html`), with the system monospace as fallback where a chat host blocks outside stylesheets |
 
 ## Changing the mark
 

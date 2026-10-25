@@ -79,7 +79,9 @@ function renderHub(skillMd, version) {
   const body = replaceOnce(split(skillMd).body, REPO_TOOL, `${SKILL_DIR}/scripts/cela.js`)
     .replace(/\btool\/cela\.js\b/g, 'scripts/cela.js')
     .replace(/\bplaybooks\//g, 'references/');
-  return frontmatter(version) + body;
+  // Hermes copies only the files SKILL.md names, so name the CommonJS marker.
+  const marker = '\n`scripts/package.json` keeps `scripts/cela.js` CommonJS when an ancestor package.json sets "type": "module".\n';
+  return frontmatter(version) + body.trimEnd() + '\n' + marker;
 }
 
 /**

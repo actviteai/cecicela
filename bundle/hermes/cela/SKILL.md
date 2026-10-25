@@ -92,3 +92,5 @@ Classes: USER_SPECIFIED, OBSERVED, VERIFIED_EXTERNAL, INFERRED. When a record pr
 ## Commands the user may type
 
 `/cela <task>` runs the loop. `/cela status` runs `T state`. `/cela audit` reads `references/audit.md`. `/cela memory <terms>` runs `T memory search`. `/cela depth full <task>` runs the loop at full depth.
+
+`scripts/package.json` keeps `scripts/cela.js` CommonJS when an ancestor package.json sets "type": "module".

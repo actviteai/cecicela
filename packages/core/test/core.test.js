@@ -101,3 +101,15 @@ test('gen: drift reports stale, missing, stray, and binary differences; write re
   assert.deepEqual(core.gen.drift(root, targets), []);
   assert.equal(fs.existsSync(path.join(root, 'out', 'stray.md')), false);
 });
+
+test('a second forced replace keeps the first backup', () => {
+  const dir = tmp('core-backup-');
+  const dest = path.join(dir, 'f.md');
+  fs.writeFileSync(dest, 'mine\n');
+  const first = core.fsx.placeConfigFile(null, dest, { content: 'ours\n', tag: 'x', force: true });
+  fs.writeFileSync(dest, 'mine again\n');
+  const second = core.fsx.placeConfigFile(null, dest, { content: 'ours\n', tag: 'x', force: true });
+  assert.notEqual(first.backup, second.backup);
+  assert.equal(fs.readFileSync(first.backup, 'utf8'), 'mine\n');
+  assert.equal(fs.readFileSync(second.backup, 'utf8'), 'mine again\n');
+});

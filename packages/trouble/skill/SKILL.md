@@ -51,7 +51,7 @@ inputs: # ask once if any of the three is missing; do not stall if the user alre
 
 roles: # the four voices; ids are fixed, display names are the user's
   ids: [keeper, detective, maintainer, physicist]
-  load: "tooled: run `node tool/voices.js resolve` from the project root and use the who: names it prints; untooled: a voices: block the user pasted in this conversation, else the defaults below"
+  load: "tooled: from the project root run `node <this skill's directory>/tool/voices.js resolve --project .` (or `trouble voices resolve` when trouble is on PATH) and use the who: names it prints; untooled: a voices: block the user pasted in this conversation, else the defaults below"
   may_change: who only, one line each; never add, drop, or rename an id, and never change does
   invalid: refuse the file, say why in one line, use the defaults
   in_text: name each voice by its who; the ids stay the keys below

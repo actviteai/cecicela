@@ -85,7 +85,7 @@ test('missing, renamed, or reshaped roles are refused with a reason each', () =>
 
 test('trouble install writes the skill, the validator, and the defaults', () => {
   const home = tmp();
-  const env = { ...process.env, HOME: home, USERPROFILE: home };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") };
   const res = trouble(['install', '--claude', '--codex'], { env });
   assert.equal(res.status, 0, res.stderr);
   const dest = path.join(home, '.claude', 'skills', 'trouble');
@@ -111,4 +111,17 @@ test('npm pack ships the skill and vendored core, not the tests', () => {
   const pkg = require('../package.json');
   assert.equal(pkg.name, '@actvite/trouble');
   assert.deepEqual(pkg.bin, { trouble: 'bin/trouble.js' });
+});
+
+test('a # inside quotes is part of the name, and a trailing comment is not', () => {
+  const roles = voices.parse([
+    'voices:',
+    '  keeper: {who: "Agent #1"}   # first',
+    '  detective: {who: "the detective"}',
+    '  maintainer: {who: "the kernel maintainer"}',
+    "  physicist: {who: 'room #42'}",
+    '',
+  ].join('\n'));
+  assert.equal(roles.keeper.who, 'Agent #1');
+  assert.equal(roles.physicist.who, 'room #42');
 });

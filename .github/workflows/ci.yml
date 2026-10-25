@@ -2,6 +2,7 @@ name: ci
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -46,7 +47,9 @@ jobs:
           CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude
           DISABLE_TELEMETRY: "1"
           DISABLE_AUTOUPDATER: "1"
-        run: npx --yes @anthropic-ai/claude-code@2.1.296 plugin validate .
+        run: |
+          npx --yes @anthropic-ai/claude-code@2.1.296 plugin validate .
+          for p in bundle/plugins/*/; do npx --yes @anthropic-ai/claude-code@2.1.296 plugin validate "$p"; done
 
   # Optional: packages/cela/nemo is the cela-nat pip package for NVIDIA NeMo
   # Agent Toolkit, Python by nature. Every leg drives the real engine, so each

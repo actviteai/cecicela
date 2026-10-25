@@ -4,11 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ceciCela graph player</title>
+<!-- JetBrains Mono, hosted by Cloudflare (cdnjs, fontsource-jetbrains-mono 5.3.0). Optional: where a host blocks it, the system monospace below takes over and the screen is unchanged. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fontsource-jetbrains-mono/5.3.0/400.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fontsource-jetbrains-mono/5.3.0/700.min.css">
 <style>
   :root { --fg: #33ff66; --dim: #1c8c3a; --bg: #041006; --glow: rgba(51, 255, 102, .35); }
   :root[data-theme="amber"] { --fg: #ffb000; --dim: #9a6a00; --bg: #120b00; --glow: rgba(255, 176, 0, .35); }
   html, body { margin: 0; background: var(--bg); color: var(--fg); }
-  body { display: flex; flex-direction: column; align-items: center; padding: 16px; font: 14px/1.2 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
+  body { display: flex; flex-direction: column; align-items: center; padding: 16px; font: 14px/1.2 "JetBrains Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
   .crt { position: relative; max-width: 100%; overflow-x: auto; }
   .crt::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
   pre { margin: 0; padding: 8px 10px; font: inherit; white-space: pre; text-shadow: 0 0 4px var(--glow); }

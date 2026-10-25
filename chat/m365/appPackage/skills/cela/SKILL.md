@@ -39,7 +39,7 @@ Then the hand-off: "To get a measured verdict, run `/cela` in your coding agent 
 
 ## Graph
 
-The graph view is off by default for cela. If the user turns it on, the centre panel is the checklist (`check <id> <ok|fail|open> <label>` events); see `graph-render.md`.
+The graph view is off by default for cela. If the user turns it on, the centre panel is the checklist (`check <id> <ok|fail|open> <label>` events); see the graph-view skill.
 
 The coding-agent protocol comes next, for reference. Its tool and commands are not available in chat.
 
@@ -58,13 +58,13 @@ The coding-agent protocol comes next, for reference. Its tool and commands are n
 
 Required: LOW and MODERATE need runtime, repo, coverage. HIGH adds repro, unless you started with `--no-defect`. CRITICAL also needs every external claim verified, so record each outside fact the change relies on. Any failing oracle blocks COMPLETE.
 
-Scores run 0 to 10: an oracle is pass 10, partial 5, fail 0. Q is their weighted mean: 10 omega (every measured oracle passed), 8+ strong, 5+ mixed, under 5 weak, 0 alpha (nothing passed). Q informs; the gate decides. `T protocol` prints every scale.
+Scores run 0 to 10: an oracle is pass 10, partial 5, fail 0. Q is their weighted mean: 10 omega (every measured oracle passed), 8+ strong, 5+ mixed, under 5 weak, 0 alpha (nothing passed). Q informs; the gate decides.
 
 # Reference: the audit checklist
 
 ## Audit (full depth, or `/cela audit`, before you report)
 
-Try to prove the task is not done. Check each item against the diff (`git diff <base>`) and the last `T check`:
+Try to prove the task is not done. Check each item against the diff (`git diff <base>`) and the latest test output the user pasted:
 
 - The requirement: re-read the task. Does the change do what was asked, not a nearby thing?
 - Unexercised paths: error branches, empty input, boundaries. Is each one covered by a test that ran?
@@ -73,4 +73,4 @@ Try to prove the task is not done. Check each item against the diff (`git diff <
 - Scope: no unrelated edits, debug output, TODOs, or new dependencies you did not need.
 - Secrets: nothing sensitive in code, logs, notes, or memory.
 
-Fix what you find, then the tool again. Report the gate's verdict, not your own.
+List what you find, ask for the evidence that would close each item, and end with the REVIEW line. There is no verdict here: only the cela tool in a coding agent names one.

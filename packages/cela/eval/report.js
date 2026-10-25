@@ -67,7 +67,9 @@ function report(dir) {
   const tasks = [...new Set(rows.map((r) => r.task))].sort();
   const header = ['group', 'runs', 'hidden pass', 'false DONE', 'claimed DONE', 'no status', 'tokens (in+out)', 'tokens out', 'cost $', 'turns', 'seconds', 'errors'];
   const out = [];
-  const version = rows.find((r) => r.celaVersion)?.celaVersion || 'unknown';
+  // Runs recorded before the rename carry the engine version under its old key; any *Version field names it.
+  const versionKey = rows.length ? Object.keys(rows.find((r) => Object.keys(r).some((k) => /Version$/.test(k))) || {}).find((k) => /Version$/.test(k)) : null;
+  const version = (versionKey && rows.find((r) => r[versionKey])?.[versionKey]) || 'unknown';
   out.push(`# cela eval — ${path.basename(dir)}`, '', `cela ${version}. ${rows.length} runs, ${tasks.length} tasks. Hidden tests run with TZ=America/New_York.`, '');
 
   out.push('## By condition (all agents)', '');
@@ -142,4 +144,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { report };
+module.exports = { load, report };

@@ -436,7 +436,7 @@ test('task commands never use the cela home as a task directory', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cela-home-'));
   const celaHome = path.join(home, '.cela');
   fs.mkdirSync(path.join(celaHome, 'memory'), { recursive: true });
-  const env = { ...process.env, HOME: home, USERPROFILE: home, CELA_HOME: celaHome };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local"), CELA_HOME: celaHome };
   for (const args of [['start', '--risk', 'LOW', '--files', 'a.js', '--run', 'true'], ['note', 'decision', 'x'], ['claim', 'x'], ['req', 'x'], ['cover', 'R1', 'test/a.test.js', 'x'], ['gate'], ['check'], ['state']]) {
     const r = cela(home, args, { env });
     assert.equal(r.code, 2, `${args[0]}: ${r.out}`);
@@ -647,4 +647,16 @@ test('outcome labels the task after the gate, current or archived, and export ca
   assert.doesNotMatch(fs.readFileSync(outFile, 'utf8'), /boundary test|merged as is/, 'the why never leaves the repository');
   assert.equal(JSON.parse(cela(root, ['protocol', '--json']).out).outcomes.accepted, 'shipped as the gate measured it');
   assert.match(cela(root, ['protocol']).out, /outcome, set by the reviewer after the gate: accepted \(.*\); revised \(.*\); rejected \(discarded\)/);
+});
+
+test('the installed engine runs inside a "type": "module" project', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cela-esm-'));
+  fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}\n');
+  const skill = path.join(root, '.agents', 'skills', 'cela');
+  fs.mkdirSync(path.join(skill, 'tool'), { recursive: true });
+  fs.copyFileSync(TOOL, path.join(skill, 'tool', 'cela.js'));
+  fs.copyFileSync(path.join(__dirname, '..', 'skill', 'package.json'), path.join(skill, 'package.json'));
+  const res = spawnSync(process.execPath, [path.join(skill, 'tool', 'cela.js'), 'protocol'], { cwd: root, encoding: 'utf8' });
+  assert.doesNotMatch(res.stderr, /require is not defined/);
+  assert.equal(res.status, 0, res.stderr);
 });

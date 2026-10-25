@@ -61,7 +61,7 @@ copilot plugin install cecicela@cecicela
 codex plugin marketplace add actviteai/cecicela
 ```
 
-**What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, and `/cecicela:trouble`. The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
+**What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`, and the front door `/cecicela:cecicela` (a bare `/cecicela` comes from `cecicela install`). The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
 
 **Hermes Agent:** `hermes skills install https://raw.githubusercontent.com/actviteai/cecicela/main/bundle/hermes/ceci/SKILL.md` (and `cela`), or the hub path `actviteai/cecicela/bundle/hermes/trouble`.
 
@@ -73,10 +73,10 @@ The chat versions are the free entry point. A Project pack puts a router in the 
 
 | Host | What is published | Setup |
 | --- | --- | --- |
-| ChatGPT | the ceciCela GPT in the GPT Store, or a Project you build yourself | [chat/chatgpt/SETUP.md](chat/chatgpt/SETUP.md) |
+| ChatGPT | a setup kit for a ChatGPT Project (custom GPTs retire on 11 December 2026; a public plugin follows when OpenAI opens submission) | [chat/chatgpt/SETUP.md](chat/chatgpt/SETUP.md) |
 | Claude | a setup kit for a Claude Project, and the graph player as a public artifact | [chat/claude/SETUP.md](chat/claude/SETUP.md) |
 | Grok | a setup kit for a Grok Project (and a shared Project where Grok allows it) | [chat/grok/SETUP.md](chat/grok/SETUP.md) |
-| Microsoft 365 Copilot | a declarative agent for the Commercial Marketplace (Agents Toolkit project) | [chat/m365/SETUP.md](chat/m365/SETUP.md) |
+| Microsoft 365 Copilot | a declarative agent with custom skills (Agents Toolkit project), for Frontier tenants now and the Commercial Marketplace once Microsoft accepts skills there | [chat/m365/SETUP.md](chat/m365/SETUP.md) |
 
 In chat, trouble leads: it runs its `untooled` mode (no files, no commands, confidence capped at 6, the incident stays open until you run the check). ceci becomes a planner that hands `brief.md` and `state.md` back as files. cela becomes a review checklist that says plainly no tool ran and there is no gate. Each states its limits in its first reply, and each ends with the install line for the full product.
 
@@ -145,6 +145,8 @@ npm run release -- --bump trouble=patch     # bump, stamp, sync, test, stage
 ```
 
 `npm run release` never publishes. It stamps and syncs, runs `npm test`, stages each package as a tarball in `dist/tarballs/`, makes a `0.0.0-stage` placeholder for any name npm has never seen, and writes `dist/release-plan.md`: what npm already has, the tarball contents, and the publish commands in dependency order (cela, trouble, ceci, then cecicela). A maintainer publishes from those tarballs with npm two-factor authentication. CI holds no npm token. A tag such as `trouble@1.0.1` triggers a workflow that only verifies the tag matches `npm test` and the package version.
+
+The first release, with the retirement of the old packages and repositories, follows [docs/release-runbook.md](docs/release-runbook.md). The chat packs are tested by hand with [docs/testing-chat.md](docs/testing-chat.md).
 
 ## Where it came from
 

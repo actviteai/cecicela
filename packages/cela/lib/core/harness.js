@@ -20,7 +20,7 @@ const HARNESSES = [
   { id: 'grok', label: 'xAI Grok', home: 'grok', dirs: [['skills']] },
   // Codex reads user skills from ~/.agents/skills (audited against the Codex skills docs).
   { id: 'codex', label: 'OpenAI Codex', home: 'agents', dirs: [['skills']] },
-  { id: 'cline', label: 'Cline / Roo Code', home: 'cline', dirs: [['skills']] },
+  { id: 'cline', label: 'Cline', home: 'cline', dirs: [['skills']] },
   // Goose reads ~/.agents/skills, the folder Codex uses by default.
   { id: 'goose', label: 'Block Goose', home: 'agents', dirs: [['skills']] },
   { id: 'cursor', label: 'Cursor', home: 'cursor', dirs: [['skills']] },

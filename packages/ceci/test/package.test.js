@@ -46,7 +46,7 @@ test('bin forwards task commands to the skill tool', () => {
 
 test('bin install writes the skill into the harness home', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ceci-home-'));
-  const env = { ...process.env, HOME: home, USERPROFILE: home, CLAUDE_HOME: path.join(home, 'claude') };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local"), CLAUDE_HOME: path.join(home, 'claude') };
   const res = ceci(['install', '--claude'], env);
   assert.equal(res.status, 0, res.stderr);
   const dest = path.join(home, 'claude', 'skills', 'ceci');

@@ -5,9 +5,9 @@
   "id": "${{TEAMS_APP_ID}}",
   "developer": {
     "name": "actvite",
-    "websiteUrl": "https://actvite.com",
-    "privacyUrl": "https://actvite.com/privacy",
-    "termsOfUseUrl": "https://actvite.com/terms"
+    "websiteUrl": "https://www.actvite.com",
+    "privacyUrl": "https://www.actvite.com/privacy",
+    "termsOfUseUrl": "https://www.actvite.com/tos"
   },
   "icons": {
     "color": "color.png",
@@ -19,7 +19,7 @@
   },
   "description": {
     "short": "Plan it, prove it, fix it: ceci, cela, and trouble in Copilot.",
-    "full": "ceciCela in Microsoft 365 Copilot. trouble runs a four-roles Bayesian debug protocol on a stuck bug and refuses a fix until all four roles agree. ceci turns a goal into a job graph with human gates before contact, posting, payment, or a price. cela reviews whether a change is really done. In chat they cannot read files or run commands, and they say so; the measured versions run in coding agents (npx @actvite/cecicela install --all)."
+    "full": "ceciCela in Microsoft 365 Copilot. trouble runs a four-roles Bayesian debug protocol on a stuck bug and refuses a fix until all four roles agree. ceci turns a goal into a job graph with human gates before contact, posting, payment, or a price. cela reviews whether a change is really done. In chat they cannot read files or run commands, and they say so; the measured versions run in coding agents (npx --yes @actvite/cecicela install --all)."
   },
   "accentColor": "#111111",
   "copilotAgents": {
@@ -30,9 +30,5 @@
       }
     ]
   },
-  "permissions": [
-    "identity",
-    "messageTeamMembers"
-  ],
   "validDomains": []
 }

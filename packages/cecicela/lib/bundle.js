@@ -79,11 +79,26 @@ function formatStatus(rows) {
   return [head, ...lines].join('\n');
 }
 
-/** Reinstall every skill into each harness that already has any of them. */
+/** Reinstall each skill, and the front door, only into the harnesses that already have it. */
 function update({ env = process.env, force = false, log = () => {} } = {}) {
-  const harnesses = status(env).filter((row) => Object.values(row.installed).some(Boolean)).map((row) => row.id);
+  const rows = status(env);
+  const harnesses = rows.filter((row) => Object.values(row.installed).some(Boolean)).map((row) => row.id);
   if (!harnesses.length) return { harnesses };
-  install({ harnesses, env, force, log });
+  const homes = core.harness.homes(env);
+  for (const id of SKILL_IDS) {
+    const where = rows.filter((row) => row.installed[id]).map((row) => row.id);
+    if (!where.length) continue;
+    const skill = SKILLS[id]();
+    log(`==> ${id} ${skill.VERSION}`);
+    if (id === 'cela') skill.install({ harnesses: where, env, force, log });
+    else skill.install({ harnesses: where, homes, log });
+  }
+  const front = rows.filter((row) => row.installed[NAME]).map((row) => row.id);
+  if (front.length) {
+    log(`==> cecicela ${pkg.version} (front door)`);
+    installFrontDoor({ harnesses: front, homes, log });
+    if (front.includes('copilot')) installCopilotAgent({ homes, force, log });
+  }
   return { harnesses };
 }
 
