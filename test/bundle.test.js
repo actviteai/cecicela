@@ -118,7 +118,7 @@ test('the Hermes copies are valid URL installs', () => {
 });
 
 function cecicela(args, home) {
-  return spawnSync(process.execPath, [path.join(REPO, 'packages', 'cecicela', 'bin', 'cecicela.js'), ...args], { encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home } });
+  return spawnSync(process.execPath, [path.join(REPO, 'packages', 'cecicela', 'bin', 'cecicela.js'), ...args], { encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") } });
 }
 
 test('npm i -g @actvite/cecicela: install puts /ceci, /cela, /trouble, and /cecicela into every harness', () => {
@@ -149,7 +149,7 @@ test('--only and a single package install just what was asked', () => {
   assert.equal(cecicela(['install', '--claude', '--only', 'trouble'], home).status, 0);
   assert.deepEqual(fs.readdirSync(path.join(home, '.claude', 'skills')).sort(), ['cecicela', 'trouble']);
   const alone = fs.mkdtempSync(path.join(os.tmpdir(), 'trouble-only-'));
-  const res = spawnSync(process.execPath, [path.join(REPO, 'packages', 'trouble', 'bin', 'trouble.js'), 'install', '--all'], { encoding: 'utf8', env: { ...process.env, HOME: alone, USERPROFILE: alone } });
+  const res = spawnSync(process.execPath, [path.join(REPO, 'packages', 'trouble', 'bin', 'trouble.js'), 'install', '--all'], { encoding: 'utf8', env: { ...process.env, HOME: alone, USERPROFILE: alone, LOCALAPPDATA: path.join(alone, "AppData", "Local") } });
   assert.equal(res.status, 0, res.stderr);
   assert.deepEqual(fs.readdirSync(path.join(alone, '.claude', 'skills')), ['trouble']);
   assert.equal(fs.existsSync(path.join(alone, '.cela')), false);

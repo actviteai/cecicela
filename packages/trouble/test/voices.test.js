@@ -85,7 +85,7 @@ test('missing, renamed, or reshaped roles are refused with a reason each', () =>
 
 test('trouble install writes the skill, the validator, and the defaults', () => {
   const home = tmp();
-  const env = { ...process.env, HOME: home, USERPROFILE: home };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") };
   const res = trouble(['install', '--claude', '--codex'], { env });
   assert.equal(res.status, 0, res.stderr);
   const dest = path.join(home, '.claude', 'skills', 'trouble');

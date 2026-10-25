@@ -28,7 +28,7 @@ test('help, version, and errors', () => {
   assert.equal(run([]).status, 2);
   assert.match(run(['--version']).stdout, /^cecicela \d+\.\d+\.\d+ \(ceci /);
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-cli-'));
-  const bad = run(['install', '--claude', '--bogus'], { ...process.env, HOME: home, USERPROFILE: home });
+  const bad = run(['install', '--claude', '--bogus'], { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") });
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /unknown option: --bogus/);
   assert.deepEqual(fs.readdirSync(home), [], 'nothing is written on a bad flag');
@@ -51,7 +51,7 @@ test('npm pack ships the CLI, the front door, the Copilot agent, and the vendore
 
 test('update reinstalls only the skills each harness already has', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-update-'));
-  const env = { ...process.env, HOME: home, USERPROFILE: home };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") };
   assert.equal(run(['install', '--claude', '--only', 'trouble'], env).status, 0);
   assert.equal(run(['update'], env).status, 0);
   const skills = fs.readdirSync(path.join(home, '.claude', 'skills')).sort();

@@ -436,7 +436,7 @@ test('task commands never use the cela home as a task directory', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cela-home-'));
   const celaHome = path.join(home, '.cela');
   fs.mkdirSync(path.join(celaHome, 'memory'), { recursive: true });
-  const env = { ...process.env, HOME: home, USERPROFILE: home, CELA_HOME: celaHome };
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local"), CELA_HOME: celaHome };
   for (const args of [['start', '--risk', 'LOW', '--files', 'a.js', '--run', 'true'], ['note', 'decision', 'x'], ['claim', 'x'], ['req', 'x'], ['cover', 'R1', 'test/a.test.js', 'x'], ['gate'], ['check'], ['state']]) {
     const r = cela(home, args, { env });
     assert.equal(r.code, 2, `${args[0]}: ${r.out}`);
