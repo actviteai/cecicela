@@ -193,5 +193,7 @@ test('the Agent Builder kit is text files only, at most 20, naming nothing the a
   const instr = read('chat/m365-builder/INSTRUCTIONS.txt');
   assert.match(instr, /`trouble\.chat\.txt`/);
   assert.doesNotMatch(instr, /Project|agent skill/);
-  assert.match(read('chat/m365-builder/LISTING.md'), /seal-192\.png/);
+  const listing = read('chat/m365-builder/LISTING.md');
+  for (const want of ['https://www.actvite.com/privacy', 'https://www.actvite.com/tos', 'Create documents, charts, and code', 'Org-wide|org catalog']) assert.match(listing + read('chat/m365-builder/SETUP.md'), new RegExp(want));
+  assert.ok(fs.existsSync(path.join(REPO, 'chat/m365-builder/icon-seal-192.png')));
 });
