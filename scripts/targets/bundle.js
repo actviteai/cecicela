@@ -61,6 +61,34 @@ const PLUGINS = {
   },
 };
 
+const SKILL_LINES = {
+  cecicela: '`/cecicela` is the front door: it says which of the three skills fits your task and hands off.',
+  ceci: '`/ceci` turns a goal into a job graph, runs ready jobs in dependency order, and stops at a human gate before anything that contacts someone, posts, pays, or sets a price.',
+  cela: '`/cela` is the evidence gate. A bundled tool runs your checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work.',
+  trouble: '`/trouble` is a four-roles debug protocol: collect verbatim evidence, rank hypotheses, and hold the fix until every role agrees.',
+};
+
+/**
+ * The listing text the Claude directory shows, and the disclosure its security
+ * scan reads: what each bundled tool runs, writes, and never does.
+ */
+function readme(plugin) {
+  const spec = PLUGINS[plugin];
+  const has = (skill) => spec.skills.includes(skill);
+  const lines = [`# ${spec.display}`, ''];
+  if (!spec.description.includes(TAGLINE)) lines.push(`> ${TAGLINE}`, '');
+  lines.push(spec.description, '', '## Skills', '');
+  for (const skill of spec.skills) lines.push(`- ${SKILL_LINES[skill]}`);
+  lines.push('', '## Install', '', 'In Claude Code:', '', '```', `/plugin install ${plugin} --marketplace actviteai/cecicela`, '```', '', 'In claude.ai, the desktop app, or Cowork, add it from **Customize > Plugins**.');
+  lines.push('', '## What runs on your machine', '');
+  lines.push('This plugin has no hooks and no MCP servers, and nothing in it opens a network connection or sends data anywhere. Everything below runs only when Claude follows a skill and you allow the command.', '');
+  if (has('ceci')) lines.push('- **ceci** (`skills/ceci/tool/ceci.js`, Node.js) reads and writes `brief.md`, `state.md` and `log.md` in the job folder you name, and draws the job graph in the terminal.');
+  if (has('cela')) lines.push('- **cela** (`skills/cela/tool/cela.js`, Node.js) runs the test and check commands you agree on for the task, reads `git diff` and `git status`, and records the results in `.cela/` inside your repository. Its memory lives in `$CELA_HOME` (default `~/.cela`). `skills/cela/install/` holds optional scripts that copy the skill into `$CELA_HOME`; nothing runs them automatically.');
+  if (has('trouble')) lines.push('- **trouble** (`skills/trouble/tool/voices.js`, Node.js) reads `voices.default.yaml`, or your own roles file, to name the four debug roles. It writes nothing.');
+  lines.push('', '## Links', '', `- Source, issues and docs: ${HOMEPAGE}`, '- Publisher: actvite, https://actvite.com', '', '## License', '', 'GPL-3.0-or-later. See `LICENSE`.', '');
+  return lines.join('\n');
+}
+
 const skillDir = (name) => path.join(REPO, 'packages', name, 'skill');
 const version = (plugin) => pkg(plugin).version;
 
@@ -71,6 +99,9 @@ function pluginFiles(plugin) {
   const base = { name: plugin, version: v, description: spec.description, author: AUTHOR, homepage: HOMEPAGE, repository: HOMEPAGE, license: 'GPL-3.0-or-later', keywords: spec.keywords };
   files.set('plugin.json', { text: json({ ...base, skills: 'skills/' }), exec: false });
   files.set('.claude-plugin/plugin.json', { text: json({ ...base, skills: './skills/' }), exec: false });
+  files.set('README.md', { text: readme(plugin), exec: false });
+  files.set('.claude-plugin/icon.svg', { text: require('fs').readFileSync(path.join(REPO, 'brand', 'seal.svg'), 'utf8'), exec: false });
+  files.set('LICENSE', { text: require('fs').readFileSync(path.join(REPO, 'LICENSE'), 'utf8'), exec: false });
   files.set('.codex-plugin/plugin.json', {
     text: json({
       ...base,
