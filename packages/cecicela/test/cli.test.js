@@ -34,11 +34,27 @@ test('help, version, and errors', () => {
   assert.deepEqual(fs.readdirSync(home), [], 'nothing is written on a bad flag');
 });
 
+test('every ceciCela command line answers --help, -h, and -help', () => {
+  const pkgs = path.resolve(ROOT, '..');
+  const clis = ['cecicela/bin/cecicela.js', 'ceci/bin/ceci.js', 'ceci/skill/tool/ceci.js', 'cela/bin/cela.js', 'cela/skill/tool/cela.js', 'trouble/bin/trouble.js', 'trouble/skill/tool/voices.js'];
+  for (const cli of clis) {
+    for (const flag of ['--help', '-h', '-help']) {
+      const res = spawnSync(process.execPath, [path.join(pkgs, cli), flag], { encoding: 'utf8' });
+      assert.equal(res.status, 0, `${cli} ${flag}: ${res.stderr}`);
+      assert.ok(res.stdout.length > 40, `${cli} ${flag} prints its help on stdout`);
+    }
+  }
+});
+
 test('the front-door skill routes and never installs', () => {
   const skill = fs.readFileSync(path.join(ROOT, 'skill', 'SKILL.md'), 'utf8');
   assert.match(skill, /^---\nname: cecicela\n/);
   for (const name of ['/ceci', '/cela', '/trouble']) assert.ok(skill.includes(name), name);
   assert.match(skill, /Never install, update, or remove anything/);
+  for (const text of [skill, fs.readFileSync(path.join(ROOT, 'agents', 'cecicela.agent.md'), 'utf8')]) {
+    assert.match(text, /ceci asks about an existing plan and the animation before it starts\./);
+    assert.match(text, /--resume.*--fresh.*--animate/);
+  }
 });
 
 test('npm pack ships the CLI, the front door, the Copilot agent, and the vendored core', () => {

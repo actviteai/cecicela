@@ -153,7 +153,7 @@ function parseArgs(argv) {
   const flags = { help: false, version: false, force: false, quiet: false, all: false, globalOnly: false, hook: false, repo: null, command: null, harnesses: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === '--help' || arg === '-h') flags.help = true;
+    if (arg === '--help' || arg === '-h' || arg === '-help') flags.help = true;
     else if (arg === '--version' || arg === '-v') flags.version = true;
     else if (arg === '--force') flags.force = true;
     else if (arg === '--quiet') flags.quiet = true;
@@ -204,7 +204,7 @@ ${rows}
   --global-only    Install only ~/.cela (or $CELA_HOME)
   --force          Replace existing harness files (keeps a .cela-backup)
   --quiet          Suppress the banner and per-file chatter
-  --help, -h       Show this help message
+  --help, -h       Show this help message (-help works too)
   --version, -v    Print the version
 
 There is no separate update command. Run install again with the same flags.

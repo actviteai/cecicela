@@ -21,10 +21,11 @@ If nothing fits, say so in one line and do not invent a fourth workflow.
 
 ## Hand off
 
-State which skill and why in one sentence, then load that skill and follow it for this task. In Claude Code a plugin namespaces its skills: from the ceciCela plugin they are `/cecicela:ceci`, `/cecicela:cela`, and `/cecicela:trouble`; the short names work when nothing else claims them.
+State which skill and why in one sentence, then load that skill and follow it for this task. When handing off to `/ceci`, pass along any `--resume`, `--fresh`, `--new-dir PATH`, or `--animate chat|terminal|off` the user typed. ceci asks about an existing plan and the animation before it starts. In Claude Code a plugin namespaces its skills: from the ceciCela plugin they are `/cecicela:ceci`, `/cecicela:cela`, and `/cecicela:trouble`; the short names work when nothing else claims them.
 
 ## Commands the user may type
 
+- `/cecicela help` (or `--help`, `-help`): list the three skills with one line each, the commands below, and that each tool prints its own manual with `--help` (`ceci help <command>`). Do not run anything.
 - `/cecicela status`: run `cecicela status` if the command exists, and show where each skill is installed. If it does not exist, say the bundle CLI is not installed.
 - `/cecicela install`: tell the user to run `npx --yes @actvite/cecicela install --all` in a terminal, then restart the agent session. Do not run an install yourself.
 - `/cecicela update`: tell the user to run `npx --yes @actvite/cecicela@latest update`, then restart the session.

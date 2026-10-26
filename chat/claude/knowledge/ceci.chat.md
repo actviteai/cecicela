@@ -4,11 +4,22 @@ This is the chat version of `/ceci`. It plans; it does not run. The coding-agent
 
 ## First reply
 
-State the limit in one sentence before anything else: you write the job graph and its gates, you do not run jobs, and you hand state back as `brief.md` and `state.md` for the user to keep. If a `state.md` is in Project knowledge or attached, read it first and continue from it instead of starting over.
+State the limit in one sentence before anything else: you write the job graph and its gates, you do not run jobs, and you hand state back as `brief.md` and `state.md` for the user to keep. Then run the Prep step below. If a `state.md` is in Project knowledge or attached, read it first, but do not continue from it until the user said so.
+
+## Prep in chat
+
+There is no `ceci prep`: read the attached or Project-knowledge `brief.md` and `state.md` yourself. Then ask, in one message, numbered so one line answers everything (`1a 2a 3b 4a`), only the questions that apply, together with any of the goal, deadline, and never-list that are still open:
+
+1. **Plan**, only when a `state.md` with jobs is there. One sentence: its title, N of M jobs done, the jobs at a gate, the newest event. a) resume it; b) start a new plan (the user keeps the old files; you start a fresh `state.md`).
+2. **Brief**, only when a `brief.md` is there. Its fields, one per line. a) keep it; b) edit it first: ask for the new rules in the user's words and write them into `brief.md` before planning any job.
+3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one line per update; offer it only where this host has a live HTML surface); b) text: the event line each turn, and the 80x24 screen only when the graph's shape changes; c) off.
+4. **Approach**, for a new plan. a) compare options first: the first job is `options` (artifact `options.md`, the possible approaches and the evidence for each), and every other job depends on it; b) the user names the approach.
+
+Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`. With 3a, build the player as `INSTRUCTIONS.md` says.
 
 ## What you do
 
-1. Ask only what changes the graph: the goal, the deadline if any, what must never happen without a yes (the defaults are contact, setting a price, and posting or paying).
+1. Ask only what changes the graph: the goal, the deadline if any, what must never happen without a yes (the defaults are contact, setting a price, and posting or paying). Ask it in the same message as the Prep questions.
 2. Write `brief.md` and the complete `state.md` before discussing any single job. Each job produces one inspectable artifact, has a `done_test` someone can apply later without this conversation, and lists its `depends_on`.
 3. Mark every job that changes code, data, or a model with the note that it needs `/cela` in a coding agent; leave `cela_gate: null`. You cannot produce a gate token.
 4. A job whose next action is contact, posting, paying, or a price gets `status: gate`. Leave the price blank. Hand back the gate shape from the protocol below (`gate: price`, `job:`, `price:` empty).
@@ -27,7 +38,8 @@ Draw the graph as `graph-render.md` says when the graph view is on (the default 
 ## Where the protocol below differs in chat
 
 - Rule 1: a first chat has no `brief.md` or `state.md`. Write them yourself from what the user said; do not stop.
-- Every `ceci <command>` the protocol names (`init`, `status`, `event`, `log`, `resolve-gpu`) is not available here. Do its job in text instead: write the event line into `events:` yourself, keep the log line in your reply, and leave `gpu:` for the coding agent to resolve.
+- Prep is the section above; there is nothing to archive, because the user keeps the old files. The player is built once and then edited, as `INSTRUCTIONS.md` says; it is never republished.
+- Every `ceci <command>` the protocol names (`prep`, `init`, `status`, `event`, `log`, `archive`, `player`, `resolve-gpu`) is not available here. Do its job in text instead: write the event line into `events:` yourself, keep the log line in your reply, and leave `gpu:` for the coding agent to resolve.
 - The playbooks it mentions are already included below; there are no other files to open.
 
 The protocol the coding-agent skill follows comes next. Everything else in it applies.
@@ -40,7 +52,7 @@ The protocol the coding-agent skill follows comes next. Everything else in it ap
 ceci owns the job graph and human gates. It calls /cela only when a job needs an evidence gate on code, data, or scoring. It is standalone: no hardcoded names, hosts, or projects. All external information arrives by flag or file.
 ### Files
 In `--work-dir` (required):
-- `brief.md` — number, never-list, deadline, tools. Read first every run.
+- `brief.md` — number, never-list, deadline, tools, and the start choices. Read first every run.
 - `state.md` — jobs as nodes. Update after every job.
 - `log.md` — append-only, one line per run.
 `gpu-prefs.yaml` is required when any job sets `gpu`. Pass it with `--gpu-pref`.
@@ -50,10 +62,12 @@ In `--work-dir` (required):
 - `--notify-bot ID` (optional; post status if present)
 - `--qa-bot ID` (optional; request check if present)
 - `--deadline TIME` (optional; record in brief.md)
+- `--resume` | `--fresh` | `--new-dir PATH` (optional; answers Prep question 1)
+- `--animate chat|terminal|off` (optional; answers Prep question 3)
 If a flag is absent, do not assume a value and do not reference any external agent.
 ### Rules
 1. Read `brief.md` and `state.md` first. If either is missing, run init behavior and stop.
-2. On a new goal, decompose into the smallest jobs that produce one inspectable artifact. Write the complete graph to `state.md` before starting any job. Each job has id, goal, owner, depends_on, schedule, status, done_test, artifact, gpu, and cela_gate (gpu and cela_gate are null when unused).
+2. On a new goal, decompose into the smallest jobs that produce one inspectable artifact. Write the complete graph to `state.md` before starting any job. Each job has id, goal, owner, depends_on, schedule, status, done_test, artifact, gpu, and cela_gate (gpu and cela_gate are null when unused). With `approach: compare` the first job is `options`: its artifact is `options.md` (the possible approaches and the evidence for each), and every other job depends on it, directly or through another job, so no search or channel work starts before it is done.
 3. A job is done only when its done_test passes and the artifact exists. Update status and append one line to `log.md`.
 4. Human gates: stop and hand back before contact, post, pay, or setting a price. Leave the price blank. Mark unverified claims UNVERIFIED.
 5. For any job that changes code, data, or a model, call /cela and store the exact gate output in cela_gate. COMPLETE is the only accepted terminal state for those jobs.
@@ -79,7 +93,7 @@ events:                  # optional: one line per status change, oldest first
   - "j1 done cela:ok"
 ```
 ### Done
-A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md and the blank-price line if an offer exists.
+A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md, the blank-price line if an offer exists, and the player link when there is one.
 
 # Playbook: job graph
 
@@ -112,6 +126,24 @@ events:
 `jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
 
 `owner` is the value supplied for that job, or `self`. `schedule` is `once` or `cron`. Do not add keys the schema does not list.
+
+### Brief
+
+`brief.md` holds the run's rules as top-level `key: value` lines. `ceci init` writes the first four; the Prep step (`playbooks/start.md`) adds the rest with `ceci init --start ... --animate ... --approach ...`, which replaces only those lines.
+
+```yaml
+number: ""                          # the target
+never: ["contact without yes", "set a price", "post or pay without yes"]
+deadline: ""
+tools: []
+start: resumed | fresh | new-dir    # Q1
+animate: chat | terminal | off      # Q3
+approach: compare | given           # Q4
+approach_note: string               # the approach the user typed, with given
+prepped: 2026-10-26T20:56Z          # when the Prep step ran
+```
+
+`ceci status` warns when `prepped:` is missing. `animate` says where the graph is shown; `graph:` in state.md says how it is drawn.
 
 ### Dependencies
 

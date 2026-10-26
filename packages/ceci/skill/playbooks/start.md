@@ -1,0 +1,70 @@
+# Start: the Prep step
+
+Every run starts here, before rule 1. It costs one read-only command and one question call, and it is the only point where the user can stop an old plan or an old brief from steering a new run.
+
+## 1. Read what is there
+
+```text
+ceci prep --work-dir PATH --json
+```
+
+Use its fields as they are; do not open the files again to recount. `summary` is the sentence for question 1. `ask` lists the questions that apply: `plan` when state.md has jobs (or does not parse), `brief` when brief.md exists, and always `animate` and `approach`.
+
+## 2. Ask, once
+
+Drop every question a flag already answers. Put the rest in one AskUserQuestion call (it takes up to four). Where that tool is missing, ask the same questions in one plain-text message, numbered, so one line answers them all (`1a 2a 3c 4a`). Use this wording.
+
+**Q1. Plan** (only when `ask` has `plan`). Header `Plan`. Question: the `summary` sentence, then "What should this run do?"
+
+| Option | Does | Records |
+| --- | --- | --- |
+| Resume this plan | keeps every file; rule 1 continues from state.md | `start: resumed` |
+| New plan, keep the old one | `ceci archive --work-dir PATH --keep-brief` moves the old plan into `runs/<time>/` and deletes nothing; then init writes a fresh state.md and log.md | `start: fresh` |
+| New plan in another folder | ask for the folder (or use `--new-dir PATH`); the old folder is untouched; every later command uses the new path | `start: new-dir` |
+
+**Q2. Brief** (only when `ask` has `brief`). Header `Brief`. Question: "The brief says:" then its fields from `brief.fields`, one per line (number or target, never, deadline, tools, and any counting rule), then "Keep it?"
+
+| Option | Does |
+| --- | --- |
+| Keep the brief as is | nothing changes |
+| Edit it first | stop and ask the user for the new rules in their words; write them into brief.md and show the result before any job or search starts |
+
+A rule in the brief limits every job after it ("public tenders only"). This question is where a wrong one gets caught.
+
+**Q3. Live animation.** Header `Animation`. Question: "Show the job graph while it runs?"
+
+| Option | Does | Records |
+| --- | --- | --- |
+| Yes, in this chat | `ceci player` writes the page and you publish it now, then republish it after each job (rule 9). Offer this only when the host can publish an HTML page beside the chat (in Claude Code, the Artifact tool). | `animate: chat` |
+| Yes, in my terminal | print the `ceci status --watch` command for the user to run in a second terminal; it costs no tokens | `animate: terminal` |
+| No | event lines only | `animate: off` |
+
+**Q4. Approach** (for a new plan; when Q1 is asked too, its answer is ignored if the user resumes). Header `Approach`. Question: "Do you already know how to reach the goal?"
+
+| Option | Does | Records |
+| --- | --- | --- |
+| Compare options first | the first job is `options`, artifact `options.md`: the possible approaches and the evidence for each. Every other job depends on it (rule 2). | `approach: compare` |
+| I already know the approach | the user types it (the tool's "Other" field, or a follow-up line); write it into brief.md as `approach_note:` | `approach: given` |
+
+## 3. Record
+
+```text
+ceci init --work-dir PATH --start resumed|fresh|new-dir --animate chat|terminal|off [--approach compare|given]
+```
+
+It creates whatever is missing and sets only those lines in brief.md, plus `prepped: <UTC minute>`. `ceci status` warns when `prepped:` is missing: that plan skipped this step. Then go on to rule 1.
+
+## Flags that skip a question
+
+| Flag | Skips | Same as |
+| --- | --- | --- |
+| `--resume` | Q1 | Resume this plan |
+| `--fresh` | Q1 | New plan, keep the old one |
+| `--new-dir PATH` | Q1 | New plan in another folder, at PATH |
+| `--animate chat\|terminal\|off` | Q3 | that option |
+
+Q2 is skipped only when there is no brief. Q4 is skipped when the plan is resumed.
+
+## Unattended runs
+
+Nobody can answer (a schedule, CI, a headless `-p` run). Do not wait. Choose: a new plan with the old one archived (`ceci archive --keep-brief`, which can be undone by moving the files back), keep the brief, animation off, approach compare. The run's first line says so, for example `prep (unattended): archived to runs/2026-10-26T205600Z, brief kept, animation off, approach compare`. A scheduled run that is meant to continue its plan passes `--resume`.

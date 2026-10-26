@@ -5,7 +5,7 @@
 3. Add these files to the Project, one by one if folders do not upload: every file in `knowledge/` (including the four in `knowledge/examples/`) and `graph-player.html`.
 4. Start a chat inside the Project. The first reply states its limits.
 
-When the graph is on and Grok Studio opens from the Project chat, Grok builds the player there once and edits it in place each turn. If Studio does not open, it uses the text screen.
+When you choose the live player (ceci's start question, or typing `animate`) and Grok Studio opens from the Project chat, Grok builds it there once and edits it in place each turn. If Studio does not open, it uses the text screen. Type `help` in any chat for the commands.
 
 Sharing: check the Project's share action at release time. If it exists, share the Project and link it from the README; if not, this kit is the route.
 

@@ -18,6 +18,10 @@ const BRIEF = [
   '',
 ].join('\n');
 
+// The start choices the Prep step records in brief.md (playbooks/start.md).
+const START = { start: ['resumed', 'fresh', 'new-dir'], animate: ['chat', 'terminal', 'off'], approach: ['compare', 'given'] };
+const PLAN_FILES = ['brief.md', 'state.md', 'log.md'];
+
 const STATE = 'jobs: []\n';
 const GRAPH_MODES = new Set(['on', 'off', 'frames']);
 const CELA_TOKENS = { ok: 'COMPLETE', pending: null, stalled: 'STALLED', blocked: 'BLOCKED', missing_test: 'MISSING_TEST' };
@@ -30,18 +34,57 @@ const MOVES = {
   done: ['done'],
 };
 
-const USAGE = `usage: ceci init --work-dir PATH
+const USAGE = `usage: ceci prep --work-dir PATH [--json]
+       ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given]
        ceci status --work-dir PATH [--screen [--tick N] | --watch]
        ceci event --work-dir PATH --line TEXT
        ceci log --work-dir PATH --line TEXT
+       ceci archive --work-dir PATH [--to NAME] [--keep-brief]
+       ceci player --work-dir PATH --out FILE
        ceci resolve-gpu --work-dir PATH --gpu-pref PATH --model NAME [--busy HOST:DEVICE ...]
+       ceci help [COMMAND]
 Flags take a value as the next argument or as --name=value.
+
+Start with:  ceci prep --work-dir ./run                 what is already there; changes nothing
+Watch with:  ceci status --work-dir ./run --watch       in your own terminal; Q quits
+More:        ceci help <command>
 `;
+
+// `ceci help <command>` and `ceci <command> --help`: one short page each.
+const MANUAL = {
+  prep: `Reads brief.md, state.md, and log.md in the work dir and reports what it found: the plan's title,
+job counts by status, the jobs at a human gate, the last log line, the brief's fields, and archived
+runs. It never writes. --json prints one JSON object; its "summary" is one sentence about the plan
+and "ask" lists the start questions that apply (playbooks/start.md).`,
+  init: `Creates any missing brief.md, state.md, or log.md and never overwrites one. With --start,
+--animate, or --approach it also records those choices and a prepped: time in brief.md, replacing
+only those lines, even when all three files exist. Without them it refuses when all three exist.`,
+  status: `Lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. Warns on
+stderr when brief.md has no prepped: line (the plan skipped the Prep step).
+--screen prints the 80x24 graph view once (about 2 KB; --tick N moves the spinner and packets).
+--watch redraws it as state.md changes and never exits: run it in your own terminal, not in an agent.
+Keys in --watch: G graph, F frames, L legend, space pause, S step, T theme, - + speed, R reset, Q quit.`,
+  event: `Applies one event line to the job it names and appends it to events: in state.md:
+  <job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
+It refuses an unknown job, a forbidden transition, done without the artifact, and ready or running
+with an unfinished dependency.`,
+  log: 'Appends one line to log.md: YYYY-MM-DDTHH:MMZ | job_id | status | note',
+  archive: `Moves brief.md, state.md, log.md, and every artifact state.md names into runs/<UTC time>/
+(or runs/NAME with --to), keeping their paths. It never deletes, refuses a destination that exists,
+and prints the new folder. --keep-brief copies brief.md instead of moving it, so a new plan keeps it.`,
+  player: `Writes one self-contained HTML page: the graph player with tui.js and the current state.md
+inlined. It loads nothing from the network. Open it in a browser, or publish it where the host can
+show a page. Run it again after each job; the page replays every event in state.md.`,
+  'resolve-gpu': `Picks the highest-priority free device for --model from the preference file and prints it,
+then CUDA_DEVICE_ORDER=PCI_BUS_ID and CUDA_VISIBLE_DEVICES for that job. --busy skips a device.`,
+};
 
 function die(message, code) {
   process.stderr.write(`${message}\n`);
   process.exit(code === undefined ? 2 : code);
 }
+
+const FLAGS = new Set(['screen', 'watch', 'json', 'keep-brief']);
 
 function parseArgs(argv) {
   const out = { _: [] };
@@ -56,7 +99,7 @@ function parseArgs(argv) {
     if (!key) die('empty flag');
     let value;
     if (eq !== -1) value = arg.slice(eq + 1);
-    else if (key === 'screen' || key === 'watch') value = true;
+    else if (FLAGS.has(key)) value = true;
     else {
       value = argv[i + 1];
       if (value === undefined || value.startsWith('--')) die(`missing value for --${key}`);
@@ -362,15 +405,230 @@ function graphProblems(dir, jobs) {
   return problems;
 }
 
+/** UTC to the minute, the form log.md uses: 2026-10-26T20:56Z. */
+function minute(date = new Date()) {
+  return `${date.toISOString().slice(0, 16)}Z`;
+}
+
+/** brief.md's top-level `key: value` lines. Lenient: a value that is not valid YAML stays as written. */
+function briefFields(text) {
+  const fields = {};
+  String(text).replace(/\r\n/g, '\n').split('\n').forEach((line) => {
+    const m = /^([A-Za-z_][\w-]*):(?: (.*))?$/.exec(line);
+    if (!m) return;
+    const raw = (m[2] || '').trim();
+    try {
+      fields[m[1]] = raw === '' ? '' : parseScalar(raw);
+    } catch {
+      fields[m[1]] = raw;
+    }
+  });
+  return fields;
+}
+
+/** Set top-level brief.md lines in place; a key it lacks is appended. Every other line stays as it was. */
+function setBriefFields(text, fields) {
+  const lines = String(text).replace(/\r\n/g, '\n').replace(/\n+$/, '').split('\n').filter((line, i, all) => line !== '' || i < all.length - 1);
+  Object.entries(fields).forEach(([key, value]) => {
+    const at = lines.findIndex((line) => line.startsWith(`${key}:`));
+    const line = `${key}: ${value}`;
+    if (at === -1) lines.push(line);
+    else lines[at] = line;
+  });
+  return `${lines.join('\n')}\n`;
+}
+
+function startChoices(args) {
+  const out = {};
+  Object.entries(START).forEach(([key, values]) => {
+    const value = args[key];
+    if (value === undefined) return;
+    if (Array.isArray(value) || !values.includes(value)) die(`--${key} must be ${values.join(', ')}`);
+    out[key] = value;
+  });
+  return out;
+}
+
 function commandInit(args) {
   const dir = workDir(args);
+  const choices = startChoices(args);
+  const record = Object.keys(choices).length > 0;
   fs.mkdirSync(dir, { recursive: true });
-  const files = ['brief.md', 'state.md', 'log.md'];
-  const existing = files.filter((name) => fs.existsSync(path.join(dir, name)));
-  if (existing.length === files.length) die(`refusing to overwrite ${existing.join(', ')}`, 1);
+  const existing = PLAN_FILES.filter((name) => fs.existsSync(path.join(dir, name)));
+  if (existing.length === PLAN_FILES.length && !record) die(`refusing to overwrite ${existing.join(', ')}`, 1);
   if (!existing.includes('brief.md')) fs.writeFileSync(path.join(dir, 'brief.md'), BRIEF);
   if (!existing.includes('state.md')) fs.writeFileSync(path.join(dir, 'state.md'), STATE);
   if (!existing.includes('log.md')) fs.writeFileSync(path.join(dir, 'log.md'), '');
+  if (record) {
+    const file = path.join(dir, 'brief.md');
+    fs.writeFileSync(file, setBriefFields(fs.readFileSync(file, 'utf8'), { ...choices, prepped: minute() }));
+  }
+}
+
+/** What a work dir holds, for the Prep step. Reads only. */
+function prepReport(dir) {
+  const has = (name) => fs.existsSync(path.join(dir, name));
+  const read = (name) => fs.readFileSync(path.join(dir, name), 'utf8');
+  const report = { work_dir: path.resolve(dir), found: PLAN_FILES.some(has), brief: null, state: null, log: null, last_change: null, runs: [], ask: [], summary: '' };
+  if (has('brief.md')) {
+    const fields = briefFields(read('brief.md'));
+    report.brief = { fields, prepped: typeof fields.prepped === 'string' && fields.prepped ? fields.prepped : null };
+  }
+  if (has('state.md')) {
+    const state = { title: null, jobs: 0, counts: Object.fromEntries([...STATUSES].map((s) => [s, 0])), gates: [], error: null };
+    try {
+      const doc = parseDoc(read('state.md'));
+      state.title = doc.title;
+      state.jobs = doc.jobs.length;
+      doc.jobs.forEach((job) => { state.counts[job.status] += 1; });
+      const words = {};
+      (doc.events || []).forEach((line) => {
+        const [id, , ...rest] = line.split(/\s+/);
+        rest.forEach((part) => {
+          const m = /^gate:(\S+)$/.exec(part);
+          if (m) words[id] = m[1];
+        });
+      });
+      state.gates = doc.jobs.filter((job) => job.status === 'gate').map((job) => ({ id: job.id, goal: job.goal, gate: words[job.id] || null }));
+    } catch (err) {
+      state.error = err.message;
+    }
+    report.state = state;
+  }
+  if (has('log.md')) {
+    const lines = read('log.md').split(/\r?\n/).filter((line) => line.trim());
+    report.log = { lines: lines.length, last: lines.length ? lines[lines.length - 1] : null };
+  }
+  const times = PLAN_FILES.filter(has).map((name) => fs.statSync(path.join(dir, name)).mtime);
+  if (times.length) report.last_change = new Date(Math.max(...times)).toISOString().slice(0, 10);
+  if (has('runs') && fs.statSync(path.join(dir, 'runs')).isDirectory()) {
+    report.runs = fs.readdirSync(path.join(dir, 'runs'), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
+  }
+  const plan = report.state && (report.state.jobs > 0 || report.state.error);
+  if (plan) report.ask.push('plan');
+  if (report.brief) report.ask.push('brief');
+  report.ask.push('animate', 'approach');
+  report.summary = summary(report);
+  return report;
+}
+
+function summary(report) {
+  const where = path.basename(report.work_dir);
+  const s = report.state;
+  if (!report.found) return `Nothing in ${where} yet: no brief.md, state.md, or log.md.`;
+  if (!s || (!s.jobs && !s.error)) return `No plan in ${where} yet${report.brief ? ', but there is a brief' : ''}.`;
+  if (s.error) return `A plan in ${where} that does not parse: ${s.error}.`;
+  const parts = [`${s.counts.done} of ${s.jobs} jobs done`];
+  if (s.gates.length) parts.push(`${s.gates.length} waiting on you (${s.gates.map((g) => g.gate || g.id).join(', ')})`);
+  if (s.counts.running) parts.push(`${s.counts.running} running`);
+  if (report.last_change) parts.push(`last change ${report.last_change}`);
+  return `I found a plan in ${where}${s.title ? `: ${s.title}` : ''} — ${parts.join(', ')}.`;
+}
+
+function commandPrep(args) {
+  const dir = workDir(args);
+  const report = prepReport(dir);
+  if (args.json !== undefined) {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return;
+  }
+  const lines = [report.summary];
+  if (report.brief) {
+    const shown = Object.entries(report.brief.fields).map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`);
+    lines.push('brief.md:', ...shown);
+  }
+  if (report.log && report.log.last) lines.push(`last log line: ${report.log.last}`);
+  if (report.runs.length) lines.push(`archived runs: ${report.runs.map((r) => `runs/${r}`).join(', ')}`);
+  lines.push(`questions: ${report.ask.join(', ')}`);
+  process.stdout.write(`${lines.join('\n')}\n`);
+}
+
+/** Moves the plan into runs/<name>/. Never deletes, never merges into an existing folder. */
+function commandArchive(args) {
+  const dir = workDir(args);
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) die(`missing work dir ${dir}`, 1);
+  const name = args.to === undefined ? `${new Date().toISOString().slice(0, 19).replace(/:/g, '')}Z` : args.to;
+  if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) die('--to must be one folder name: letters, digits, dot, dash, underscore');
+  const items = PLAN_FILES.filter((file) => fs.existsSync(path.join(dir, file)));
+  if (items.includes('state.md')) {
+    let doc;
+    try {
+      doc = parseDoc(fs.readFileSync(path.join(dir, 'state.md'), 'utf8'));
+    } catch (err) {
+      die(`state.md does not parse, so its artifacts are unknown: ${err.message}`, 1);
+    }
+    const artifacts = [...new Set(doc.jobs.map((job) => path.normalize(job.artifact).replace(/[\\/]+$/, '')))]
+      .filter((rel) => rel.split(path.sep)[0] !== 'runs' && !PLAN_FILES.includes(rel) && fs.existsSync(path.join(dir, rel)))
+      .sort((a, b) => a.length - b.length);
+    // A directory artifact carries any artifact inside it.
+    artifacts.forEach((rel) => {
+      if (!items.some((kept) => rel.startsWith(`${kept}${path.sep}`))) items.push(rel);
+    });
+  }
+  if (!items.length) die(`nothing to archive in ${dir}`, 1);
+  const dest = path.join(dir, 'runs', name);
+  if (fs.existsSync(dest)) die(`refusing to archive into ${dest}: it exists`, 1);
+  fs.mkdirSync(path.join(dir, 'runs'), { recursive: true });
+  fs.mkdirSync(dest);
+  const keep = args['keep-brief'] !== undefined;
+  items.forEach((rel) => {
+    const to = path.join(dest, rel);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    if (keep && rel === 'brief.md') fs.copyFileSync(path.join(dir, rel), to);
+    else fs.renameSync(path.join(dir, rel), to);
+  });
+  process.stdout.write(`${dest}\n`);
+}
+
+/**
+ * The renderer without its comments or indentation: same code, fewer bytes,
+ * because a chat model emits the player once per conversation.
+ */
+function compact(js) {
+  return js
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('//'))
+    .join('\n');
+}
+
+/**
+ * graph-player.html filled in: the renderer, state.md without its events, and
+ * the events as the EVENTS array a chat model appends to. `offline` drops the
+ * optional web font, so the page requests nothing.
+ */
+function fillPlayer(template, tuiSource, stateText, opts = {}) {
+  const text = String(stateText).replace(/\r\n/g, '\n');
+  const at = text.indexOf('\nevents:');
+  const head = at === -1 ? text : text.slice(0, at + 1);
+  const events = at === -1 ? [] : tui.fromStateMd(text).events;
+  let html = String(template).replace(/\r\n/g, '\n');
+  if (opts.offline) html = html.replace(/<!-- JetBrains Mono[^\n]*-->\n(?:<link rel="stylesheet" href="https:[^\n]*>\n)+/, '');
+  return html
+    .replace('/*@@TUI@@*/', () => compact(tuiSource))
+    .replace('/*@@STATE@@*/', () => JSON.stringify(head))
+    .replace('/*@@EVENTS@@*/\n', () => events.map((e) => `  ${JSON.stringify(e)},\n`).join(''));
+}
+
+function commandPlayer(args) {
+  const dir = workDir(args);
+  const out = args.out;
+  if (!out || Array.isArray(out)) die('--out is required');
+  readDoc(dir);
+  const read = (name) => fs.readFileSync(path.join(__dirname, name), 'utf8');
+  const html = fillPlayer(read('graph-player.html'), read('tui.js'), fs.readFileSync(path.join(dir, 'state.md'), 'utf8'), { offline: true });
+  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+  fs.writeFileSync(out, html);
+  process.stdout.write(`${out}\n`);
+}
+
+/** A plan started without the Prep step has no prepped: line in brief.md. */
+function warnUnprepped(dir) {
+  const file = path.join(dir, 'brief.md');
+  const fields = fs.existsSync(file) ? briefFields(fs.readFileSync(file, 'utf8')) : null;
+  if (fields && typeof fields.prepped === 'string' && fields.prepped) return;
+  process.stderr.write(`warning: ${fields ? 'brief.md has no prepped: line' : 'no brief.md'}; this plan skipped the Prep step (playbooks/start.md)\n`);
 }
 
 /** The graph view model: the drawing reads the validated doc, never a second parser. */
@@ -461,6 +719,7 @@ function commandStatus(args) {
   }
   if (args.screen !== undefined) {
     const doc = readDoc(dir);
+    warnUnprepped(dir);
     const tick = args.tick === undefined ? 0 : Number(args.tick);
     if (!Number.isInteger(tick) || tick < 0) die('--tick must be a whole number');
     process.stdout.write(`${screen(doc, tick).lines.join('\n')}\n`);
@@ -469,6 +728,7 @@ function commandStatus(args) {
     return;
   }
   const jobs = readState(dir);
+  warnUnprepped(dir);
   const problems = graphProblems(dir, jobs);
   ['ready', 'running', 'blocked', 'gate'].forEach((status) => {
     process.stdout.write(`${status}:\n`);
@@ -548,22 +808,38 @@ function commandGpu(args) {
   }
 }
 
+const HELP = new Set(['--help', '-h', '-help']);
+
 function main(argv) {
   const [command, ...rest] = argv;
-  if ([command, ...rest].some((arg) => arg === '--help' || arg === '-h')) {
-    process.stdout.write(USAGE);
+  if (command === 'help' || HELP.has(command)) {
+    const topic = rest.find((arg) => !HELP.has(arg));
+    process.stdout.write(topic && MANUAL[topic] ? manual(topic) : USAGE);
+    return;
+  }
+  if (rest.some((arg) => HELP.has(arg))) {
+    process.stdout.write(MANUAL[command] ? manual(command) : USAGE);
     return;
   }
   const args = parseArgs(rest);
   if (args._.length) die(`unexpected argument ${args._[0]}`);
-  if (command === 'init') commandInit(args);
+  if (command === 'prep') commandPrep(args);
+  else if (command === 'init') commandInit(args);
   else if (command === 'status') commandStatus(args);
   else if (command === 'log') commandLog(args);
   else if (command === 'event') commandEvent(args);
+  else if (command === 'archive') commandArchive(args);
+  else if (command === 'player') commandPlayer(args);
   else if (command === 'resolve-gpu') commandGpu(args);
   else {
     die(USAGE.trimEnd());
   }
+}
+
+/** The command's usage line, then its page. */
+function manual(command) {
+  const line = USAGE.split('\n').find((l) => l.includes(`ceci ${command} `) || l.endsWith(`ceci ${command}`));
+  return `${line.replace(/^usage: | {7}/, 'usage: ')}\n${MANUAL[command]}\n`;
 }
 
 if (require.main === module) {
@@ -575,5 +851,5 @@ if (require.main === module) {
   main(process.argv.slice(2));
 }
 else {
-  module.exports = { chooseGpu, formatState, parseDoc, parsePrefs, parseState, screen, screenModel };
+  module.exports = { briefFields, chooseGpu, compact, fillPlayer, formatState, parseDoc, parsePrefs, parseState, prepReport, screen, screenModel, setBriefFields };
 }

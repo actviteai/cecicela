@@ -80,9 +80,18 @@ function readme(plugin) {
   lines.push(spec.description, '', '## Skills', '');
   for (const skill of spec.skills) lines.push(`- ${SKILL_LINES[skill]}`);
   lines.push('', '## Install', '', 'In Claude Code:', '', '```', `/plugin install ${plugin} --marketplace actviteai/cecicela`, '```', '', 'In claude.ai, the desktop app, or Cowork, add it from **Customize > Plugins**.');
+  if (has('ceci')) {
+    lines.push('', '## What ceci asks when it starts', '');
+    lines.push('Before it plans, ceci reads the job folder (`ceci prep`, which changes nothing) and asks up to four questions in one go:', '');
+    lines.push('1. **Plan**, when an older plan is there: resume it, start a new one and archive the old one into `runs/` (nothing is deleted), or start a new one in another folder. `--resume`, `--fresh`, or `--new-dir PATH` answers it.');
+    lines.push('2. **Brief**, when a brief is there: keep its rules, or edit them before any job starts.');
+    lines.push('3. **Animation**: the job graph live in this chat, in your terminal (`ceci status --watch`), or not at all. `--animate chat|terminal|off` answers it.');
+    lines.push('4. **Approach**, for a new plan: compare the options first, or name the approach yourself.', '');
+    lines.push('With nobody there to answer, ceci archives the old plan, keeps the brief, turns the animation off, and says so in its first line.');
+  }
   lines.push('', '## What runs on your machine', '');
   lines.push('This plugin has no hooks and no MCP servers, and nothing in it opens a network connection or sends data anywhere. Everything below runs only when Claude follows a skill and you allow the command.', '');
-  if (has('ceci')) lines.push('- **ceci** (`skills/ceci/tool/ceci.js`, Node.js) reads and writes `brief.md`, `state.md` and `log.md` in the job folder you name, and draws the job graph in the terminal.');
+  if (has('ceci')) lines.push('- **ceci** (`skills/ceci/tool/ceci.js`, Node.js) reads and writes `brief.md`, `state.md` and `log.md` in the job folder you name, and draws the job graph in the terminal. `ceci archive` moves an old plan and its artifacts into `runs/` in that folder and deletes nothing; `ceci player` writes one HTML file, the graph player, with everything inlined. Neither opens a network connection.');
   if (has('cela')) lines.push('- **cela** (`skills/cela/tool/cela.js`, Node.js) runs the test and check commands you agree on for the task, reads `git diff` and `git status`, and records the results in `.cela/` inside your repository. Its memory lives in `$CELA_HOME` (default `~/.cela`). `skills/cela/install/` holds optional scripts that copy the skill into `$CELA_HOME`; nothing runs them automatically.');
   if (has('trouble')) lines.push('- **trouble** (`skills/trouble/tool/voices.js`, Node.js) reads `voices.default.yaml`, or your own roles file, to name the four debug roles. It writes nothing.');
   lines.push('', '## Links', '', `- Source, issues and docs: ${HOMEPAGE}`, '- Publisher: actvite, https://actvite.com', '', '## License', '', 'GPL-3.0-or-later. See `LICENSE`.', '');

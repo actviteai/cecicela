@@ -16,6 +16,10 @@
     {
       "title": "Is it done?",
       "text": "Is this change really done? Here is the diff and the test output:"
+    },
+    {
+      "title": "Help",
+      "text": "help"
     }
   ],
   "capabilities": [
@@ -35,6 +39,9 @@
     },
     {
       "folder": "./skills/graph-view"
+    },
+    {
+      "folder": "./skills/help"
     }
   ],
   "disclaimer": {

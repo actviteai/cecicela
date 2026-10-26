@@ -1199,7 +1199,7 @@ function main(argv, options = {}) {
   const env = options.env ?? process.env;
   const cwd = options.cwd || process.cwd();
   const [command, ...rest] = argv;
-  if (!command || command === 'help' || command === '--help' || command === '-h') {
+  if (!command || command === 'help' || command === '--help' || command === '-h' || command === '-help') {
     out(HELP.trimEnd());
     return 0;
   }

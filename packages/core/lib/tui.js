@@ -184,6 +184,8 @@
    * The ceci model from state.md text: optional `title:` and `graph:` header
    * lines, the `jobs:` graph, and an optional `events:` list. Lenient: it is
    * for drawing. `ceci status` validates the file strictly before it draws.
+   * A `kind: trouble` or `kind: cela` line makes it the model for that
+   * protocol instead, so one player draws all three in chat.
    */
   function fromStateMd(text) {
     var lines = String(text).replace(/\r\n/g, '\n').split('\n');
@@ -198,6 +200,7 @@
         else if (top[1] === 'events') section = 'events';
         else if (top[1] === 'title') model.title = scalar(top[2] || '') || '';
         else if (top[1] === 'graph') model.graph = scalar(top[2] || '') || 'on';
+        else if (top[1] === 'kind' && /^(ceci|trouble|cela)$/.test(scalar(top[2] || '') || '')) model.kind = scalar(top[2]);
         if ((top[2] || '').trim() === '[]') section = top[1] === 'events' ? 'events' : 'jobs';
         return;
       }
