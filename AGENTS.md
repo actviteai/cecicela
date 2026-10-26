@@ -5,7 +5,7 @@ This repository is the ceciCela monorepo: `@actvite/ceci`, `@actvite/cela`, `@ac
 ## Before you change anything
 
 - Sources: `packages/core/lib/`, `packages/<pkg>/` (except `lib/core/` and `LICENSE`), `chat/src/`, `scripts/`, `test/`, `docs/`.
-- Generated, never edited by hand: `packages/<pkg>/lib/core/`, `packages/<pkg>/LICENSE`, `packages/ceci/skill/tool/tui.js`, `bundle/`, `chat/pack/`, `chat/claude/`, `chat/chatgpt/`, `chat/grok/`, `chat/m365/`, and the catalogs `.claude-plugin/`, `.github/plugin/`, `.grok-plugin/`, `.agents/plugins/`.
+- Generated, never edited by hand: `packages/<pkg>/lib/core/`, `packages/<pkg>/LICENSE`, `packages/ceci/skill/tool/tui.js`, `bundle/`, `chat/pack/`, `chat/claude/`, `chat/chatgpt/`, `chat/grok/`, `chat/m365/`, `chat/m365-builder/`, and the catalogs `.claude-plugin/`, `.github/plugin/`, `.grok-plugin/`, `.agents/plugins/`.
 - After changing a source, run `npm run sync`. `npm test` fails while anything generated is stale.
 - Never edit a version by hand outside a `package.json`; `npm run stamp` writes it everywhere it repeats. A line that must name another version ends with `<!-- keep-version -->`.
 - Node only, no third-party dependencies. The one exception is the optional Python package `packages/cela/nemo`.
