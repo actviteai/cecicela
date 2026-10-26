@@ -27,6 +27,13 @@ ceci is standalone. It contains no bot names, project names, hostnames, or envir
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.1.0 <!-- keep-version -->
+
+- A [Prep step](#what-ceci-asks-when-it-starts) runs before every plan: `ceci prep` reads the job folder, and ceci asks about an existing plan, the brief, the animation, and the approach in one question call.
+- New commands: `ceci prep` (read-only), `ceci archive` (moves an old plan into `runs/`, never deletes), `ceci player` (writes the self-contained graph player), and `ceci help <command>`. `-help` works like `--help`.
+- `ceci init --start/--animate/--approach` records the start choices in `brief.md`; `ceci status` warns when a plan skipped the Prep step.
+- The skill spends tokens on the graph only when it is shown: the player is written by the tool and published by path, `--watch` runs in your terminal, and `--screen` only when you ask.
+
 ### Changes in 2.0.0 <!-- keep-version -->
 
 - The evidence gate is `/cela`, shipped beside ceci in ceciCela. The job field is now `cela_gate`, and the playbook is `playbooks/cela.md`. The four tokens are unchanged. A 1.x `state.md` needs its gate key renamed to `cela_gate`; the old repository's archive notice shows the one-line edit.
@@ -62,12 +69,14 @@ packages/ceci/
     ├── SKILL.md                      # loaded on /ceci
     ├── examples/gpu-prefs.yaml       # shape only; no real hostnames
     ├── playbooks/
-    │   ├── graph.md                  # schema, transitions, dependencies, events, graph view, log line
+    │   ├── start.md                  # the Prep step: the four start questions, flags, unattended defaults
+    │   ├── graph.md                  # schema, brief fields, transitions, dependencies, events, graph view, log line
     │   ├── gates.md                  # human stops, blank price, hand-back
     │   ├── gpu.md                    # preference file, CUDA env, fallback
     │   └── cela.md                   # when to call /cela and what may be stored
     └── tool/
         ├── ceci.js                   # zero-dependency CLI
+        ├── graph-player.html         # the player page template `ceci player` fills (the chat packs use it too)
         └── tui.js                    # generated copy of the graph view renderer (packages/core/lib/tui.js)
 ```
 
@@ -99,7 +108,7 @@ ceci init --work-dir ./run
 ceci status --work-dir ./run
 ```
 
-`ceci install` replaces an existing ceci skill directory with a fresh copy. Each copy is staged first and renamed into place only after `SKILL.md` is present. With no harness named it installs all nine. Every other `ceci` command (`init`, `status`, `event`, `log`, `resolve-gpu`) goes to `skill/tool/ceci.js`; see [CLI](#cli).
+`ceci install` replaces an existing ceci skill directory with a fresh copy. Each copy is staged first and renamed into place only after `SKILL.md` is present. With no harness named it installs all nine. Every other `ceci` command (`prep`, `init`, `status`, `event`, `log`, `archive`, `player`, `resolve-gpu`, `help`) goes to `skill/tool/ceci.js`; see [CLI](#cli).
 
 ### Plugin marketplaces
 
@@ -221,17 +230,41 @@ Run it as `ceci` after `npm install -g @actvite/ceci` (installing the `@actvite/
 node skill/tool/ceci.js <command> --work-dir PATH
 ```
 
-Every flag takes its value as the next argument or as `--name=value`. Use the second form for a value that starts with `--`. `--help` on any command prints the usage and exits `0`.
+Every flag takes its value as the next argument or as `--name=value`. Use the second form for a value that starts with `--`. `ceci --help` (or `-h`, `-help`, `help`) prints the usage and where to start; `ceci help <command>` or `ceci <command> --help` prints that command's page. Both exit `0`.
 
 The skill refers to that command as `ceci`. Prefer the CLI over hand-editing when the command exists. The graph itself is still written as `state.md`; there is no `ceci add-job` command. Write the graph in the subset above, then use `status` to check it.
+
+### `prep`
+
+```bash
+node skill/tool/ceci.js prep --work-dir /path/to/run [--json]
+```
+
+Reports what the folder holds and changes nothing: the plan's title, job counts by status, the jobs at a human gate (with their `gate:` word), the last `log.md` line, the brief's fields, and archived runs. `--json` adds `summary` (one sentence about the plan) and `ask` (the start questions that apply). The skill builds its first questions from this.
 
 ### `init`
 
 ```bash
-node skill/tool/ceci.js init --work-dir /path/to/run
+node skill/tool/ceci.js init --work-dir /path/to/run [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given]
 ```
 
-Creates `brief.md`, `state.md`, and `log.md`. Refuses to overwrite.
+Creates `brief.md`, `state.md`, and `log.md`. Refuses to overwrite. With a start flag it also writes those choices and `prepped: <UTC minute>` into `brief.md`, replacing only those lines, even when all three files exist.
+
+### `archive`
+
+```bash
+node skill/tool/ceci.js archive --work-dir /path/to/run [--to NAME] [--keep-brief]
+```
+
+Moves `brief.md`, `state.md`, `log.md`, and every artifact `state.md` names into `runs/<UTC time>/` (or `runs/NAME`), keeping their relative paths, and prints the new folder. It never deletes, refuses a destination that exists, and refuses a `state.md` that does not parse. `--keep-brief` copies the brief instead, so a new plan starts with the same rules.
+
+### `player`
+
+```bash
+node skill/tool/ceci.js player --work-dir /path/to/run --out /path/to/run/graph-player.html
+```
+
+Writes one HTML page: [`skill/tool/graph-player.html`](skill/tool/graph-player.html) with `tui.js` and the current `state.md` inlined. It requests nothing from the network. It draws the same screen as `status --screen` and replays the events.
 
 ### `status`
 
@@ -323,8 +356,21 @@ Appends that text plus one newline. `--line` must already be a single non-empty 
 | Code | Meaning |
 | --- | --- |
 | `0` | The command finished |
-| `1` | The files or the graph refused the request (missing file, no GPU, overwrite, inconsistent status) |
+| `1` | The files or the graph refused the request (missing file, no GPU, overwrite, inconsistent status, an archive destination that exists) |
 | `2` | Usage: unknown command, missing flag, extra argument, or a log line that contains a newline |
+
+## What ceci asks when it starts
+
+Every run begins with `ceci prep` and, in one question call (AskUserQuestion where the agent has it, plain text otherwise), up to four questions. The exact wording and what each answer does are in [`skill/playbooks/start.md`](skill/playbooks/start.md).
+
+| Question | Asked when | Choices | Flag that answers it |
+| --- | --- | --- | --- |
+| Plan | an older plan exists | resume it; new plan, archive the old one into `runs/`; new plan in another folder | `--resume`, `--fresh`, `--new-dir PATH` |
+| Brief | a brief exists | keep it; edit it first | none |
+| Animation | always | live in this chat; in my terminal; no | `--animate chat\|terminal\|off` |
+| Approach | a new plan | compare options first (the first job is `options`, artifact `options.md`); I know the approach | none |
+
+The answers go into `brief.md` (`start`, `animate`, `approach`, `prepped`). With nobody there to answer, the run archives the old plan, keeps the brief, turns the animation off, compares options, and says so in its first line; a scheduled run that should continue passes `--resume`.
 
 ## How a goal becomes jobs
 
@@ -472,6 +518,16 @@ Record the chosen `host:device` on the job, export the CUDA lines for the local 
 ```
 
 Hotkeys in `--watch`: `G` graph on/off, `F` frames, `L` legend, space pause, `S` step, `T` green/amber, `-`/`+` speed, `R` reset, `Q` quit. `graph: off` in `state.md` turns the drawing off for every reader, including the chat versions. The renderer is the same module the chat player uses, and a test asserts both print the same 80x24 screen.
+
+Where the graph is shown is the `animate` start choice, and the skill is built so the animation costs your tokens only when it is on screen:
+
+| `animate` | What the agent does | Tokens per update |
+| --- | --- | --- |
+| `terminal` | prints `ceci status --watch` once; you run it in a second terminal | none |
+| `chat` | after each job, `ceci player --out FILE` writes the page and the agent republishes it by path (in Claude Code, as an artifact); the 23 KB page never passes through the model | two short tool calls |
+| `off` | event lines in `state.md` only | none |
+
+The agent checks progress with plain `ceci status` and runs `--screen` (about 2 KB) only when you ask to see the graph in the conversation.
 
 ## `/cela`
 

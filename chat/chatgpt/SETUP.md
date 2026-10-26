@@ -9,11 +9,11 @@ OpenAI is retiring custom GPTs on **11 December 2026** (11 February 2027 for Ent
 1. Create a Project named **ceciCela**.
 2. Open the Project's settings and paste the whole of `INSTRUCTIONS.md` into its instructions.
 3. Add the files. ChatGPT takes at most 10 files per upload, so add them in two batches.
-   - Go, Plus, and higher plans: every file in `knowledge/` (including the four in `knowledge/examples/`) plus `graph-player.html`, 11 files.
-   - Free (5 files per Project): `trouble.chat.md`, `ceci.chat.md`, `cela.chat.md`, `graph-render.md`, `graph-player.html`. The defaults for trouble's roles are in `trouble.chat.md`, so `voices.default.yaml` is optional.
+   - Go, Plus, and higher plans: every file in `knowledge/` (including the four in `knowledge/examples/`) plus `graph-player.html`, 12 files.
+   - Free (5 files per Project): `trouble.chat.md`, `ceci.chat.md`, `cela.chat.md`, `graph-render.md`, `graph-player.html`. The defaults for trouble's roles are in `trouble.chat.md`, so `voices.default.yaml` is optional. `help.md` does not fit; without it, `help` gets a shorter answer from the router.
 4. Start a chat inside the Project. The first reply states its limits.
 
-When the graph is on, ChatGPT builds the player once in a canvas and edits it in place each turn. Where canvas is not offered, it falls back to the text screen.
+When you choose the live player (ceci's start question, or typing `animate`), ChatGPT builds it once in a canvas and edits it in place each turn. Where canvas is not offered, it falls back to the text screen. Type `help` in any chat for the commands.
 
 To continue a ceci plan later, replace `state.md` in the Project's files with the latest copy ChatGPT gave you, or attach it to the new chat.
 

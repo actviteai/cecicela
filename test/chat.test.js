@@ -179,3 +179,57 @@ test('the Microsoft 365 skills name only what the package carries', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(REPO, 'chat/m365/appPackage/manifest.json'), 'utf8'));
   assert.equal(manifest.developer.termsOfUseUrl, 'https://www.actvite.com/tos');
 });
+
+test('help: every pack routes help, -help, and /help to one help page, and Copilot has a help skill', () => {
+  const help = read('chat/src/help.md');
+  for (const section of ['help', 'help ceci', 'help trouble', 'help cela', 'help graph', 'Footer']) assert.match(help, new RegExp(`^## ${section}$`, 'm'), section);
+  assert.match(help, /npx --yes @actvite\/cecicela install --all/);
+  for (const host of HOSTS) {
+    assert.equal(read(`chat/${host}/knowledge/help.md`), help, host);
+    const text = read(`chat/${host}/INSTRUCTIONS.md`);
+    assert.match(text, /`help`, `--help`, `-help`, `\/help`, or `\?`/, host);
+    assert.match(text, /read `help\.md`/, host);
+    assert.match(text, /Type `help` for the commands\./, `${host}: the first reply points at help`);
+  }
+  const m365 = read('chat/m365/appPackage/instruction.txt');
+  assert.match(m365, /load the help skill/);
+  assert.doesNotMatch(m365, /help\.md/);
+  const agent = JSON.parse(read('chat/m365/appPackage/declarativeAgent.json'));
+  assert.ok(agent.agent_skills.some((s) => s.folder === './skills/help'));
+  assert.ok(agent.conversation_starters.some((s) => s.text === 'help'));
+  assert.doesNotMatch(read('chat/m365/appPackage/skills/help/SKILL.md'), /^ {2}animate /m, 'Copilot has no live player to offer');
+});
+
+test('the live player is opt-in: chat ceci asks first, and the router builds it only when chosen', () => {
+  for (const host of [...HOSTS]) {
+    const text = read(`chat/${host}/INSTRUCTIONS.md`);
+    assert.match(text, /build it only when the user chose it \(ceci's start question, or typing `animate`\)/, host);
+  }
+  assert.match(read('chat/m365/appPackage/instruction.txt'), /`animate` is not available/);
+  const ceci = read('chat/pack/knowledge/ceci.chat.md');
+  assert.match(ceci, /^## Prep in chat$/m);
+  assert.match(ceci, /a live player beside this chat \(built once, about 7,000 tokens/);
+  assert.doesNotMatch(ceci, /ceci (prep|player|archive) --work-dir|AskUserQuestion/, 'the CLI-only start step is replaced, not copied');
+  assert.doesNotMatch(ceci, /What each view costs/, 'the CLI cost table stays out of chat');
+});
+
+test('one player draws trouble and cela too, from a kind: line in STATE', () => {
+  const html = read('chat/pack/graph-player.html');
+  const marker = '  // append new event lines above this one\n';
+  const filled = html
+    .replace(/var STATE = "(?:[^"\\]|\\.)*";/, () => `var STATE = ${JSON.stringify('kind: trouble\ntitle: "stale page after deploy"\n')};`)
+    .replace(/var EVENTS = \[\n[\s\S]*?(?= {2}\/\/ append new event lines above this one)/, 'var EVENTS = [\n')
+    .replace(marker, `  "h H1 0.61 stale edge cache after deploy",\n  "vote keeper yes 7",\n${marker}`);
+  const scripts = [...filled.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  const el = { innerHTML: '' };
+  const ctx = { document: { getElementById: () => el, querySelectorAll: () => [], addEventListener() {}, documentElement: { setAttribute() {} } }, setTimeout: () => 0, JSON, Math, Object, Array };
+  ctx.window = ctx;
+  ctx.self = ctx;
+  vm.createContext(ctx);
+  for (const code of scripts) vm.runInContext(code, ctx);
+  ctx.typed = null;
+  const screen = vm.runInContext('screen()', ctx).lines.join('\n');
+  assert.match(screen, /TUI \| trouble: stale page after deploy/);
+  assert.match(screen, / H1 {2}stale edge cache after deploy +\[#+\.+\] {2}0\.61/);
+  assert.match(read('chat/pack/knowledge/graph-render.md'), /`STATE` is `kind: trouble` \(or `kind: cela`\)/);
+});

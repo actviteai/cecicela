@@ -23,6 +23,7 @@ function hermesFiles(skillDir = SKILL_DIR) {
   files.set('SKILL.md', { text: hermes.renderHub(read('SKILL.md')), exec: false });
   files.set('scripts/ceci.js', { text: read('tool/ceci.js'), exec: false });
   files.set('scripts/tui.js', { text: read('tool/tui.js'), exec: false });
+  files.set('scripts/graph-player.html', { text: read('tool/graph-player.html'), exec: false });
   files.set('scripts/package.json', { text: read('package.json'), exec: false });
   for (const name of fs.readdirSync(path.join(skillDir, 'playbooks')).sort()) {
     files.set(`references/${name}`, { text: read(`playbooks/${name}`), exec: false });

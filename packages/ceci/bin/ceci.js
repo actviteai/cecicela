@@ -5,7 +5,8 @@
  * npm entry point.
  *
  *   ceci install [--all|--claude|--grok|--codex|...]       copy the skill into harness homes
- *   ceci init|status|event|log|resolve-gpu --work-dir PATH  run the skill's tool
+ *   ceci prep|init|status|event|log|archive|player|resolve-gpu --work-dir PATH  run the skill's tool
+ *   ceci help [COMMAND]                                     the tool's usage or one command's page
  */
 
 const { spawnSync } = require('child_process');
@@ -18,7 +19,8 @@ function usage() {
   const { harness } = require('../lib/core');
   return `Usage:
   ceci install [--all] [--<harness> ...]
-  ceci init|status|event|log|resolve-gpu --work-dir PATH [...]
+  ceci prep|init|status|event|log|archive|player|resolve-gpu --work-dir PATH [...]
+  ceci help [COMMAND]        the task commands' usage, or one command's page
   ceci --help | --version
 
 Install writes the skill into each harness you name (default: --all):
@@ -32,7 +34,7 @@ function install(argv) {
   const { harness } = require('../lib/core');
   const skill = require('../lib/skill');
   const picked = harness.parseSelectors(argv);
-  if (picked.rest.includes('--help') || picked.rest.includes('-h')) {
+  if (picked.rest.some((arg) => arg === '--help' || arg === '-h' || arg === '-help')) {
     process.stdout.write(usage());
     return 0;
   }
@@ -46,7 +48,8 @@ function install(argv) {
 
 function main(argv) {
   const [command, ...rest] = argv;
-  if (!command || command === '--help' || command === '-h' || command === 'help') {
+  if (command === 'help' && rest.length) return tool(argv);
+  if (!command || command === '--help' || command === '-h' || command === '-help' || command === 'help') {
     process.stdout.write(usage());
     return command ? 0 : 2;
   }
@@ -62,6 +65,10 @@ function main(argv) {
       return 1;
     }
   }
+  return tool(argv);
+}
+
+function tool(argv) {
   const res = spawnSync(process.execPath, [TOOL, ...argv], { stdio: 'inherit' });
   if (res.error) {
     process.stderr.write(`${res.error.message}\n`);

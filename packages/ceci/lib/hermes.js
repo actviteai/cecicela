@@ -55,7 +55,7 @@ function renderHub(skillMd) {
   );
   const last = '- `references/cela.md` — when and how to call /cela, how to store the gate.\n';
   if (!body.includes(last)) throw new Error('SKILL.md playbook list changed');
-  body = body.replace(last, `${last}- \`examples/gpu-prefs.yaml\` — preference-file shape; no real hostnames.\n- \`scripts/tui.js\` — the graph view renderer the engine loads for \`status --screen\` and \`--watch\`.\n- \`scripts/package.json\` — keeps the engine CommonJS when an ancestor package.json sets "type": "module".\n`);
+  body = body.replace(last, `${last}- \`examples/gpu-prefs.yaml\` — preference-file shape; no real hostnames.\n- \`scripts/tui.js\` — the graph view renderer the engine loads for \`status --screen\` and \`--watch\`.\n- \`scripts/graph-player.html\` — the page template \`player\` fills in.\n- \`scripts/package.json\` — keeps the engine CommonJS when an ancestor package.json sets "type": "module".\n`);
   return frontmatter() + body;
 }
 
@@ -91,7 +91,7 @@ function checkFrontmatter(skillMd) {
   if (!platforms || platforms[1].split(',').map((item) => item.trim()).some((item) => !PLATFORMS.includes(item))) {
     problems.push(`platforms must be a list of ${PLATFORMS.join(', ')}`);
   }
-  for (const needle of ['scripts/ceci.js', 'scripts/tui.js', 'scripts/package.json', 'references/graph.md', 'references/gates.md', 'references/gpu.md', 'references/cela.md', 'examples/gpu-prefs.yaml', SKILL_DIR]) {
+  for (const needle of ['scripts/ceci.js', 'scripts/tui.js', 'scripts/graph-player.html', 'scripts/package.json', 'references/start.md', 'references/graph.md', 'references/gates.md', 'references/gpu.md', 'references/cela.md', 'examples/gpu-prefs.yaml', SKILL_DIR]) {
     if (!text.includes(needle)) problems.push(`Hermes SKILL.md does not name ${needle}`);
   }
   return problems;

@@ -152,11 +152,22 @@ test('flags accept --name=value, so a log line may start with dashes', () => {
   assert.equal(fs.readFileSync(path.join(dir, 'log.md'), 'utf8'), '-- a | b | done | c\n');
 });
 
-test('--help prints usage and exits 0 for every command', () => {
-  for (const args of [['--help'], ['status', '--help'], ['resolve-gpu', '-h']]) {
+test('--help, -h, -help, and help print usage, or one command\'s page, and exit 0', () => {
+  for (const args of [['--help'], ['-help'], ['-h'], ['help'], ['help', 'bogus']]) {
     const res = run(args);
     assert.equal(res.status, 0, `${args.join(' ')}: ${res.stderr}`);
-    assert.match(res.stdout, /resolve-gpu --work-dir PATH --gpu-pref PATH --model NAME/);
+    assert.match(res.stdout, /resolve-gpu --work-dir PATH --gpu-pref PATH --model NAME/, args.join(' '));
+    assert.match(res.stdout, /ceci prep --work-dir \.\/run/, 'the usage ends with where to start');
+  }
+  for (const args of [['status', '--help'], ['help', 'status'], ['status', '-help']]) {
+    const res = run(args);
+    assert.equal(res.status, 0, res.stderr);
+    assert.match(res.stdout, /^usage: ceci status --work-dir PATH/, args.join(' '));
+    assert.match(res.stdout, /never exits: run it in your own terminal/);
+  }
+  for (const command of ['prep', 'init', 'event', 'log', 'archive', 'player', 'resolve-gpu']) {
+    const res = run(['help', command]);
+    assert.match(res.stdout, new RegExp(`^usage: ceci ${command} --work-dir PATH`), command);
   }
 });
 

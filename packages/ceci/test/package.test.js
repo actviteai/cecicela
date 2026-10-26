@@ -61,7 +61,7 @@ test('npm pack ships the skill, the vendored core, and no tests', () => {
   const files = JSON.parse(res.stdout)[0].files.map((f) => f.path);
   for (const want of [
     'LICENSE', 'README.md', 'package.json', 'bin/ceci.js', 'lib/skill.js', 'lib/hermes.js', 'lib/core/index.js', 'lib/core/install.js',
-    'skill/SKILL.md', 'skill/tool/ceci.js', 'skill/tool/tui.js', 'skill/package.json', 'skill/playbooks/cela.md', 'skill/examples/gpu-prefs.yaml',
+    'skill/SKILL.md', 'skill/tool/ceci.js', 'skill/tool/tui.js', 'skill/tool/graph-player.html', 'skill/playbooks/start.md', 'skill/package.json', 'skill/playbooks/cela.md', 'skill/examples/gpu-prefs.yaml',
   ]) assert.ok(files.includes(want), `missing ${want}`);
   assert.deepEqual(files.filter((f) => f.endsWith('.test.js') || f.startsWith('test/')), []);
 });

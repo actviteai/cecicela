@@ -28,6 +28,24 @@ events:
 
 `owner` is the value supplied for that job, or `self`. `schedule` is `once` or `cron`. Do not add keys the schema does not list.
 
+## Brief
+
+`brief.md` holds the run's rules as top-level `key: value` lines. `ceci init` writes the first four; the Prep step (`playbooks/start.md`) adds the rest with `ceci init --start ... --animate ... --approach ...`, which replaces only those lines.
+
+```yaml
+number: ""                          # the target
+never: ["contact without yes", "set a price", "post or pay without yes"]
+deadline: ""
+tools: []
+start: resumed | fresh | new-dir    # Q1
+animate: chat | terminal | off      # Q3
+approach: compare | given           # Q4
+approach_note: string               # the approach the user typed, with given
+prepped: 2026-10-26T20:56Z          # when the Prep step ran
+```
+
+`ceci status` warns when `prepped:` is missing. `animate` says where the graph is shown; `graph:` in state.md says how it is drawn.
+
 ## Dependencies
 
 - Every `depends_on` id exists, and a job does not depend on itself.
@@ -60,6 +78,15 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 ## Graph view
 
 `ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column. Hotkeys in `--watch`: G graph, F frames, L legend, space pause, S step, T theme, - and + speed, R reset, Q quit.
+
+What each view costs you (the model):
+
+| View | Cost per update | Who runs it |
+| --- | --- | --- |
+| `ceci status` | a few short lines | you, to check the graph |
+| `ceci status --screen` | about 2 KB (24 lines of 80) | you, only when the user asks to see it here |
+| `ceci status --watch` | nothing: it runs in the user's terminal and never exits | the user; you print the command once |
+| `ceci player --out FILE` | one short command and one publish by path; the 23 KB page never passes through you | you, after each job when `animate: chat` |
 
 ## Log
 

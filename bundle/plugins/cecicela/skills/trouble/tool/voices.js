@@ -216,8 +216,9 @@ function main(argv) {
     process.stdout.write(`source: ${result.source}\n${format(result.roles)}\n`);
     return 0;
   }
-  process.stderr.write('usage: voices.js resolve [--project DIR] [--home DIR]\n       voices.js check FILE\n');
-  return command === '--help' || command === '-h' ? 0 : 2;
+  const help = command === '--help' || command === '-h' || command === '-help';
+  (help ? process.stdout : process.stderr).write('usage: voices.js resolve [--project DIR] [--home DIR]\n       voices.js check FILE\n');
+  return help ? 0 : 2;
 }
 
 if (require.main === module) process.exit(main(process.argv.slice(2)));

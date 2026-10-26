@@ -35,7 +35,7 @@ trouble is part of ceciCela: npm i -g @actvite/cecicela installs /ceci, /cela, a
 
 function main(argv) {
   const [command, ...rest] = argv;
-  if (!command || command === '--help' || command === '-h' || command === 'help') {
+  if (!command || command === '--help' || command === '-h' || command === '-help' || command === 'help') {
     process.stdout.write(usage());
     return command ? 0 : 2;
   }

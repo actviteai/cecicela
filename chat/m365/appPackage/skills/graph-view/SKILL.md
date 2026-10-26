@@ -38,18 +38,20 @@ trouble and cela keep the same title bar, log panel, and footer. trouble's centr
 
 ## Toggles
 
-`graph on`, `graph off`, `graph frames`, and `legend` may appear anywhere in a user turn. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80.
+`graph on`, `graph off`, `graph frames`, `legend`, and `animate` may appear anywhere in a user turn. `animate` builds the live player where the host has a surface for it (below), and turns the graph on. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80.
 
 ## Where the screen goes
 
-| Host | Surface | Each turn |
+| Host | Surface, when the user chose the live player | Each turn |
 | --- | --- | --- |
 | Claude | an artifact built once from `graph-player.html` | edit the artifact: append the event line to its `EVENTS` array |
 | ChatGPT | a canvas document built once from `graph-player.html` | edit the canvas in place: append the event line |
 | Grok | a Grok Studio window built once from `graph-player.html`, when it opens from this chat | edit in place: append the event line |
-| Microsoft 365 Copilot, or anywhere without a live HTML surface | the reply | the event line; the full 80x24 screen in a code block only when the graph's shape changed or the user asks |
+| Microsoft 365 Copilot, anywhere without a live HTML surface, or the user did not choose the player | the reply | the event line; the full 80x24 screen in a code block only when the graph's shape changed or the user asks |
 
-The player is about 23 KB (roughly 7,000 tokens). Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
+The player is about 23 KB (roughly 7,000 tokens), so it is built only when the user chose it: ceci's start question, or typing `animate`. Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
+
+To build it, replace the `STATE` string with the `state.md` text above its `events:` list, and put the events in `EVENTS`, one per line. For trouble or cela there is no `state.md`: `STATE` is `kind: trouble` (or `kind: cela`) and a `title:` line, for example `"kind: trouble\ntitle: \"stale page after deploy\"\n"`, and the `h`, `vote`, or `check` lines go in `EVENTS`.
 
 
 # Worked example: `graph frames` without a live surface

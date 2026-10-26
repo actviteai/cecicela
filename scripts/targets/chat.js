@@ -7,7 +7,8 @@
  *
  * Sources:
  *   chat/src/                 the chat deltas: the router, the per-skill chat rules,
- *                             the drawing rules, examples, host setup pages, the player
+ *                             the drawing rules, the help page, examples, host setup pages
+ *   packages/ceci/skill/tool/graph-player.html   the player template `ceci player` also fills
  *   packages/<skill>/skill/   the CLI protocols the knowledge files carry
  *   packages/core/lib/tui.js  the renderer, inlined into the player
  *
@@ -62,9 +63,20 @@ function chatAudit(md) {
   return out;
 }
 
-/** ceci's protocol without the commands chat cannot run. */
+/** ceci's protocol without the commands chat cannot run; ceci.delta.md says what replaces Prep and rule 9. */
 function chatCeci(md) {
-  return md.replace(/^## Playbooks\n(?:- `playbooks\/.*\n)+/m, '');
+  const out = dropSection(md, 'Prep')
+    .replace(/^## Playbooks\n(?:- `playbooks\/.*\n)+/m, '')
+    .replace(/^9\. Animation .*\n/m, '');
+  if (/ceci (prep|player|archive)|AskUserQuestion/.test(out)) throw new Error('chat ceci protocol still names a CLI-only start step');
+  return out;
+}
+
+/** The graph playbook without the CLI's cost table: chat has its own rule in INSTRUCTIONS.md. */
+function chatGraph(md) {
+  const out = md.replace(/\nWhat each view costs you \(the model\):\n\n(?:\|.*\n)+/, '');
+  if (out.includes('What each view costs')) throw new Error('chat graph playbook still carries the CLI cost table');
+  return out;
 }
 
 function knowledge() {
@@ -80,7 +92,7 @@ function knowledge() {
     '',
     '# Playbook: job graph',
     '',
-    demote(skill('ceci', 'playbooks/graph.md')).replace(/^## # /m, '').trim(),
+    demote(chatGraph(skill('ceci', 'playbooks/graph.md'))).replace(/^## # /m, '').trim(),
     '',
     '# Playbook: human gates',
     '',
@@ -110,6 +122,7 @@ function knowledge() {
     '',
   ].join('\n')));
   files.set('graph-render.md', text(read(SRC, 'graph-render.md')));
+  files.set('help.md', text(read(SRC, 'help.md')));
   files.set('voices.default.yaml', text(skill('trouble', 'voices.default.yaml')));
   files.set('state.example.md', text(read(SRC, 'state.example.md')));
   for (const name of fs.readdirSync(path.join(SRC, 'examples')).sort()) files.set(`examples/${name}`, text(read(SRC, 'examples', name)));
@@ -132,28 +145,15 @@ function framesExample() {
 }
 
 /**
- * The renderer without its comments or indentation: same code, fewer bytes,
- * because the model emits the player once per conversation. The parity test
- * runs this compacted copy, not the source, against the CLI.
+ * The player as chat hosts get it: the template and filling are ceci's own
+ * (`ceci player` writes the same page from a work dir), with the example
+ * state. The parity test runs this compacted copy, not the source, against
+ * the CLI.
  */
-function compact(js) {
-  return js
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('//'))
-    .join('\n');
-}
-
 function player() {
-  const state = read(SRC, 'state.example.md');
-  const at = state.indexOf('\nevents:\n');
-  const stateOnly = at === -1 ? state : state.slice(0, at + 1);
-  const events = at === -1 ? [] : tui().fromStateMd(state).events;
-  return read(SRC, 'graph-player.html')
-    .replace('/*@@TUI@@*/', () => compact(read(REPO, 'packages', 'core', 'lib', 'tui.js')))
-    .replace('/*@@STATE@@*/', () => JSON.stringify(stateOnly))
-    .replace('/*@@EVENTS@@*/\n', () => events.map((e) => `  ${JSON.stringify(e)},\n`).join(''));
+  const tool = path.join(REPO, 'packages', 'ceci', 'skill', 'tool');
+  const { fillPlayer } = require(path.join(tool, 'ceci.js'));
+  return fillPlayer(read(tool, 'graph-player.html'), read(REPO, 'packages', 'core', 'lib', 'tui.js'), read(SRC, 'state.example.md'));
 }
 
 function instructions(host) {
@@ -168,7 +168,8 @@ function instructions(host) {
       .replace('If a `state.md` is in knowledge or attached', 'If a `state.md` is attached')
       .replace('Validate it as `trouble.chat.md` says.', 'Validate it as the trouble skill says.')
       .replace('`graph-render.md` is the drawing rule set.', 'The graph-view skill is the drawing rule set.')
-      .replace(/When the graph is on and this host can show a live HTML document[\s\S]*?redraw the full 80x24 text screen only when the graph's shape changed or the user asks\./, 'Copilot chat has no live HTML surface, so put the event line in the reply and redraw the full 80x24 text screen in a code block only when the graph\'s shape changed or the user asks.');
+      .replace(/The live player is about 7,000 tokens[\s\S]*?redraw the full 80x24 text screen only when the graph's shape changed or the user asks\./, 'Copilot chat has no live HTML surface, so `animate` is not available: put the event line in the reply and redraw the full 80x24 text screen in a code block only when the graph\'s shape changed or the user asks.')
+      .replace('read `help.md` and reply', 'load the help skill and reply');
   }
   const out = `${t}\n\nPack: ceciCela ${version}.\n`;
   if (out.length > LIMITS[host]) throw new Error(`chat/${host}: instructions are ${out.length} characters; the limit is ${LIMITS[host]}`);
@@ -184,7 +185,7 @@ function packTargets() {
     'The host-agnostic ceciCela chat pack, rendered by `npm run chat:build` from `chat/src/` and the CLI skills in `packages/`. Do not edit it here.',
     '',
     '- `INSTRUCTIONS.md`: the router, for the Project\'s instructions slot.',
-    '- `knowledge/`: the three protocols (`ceci.chat.md`, `cela.chat.md`, `trouble.chat.md`), the drawing rules, the default role names, an example `state.md`, and worked examples.',
+    '- `knowledge/`: the three protocols (`ceci.chat.md`, `cela.chat.md`, `trouble.chat.md`), the help page (`help.md`), the drawing rules, the default role names, an example `state.md`, and worked examples.',
     '- `graph-player.html`: the 80x24 player; the model emits it once per conversation and appends event lines after that.',
     '',
     'Per-host kits with setup steps: `chat/claude/`, `chat/chatgpt/`, `chat/grok/`, `chat/m365/`.',
@@ -229,9 +230,10 @@ function m365Files() {
       { title: 'Stuck bug', text: 'Nothing I try fixes this bug. Here is the error:' },
       { title: 'Plan a goal', text: 'Plan this goal as a job graph with gates:' },
       { title: 'Is it done?', text: 'Is this change really done? Here is the diff and the test output:' },
+      { title: 'Help', text: 'help' },
     ],
     capabilities: [{ name: 'CodeInterpreter' }],
-    agent_skills: ['ceci', 'cela', 'trouble', 'graph-view'].map((s) => ({ folder: `./skills/${s}` })),
+    agent_skills: ['ceci', 'cela', 'trouble', 'graph-view', 'help'].map((s) => ({ folder: `./skills/${s}` })),
     disclaimer: { text: 'ceciCela in chat cannot read your files or run commands. trouble caps confidence at 6, ceci plans without running jobs, and cela reviews without measuring. The measured versions run in coding agents.' },
   })));
   files.set('appPackage/instruction.txt', text(instr));
@@ -239,6 +241,7 @@ function m365Files() {
   files.set('appPackage/skills/cela/SKILL.md', agentSkill('cela', 'ceciCela review checklist: reviews whether a pasted change is really done, without a tool and without a gate. Use when the user asks if a change is done.', k.get('cela.chat.md').text));
   files.set('appPackage/skills/trouble/SKILL.md', agentSkill('trouble', 'ceciCela four-roles debug protocol in untooled mode: verbatim evidence, Bayesian ranking, unanimous gate, TROUBLE_VERDICT. Use for a bug or incident earlier attempts did not fix.', k.get('trouble.chat.md').text));
   files.set('appPackage/skills/trouble/voices.default.yaml', text(skill('trouble', 'voices.default.yaml')));
+  files.set('appPackage/skills/help/SKILL.md', agentSkill('help', 'ceciCela help: the short manual for trouble, ceci, cela, and the graph commands. Use when the user types help, --help, -help, /help, or ?.', k.get('help.md').text.replace(/\n  animate {7}[^\n]*/, '')));
   files.set('appPackage/skills/graph-view/SKILL.md', agentSkill('graph-view', 'ceciCela graph view: the 80x24 ASCII screen rules and event lines for ceci, trouble, and cela. Use when the graph view is on.', `${k.get('graph-render.md').text}\n\n${k.get('examples/graph-frames.md').text}`));
   files.set('appPackage/manifest.json', text(core.gen.json({
     $schema: 'https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json',
@@ -311,4 +314,4 @@ function targets() {
   ];
 }
 
-module.exports = { LIMITS, compact, framesExample, instructions, knowledge, player, targets };
+module.exports = { LIMITS, framesExample, instructions, knowledge, player, targets };

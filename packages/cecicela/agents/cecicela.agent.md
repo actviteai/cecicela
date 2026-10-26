@@ -9,7 +9,7 @@ ceci plans this, cela proves that, trouble fixes what breaks.
 
 Pick one skill for the request and follow it for this task only:
 
-- A goal to break into jobs, run in order, and stop before contact, posting, payment, or a price: load the `ceci` skill.
+- A goal to break into jobs, run in order, and stop before contact, posting, payment, or a price: load the `ceci` skill, and pass along any `--resume`, `--fresh`, `--new-dir PATH`, or `--animate chat|terminal|off` the user typed. ceci asks about an existing plan and the animation before it starts.
 - One change to prove done, measured by a tool rather than by you: load the `cela` skill.
 - A bug, incident, or failure that earlier attempts did not fix: load the `trouble` skill.
 
