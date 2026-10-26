@@ -2,7 +2,7 @@
   "version": 1,
   "plugins": {
     "cecicela": {
-      "version": "1.1.0",
+      "version": "1.2.0",
       "components": {
         "skills": [
           {
@@ -25,7 +25,7 @@
       }
     },
     "ceci": {
-      "version": "2.1.0",
+      "version": "2.2.0",
       "components": {
         "skills": [
           {

@@ -1,6 +1,6 @@
 # Testing the chat packs: ChatGPT, Claude, Grok
 
-A manual test of ceciCela for Projects on the three web chat hosts. It takes about 45 minutes per host. Run the same thirteen tests on each host and fill in the results table at the end. Microsoft 365 Copilot has its own test in [`chat/m365/SETUP.md`](../chat/m365/SETUP.md), because it needs a Frontier tenant.
+A manual test of ceciCela for Projects on the three web chat hosts. It takes about 45 minutes per host. Run the same fourteen tests on each host and fill in the results table at the end. Microsoft 365 Copilot has its own test in [`chat/m365/SETUP.md`](../chat/m365/SETUP.md), because it needs a Frontier tenant.
 
 The install line the packs end with (`npx --yes @actvite/cecicela install --all`) only works once the npm packages are published. Before that, test 11 checks only that the line is there.
 
@@ -56,6 +56,7 @@ Start every test in a **new chat inside the Project**, unless the test says othe
 | 11 | In a ceci chat with no player open (ChatGPT without canvas, or a text-screen host), type `graph frames`, then `legend` | Three code blocks reveal the same screen column by column (cut at columns 27, 54, then the whole screen); `legend` hides or shows the one-line LEGEND row on the next screen. With a player open, press **F** and **L** in the player instead; the model must not re-emit the player. Every protocol's hand-off includes `npx --yes @actvite/cecicela install --all`. |
 | 12 | New chat. Attach the `state.md` and `brief.md` from test 7 and type `plan it again` | It does **not** continue silently. One message summarises the plan (title, N of M done, gate jobs) and asks **1 plan** (resume / new), **2 brief** (shows the fields; keep / edit), and **3 animation**. Answering `2b` makes it ask for the new rules before any job is planned. |
 | 13 | New chat. Type `help`, then `help graph`, then `-help` | Each reply is the matching section of `help.md` with its footer, and nothing else: no protocol starts, no limits sentence, no `state.md`. `help graph` lists `animate`, `graph on/off/frames`, `legend`, and the player keys. |
+| 14 | New chat. Plan a small goal; choose the live player (or text) and type `budget creator`. Then paste real test output, for example `npm test: 41 pass, 0 fail`, and type `budget low` and paste another line | Under creator, the reply adds a `step` line that copies the pasted numbers exactly, the screen shows `NOW` with that step, and the title bar says `creator`. Under low, no `step` line is written and no screen is drawn unless you ask. At no budget does it add a step for something you did not paste or it did not do, or an estimate or percentage. |
 
 ## 3. Host notes
 
@@ -85,8 +86,9 @@ Fill in one column per host. Write **P** for pass, **F** for fail (with a note),
 | 11 frames, legend, install line | | | | |
 | 12 prep questions on an attached plan | | | | |
 | 13 help | | | | |
+| 14 budget low / creator, honest steps | | | | |
 | Instruction limit shown by host | | | | |
 | Player surface (artifact / canvas / Studio / text) | | | | |
 | Share action exists | n/a | org only | | |
 
-A failure in tests 2, 3, 6, 9, 12 or 13 is a protocol or router bug: fix it in `chat/src/` (chat rules) or `packages/<name>/skill/` (protocol text) in a worktree and pull request, run `npm run sync`, and re-upload. A failure in test 8 is usually the host's surface. Note it and check the fallback works.
+A failure in tests 2, 3, 6, 9, 12, 13 or 14 is a protocol or router bug: fix it in `chat/src/` (chat rules) or `packages/<name>/skill/` (protocol text) in a worktree and pull request, run `npm run sync`, and re-upload. A failure in test 8 is usually the host's surface. Note it and check the fallback works.

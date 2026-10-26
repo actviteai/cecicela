@@ -30,6 +30,8 @@
   var ROLES = ['keeper', 'detective', 'maintainer', 'physicist'];
   var FOOTER = ' [G]raph [F]rames [L]egend [SPC]pause [S]tep [T]heme [-+]speed [R]eset';
   var LEGEND = ' LEGEND +--+ pending  +==+ done  |/-\\ running  ! GATE waiting  * packet --> deps';
+  // How often the model updates the view (playbooks/graph.md, Budget). The drawing itself costs no tokens.
+  var BUDGETS = ['low', 'medium', 'creator'];
 
   function pad(text, width) {
     text = String(text);
@@ -54,8 +56,10 @@
 
   /**
    * One event line. ceci:    [tNN] <job> <status> [cela:<ok|pending|stalled|blocked|missing_test>] [gate:<word>]
+   *                         [tNN] <job> step <what was done, with its real result>
    *                trouble: [tNN] h <H#> <p> <label...>   |   [tNN] vote <role> <yes|no> <N>
    *                cela:    [tNN] check <id> <ok|fail|open> <label...>
+   *                any:     [tNN] step <what was done>     (no job: planning, evidence received)
    * Returns null for a line that is not an event.
    */
   function parseEvent(line) {
@@ -84,6 +88,18 @@
       ev.label = parts.slice(3).join(' ');
       return ev;
     }
+    if (parts[0] === 'step' && parts.length >= 2 && STATUSES.indexOf(parts[1]) === -1) {
+      ev.type = 'step';
+      ev.job = null;
+      ev.text = parts.slice(1).join(' ');
+      return ev;
+    }
+    if (parts.length >= 3 && parts[1] === 'step') {
+      ev.type = 'step';
+      ev.job = parts[0];
+      ev.text = parts.slice(2).join(' ');
+      return ev;
+    }
     if (parts.length >= 2 && STATUSES.indexOf(parts[1]) !== -1) {
       ev.type = 'job';
       ev.job = parts[0];
@@ -100,7 +116,7 @@
 
   function clone(jobs) {
     return jobs.map(function (job) {
-      return { id: job.id, label: job.label, depends_on: job.depends_on.slice(), status: job.status, cela: job.cela, gate: job.gate };
+      return { id: job.id, label: job.label, depends_on: job.depends_on.slice(), status: job.status, cela: job.cela, gate: job.gate, steps: 0 };
     });
   }
 
@@ -111,7 +127,9 @@
       kind: model.kind || 'ceci',
       title: model.title || '',
       graph: model.graph || 'on',
+      budget: BUDGETS.indexOf(model.budget) === -1 ? 'low' : model.budget,
       legend: model.legend !== false,
+      now: null,
       jobs: clone(model.jobs || []),
       hypotheses: (model.hypotheses || []).map(function (h) { return { id: h.id, label: h.label, p: h.p }; }),
       votes: {},
@@ -132,6 +150,10 @@
         job.status = ev.status;
         if (ev.cela !== undefined) job.cela = ev.cela;
         if (ev.gate !== undefined) job.gate = ev.gate;
+      } else if (ev.type === 'step') {
+        var worker = ev.job === null ? null : out.jobs.filter(function (j) { return j.id === ev.job; })[0];
+        if (worker) worker.steps += 1;
+        out.now = { job: ev.job, text: ev.text };
       } else if (ev.type === 'h') {
         var h = out.hypotheses.filter(function (x) { return x.id === ev.id; })[0];
         if (h) {
@@ -200,6 +222,7 @@
         else if (top[1] === 'events') section = 'events';
         else if (top[1] === 'title') model.title = scalar(top[2] || '') || '';
         else if (top[1] === 'graph') model.graph = scalar(top[2] || '') || 'on';
+        else if (top[1] === 'budget') model.budget = scalar(top[2] || '') || 'low';
         else if (top[1] === 'kind' && /^(ceci|trouble|cela)$/.test(scalar(top[2] || '') || '')) model.kind = scalar(top[2]);
         if ((top[2] || '').trim() === '[]') section = top[1] === 'events' ? 'events' : 'jobs';
         return;
@@ -331,11 +354,12 @@
     return cells;
   }
 
-  function statusText(job, tick) {
+  function statusText(job, tick, budget) {
     var spin = SPIN.charAt(tick % 4);
     if (job.status === 'done') return job.cela === 'COMPLETE' ? ' done  cela OK' : ' done';
     if (job.status === 'running') {
       if (job.cela === 'pending') return ' ' + spin + ' run  cela..';
+      if (budget === 'creator' && job.steps && !job.cela) return ' ' + spin + ' ' + (job.steps > 99 ? '99+' : job.steps) + (job.steps === 1 ? ' step' : ' steps');
       if (job.cela && job.cela !== 'COMPLETE') return ' ' + spin + ' cela:' + job.cela;
       return ' ' + spin + ' running';
     }
@@ -382,7 +406,7 @@
       cv.text(p.x, p.y, bar, a);
       cv.text(p.x, p.y + BOX_H - 1, bar, a);
       cv.text(p.x, p.y + 1, '|' + pad(job.id + ' ' + job.label, BOX_W - 2) + '|', a);
-      var st = statusText(job, tick);
+      var st = statusText(job, tick, model.budget);
       cv.text(p.x, p.y + 2, '|' + pad(st, BOX_W - 2) + '|', job.status === 'gate' ? 'k' : a);
     });
     lay.overflow.forEach(function (o) {
@@ -437,7 +461,7 @@
     var model = applyEvents(input, opts.step);
     var cv = new Canvas();
     var label = model.kind === 'ceci' ? 'ceci' : model.kind;
-    var right = 'turn ' + two(model.turn) + '/' + two(countTurns(input.events || [])) + '  graph:' + model.graph + ' ';
+    var right = 'turn ' + two(model.turn) + '/' + two(countTurns(input.events || [])) + '  graph:' + model.graph + (model.budget === 'low' ? '' : '  ' + model.budget) + ' ';
     var left = ' ceciCela  TUI | ' + label + ': ' + model.title;
     cv.text(0, 0, pad(pad(left, W - right.length) + right, W), 'i');
     if (model.graph === 'off') {
@@ -445,7 +469,13 @@
     } else if (model.kind === 'trouble') drawTrouble(cv, model);
     else if (model.kind === 'cela') drawCela(cv, model);
     else drawGraph(cv, model, tick);
-    if (model.legend) cv.text(0, 17, pad(LEGEND, W), 'd');
+    if (model.budget !== 'low' && model.now && model.graph !== 'off') {
+      // The newest real step, typed out like the log: medium and creator only.
+      var said = (model.now.job === null ? '' : model.now.job + ' > ') + model.now.text;
+      if (opts.typed !== undefined) said = said.slice(0, Math.max(0, opts.typed));
+      cv.text(0, 17, ' NOW ', 'i');
+      cv.text(5, 17, pad(' ' + said, W - 5), 'b');
+    } else if (model.legend) cv.text(0, 17, pad(LEGEND, W), 'd');
     cv.text(0, 18, '+-- log.md ' + new Array(W - 11).join('-') + '+');
     var recent = model.log.slice(-3);
     for (var i = 0; i < 3; i += 1) {
@@ -529,6 +559,7 @@
     H: H,
     W: W,
     ROLES: ROLES,
+    BUDGETS: BUDGETS,
     applyEvents: applyEvents,
     fromStateMd: fromStateMd,
     layout: layout,

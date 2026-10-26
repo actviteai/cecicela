@@ -12,10 +12,10 @@ There is no `ceci prep`: read the attached or Project-knowledge `brief.md` and `
 
 1. **Plan**, only when a `state.md` with jobs is there. One sentence: its title, N of M jobs done, the jobs at a gate, the newest event. a) resume it; b) start a new plan (the user keeps the old files; you start a fresh `state.md`).
 2. **Brief**, only when a `brief.md` is there. Its fields, one per line. a) keep it; b) edit it first: ask for the new rules in the user's words and write them into `brief.md` before planning any job.
-3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one line per update; offer it only where this host has a live HTML surface); b) text: the event line each turn, and the 80x24 screen only when the graph's shape changes; c) off.
+3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one edit per turn; offer it only where this host has a live HTML surface); b) text: event lines, with the 80x24 screen as the budget says; c) off. Unless it is off, the budget too: low (only meaningful updates, the default), medium (up to three real milestones per turn), or creator (every real step, for a live audience; the most tokens).
 4. **Approach**, for a new plan. a) compare options first: the first job is `options` (artifact `options.md`, the possible approaches and the evidence for each), and every other job depends on it; b) the user names the approach.
 
-Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`. With 3a, build the player as `INSTRUCTIONS.md` says.
+Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`, and its budget part when they typed `budget <level>`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`; the budget goes in `state.md` as `budget:` (leave it out for low). With 3a, build the player as `INSTRUCTIONS.md` says.
 
 ## What you do
 
@@ -64,6 +64,7 @@ In `--work-dir` (required):
 - `--deadline TIME` (optional; record in brief.md)
 - `--resume` | `--fresh` | `--new-dir PATH` (optional; answers Prep question 1)
 - `--animate chat|terminal|off` (optional; answers Prep question 3)
+- `--budget low|medium|creator` (optional; the animation's token budget, Prep question 5)
 If a flag is absent, do not assume a value and do not reference any external agent.
 ### Rules
 1. Read `brief.md` and `state.md` first. If either is missing, run init behavior and stop.
@@ -78,6 +79,7 @@ If a flag is absent, do not assume a value and do not reference any external age
 ```yaml
 title: string            # optional: the goal in a few words
 graph: on | off | frames # optional: the graph view; default on
+budget: low | medium | creator # optional: how often the view updates; default low
 jobs:
   - id: string
     goal: string
@@ -89,7 +91,7 @@ jobs:
     artifact: path
     gpu: null | "host:device"
     cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
-events:                  # optional: one line per status change, oldest first
+events:                  # optional: one line per status change or step, oldest first
   - "j1 done cela:ok"
 ```
 ### Done
@@ -106,6 +108,7 @@ A run ends when the next action is a human gate, the deadline is reached, or no 
 ```yaml
 title: string
 graph: on | off | frames
+budget: low | medium | creator
 jobs:
   - id: string
     goal: string
@@ -121,7 +124,7 @@ events:
   - "job status [cela:token] [gate:word]"
 ```
 
-`title:` and `graph:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
+`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
 
 `jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
 
@@ -170,6 +173,7 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 
 ```text
 <job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
+<job> step <what was done, with its real result>
 ```
 
 `ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
@@ -177,6 +181,26 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 ### Graph view
 
 `ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column. Hotkeys in `--watch`: G graph, F frames, L legend, space pause, S step, T theme, - and + speed, R reset, Q quit.
+
+### Budget
+
+`budget:` in state.md sets how often you update the graph view, and that is all the animation costs: the spinner, packets, blink, typing, and ticker are computed by the renderer and cost no tokens at any budget. The default is `low`. Set it with `ceci init --budget`, the `--budget` flag, or when the user asks.
+
+| | low | medium | creator |
+| --- | --- | --- | --- |
+| Step events (`<job> step ...`) | none | up to 3 per job, at real milestones | one after every action on a running job |
+| Republish the player (`animate: chat`) | when a job ends (done, gate, blocked) and at a stop | also when a job starts and after each step | after every event |
+| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
+| Rough cost per job | one publish | up to five publishes and three steps | a step and a publish per action |
+
+`ceci event` enforces the step column: it refuses a step under `low` and a fourth step on a job under `medium`.
+
+Honest at every budget:
+
+- Write a step after the action, never before it or instead of it: `j4 step npm test: 41 pass, 0 fail`, not `j4 step running tests`.
+- Copy every number from the output that printed it. No estimates, no percentages a tool did not print, no activity invented to keep the screen busy. A quiet job looks quiet.
+- A step belongs to a running job; `ceci event` refuses one on any other.
+- A lower budget shows less, never something different: it skips updates, it does not merge them into a claim nobody checked.
 
 ### Log
 

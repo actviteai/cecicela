@@ -7,6 +7,7 @@
 ```yaml
 title: string
 graph: on | off | frames
+budget: low | medium | creator
 jobs:
   - id: string
     goal: string
@@ -22,7 +23,7 @@ events:
   - "job status [cela:token] [gate:word]"
 ```
 
-`title:` and `graph:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
+`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
 
 `jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
 
@@ -71,6 +72,7 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 
 ```text
 <job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
+<job> step <what was done, with its real result>
 ```
 
 `ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
@@ -87,6 +89,26 @@ What each view costs you (the model):
 | `ceci status --screen` | about 2 KB (24 lines of 80) | you, only when the user asks to see it here |
 | `ceci status --watch` | nothing: it runs in the user's terminal and never exits | the user; you print the command once |
 | `ceci player --out FILE` | one short command and one publish by path; the 23 KB page never passes through you | you, after each job when `animate: chat` |
+
+## Budget
+
+`budget:` in state.md sets how often you update the graph view, and that is all the animation costs: the spinner, packets, blink, typing, and ticker are computed by the renderer and cost no tokens at any budget. The default is `low`. Set it with `ceci init --budget`, the `--budget` flag, or when the user asks.
+
+| | low | medium | creator |
+| --- | --- | --- | --- |
+| Step events (`<job> step ...`) | none | up to 3 per job, at real milestones | one after every action on a running job |
+| Republish the player (`animate: chat`) | when a job ends (done, gate, blocked) and at a stop | also when a job starts and after each step | after every event |
+| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
+| Rough cost per job | one publish | up to five publishes and three steps | a step and a publish per action |
+
+`ceci event` enforces the step column: it refuses a step under `low` and a fourth step on a job under `medium`.
+
+Honest at every budget:
+
+- Write a step after the action, never before it or instead of it: `j4 step npm test: 41 pass, 0 fail`, not `j4 step running tests`.
+- Copy every number from the output that printed it. No estimates, no percentages a tool did not print, no activity invented to keep the screen busy. A quiet job looks quiet.
+- A step belongs to a running job; `ceci event` refuses one on any other.
+- A lower budget shows less, never something different: it skips updates, it does not merge them into a claim nobody checked.
 
 ## Log
 

@@ -8,11 +8,11 @@ Every run starts here, before rule 1. It costs one read-only command and one que
 ceci prep --work-dir PATH --json
 ```
 
-Use its fields as they are; do not open the files again to recount. `summary` is the sentence for question 1. `ask` lists the questions that apply: `plan` when state.md has jobs (or does not parse), `brief` when brief.md exists, and always `animate` and `approach`.
+Use its fields as they are; do not open the files again to recount. `summary` is the sentence for question 1. `ask` lists the questions that apply: `plan` when state.md has jobs (or does not parse), `brief` when brief.md exists, and always `animate`, `approach`, and `budget`.
 
 ## 2. Ask, once
 
-Drop every question a flag already answers. Put the rest in one AskUserQuestion call (it takes up to four). Where that tool is missing, ask the same questions in one plain-text message, numbered, so one line answers them all (`1a 2a 3c 4a`). Use this wording.
+Drop every question a flag already answers. Put the rest in one AskUserQuestion call (it takes up to four; when five remain, Q5 follows in a second call, only if Q3 turned the animation on). Where that tool is missing, ask the same questions in one plain-text message, numbered, so one line answers them all (`1a 2a 3c 4a`). Use this wording.
 
 **Q1. Plan** (only when `ask` has `plan`). Header `Plan`. Question: the `summary` sentence, then "What should this run do?"
 
@@ -46,10 +46,18 @@ A rule in the brief limits every job after it ("public tenders only"). This ques
 | Compare options first | the first job is `options`, artifact `options.md`: the possible approaches and the evidence for each. Every other job depends on it (rule 2). | `approach: compare` |
 | I already know the approach | the user types it (the tool's "Other" field, or a follow-up line); write it into brief.md as `approach_note:` | `approach: given` |
 
+**Q5. Budget** (skipped when Q3 is No, or by `--budget`). Header `Budget`. Question: "How much of your token budget should the animation use?" Every budget shows only real work; they differ in how often the view updates (Budget in `playbooks/graph.md`).
+
+| Option | Does | Records |
+| --- | --- | --- |
+| Low (Recommended) | only meaningful updates: the view changes when a job ends or stops at a gate | `budget: low` |
+| Medium | up to three real milestones per job, and the view updates when a job starts | `budget: medium` |
+| Content creator | a step after every action and an update after every event, for a live audience; uses the most tokens | `budget: creator` |
+
 ## 3. Record
 
 ```text
-ceci init --work-dir PATH --start resumed|fresh|new-dir --animate chat|terminal|off [--approach compare|given]
+ceci init --work-dir PATH --start resumed|fresh|new-dir --animate chat|terminal|off [--approach compare|given] [--budget low|medium|creator]
 ```
 
 It creates whatever is missing and sets only those lines in brief.md, plus `prepped: <UTC minute>`. `ceci status` warns when `prepped:` is missing: that plan skipped this step. Then go on to rule 1.
@@ -62,9 +70,10 @@ It creates whatever is missing and sets only those lines in brief.md, plus `prep
 | `--fresh` | Q1 | New plan, keep the old one |
 | `--new-dir PATH` | Q1 | New plan in another folder, at PATH |
 | `--animate chat\|terminal\|off` | Q3 | that option |
+| `--budget low\|medium\|creator` | Q5 | that option |
 
 Q2 is skipped only when there is no brief. Q4 is skipped when the plan is resumed.
 
 ## Unattended runs
 
-Nobody can answer (a schedule, CI, a headless `-p` run). Do not wait. Choose: a new plan with the old one archived (`ceci archive --keep-brief`, which can be undone by moving the files back), keep the brief, animation off, approach compare. The run's first line says so, for example `prep (unattended): archived to runs/2026-10-26T205600Z, brief kept, animation off, approach compare`. A scheduled run that is meant to continue its plan passes `--resume`.
+Nobody can answer (a schedule, CI, a headless `-p` run). Do not wait. Choose: a new plan with the old one archived (`ceci archive --keep-brief`, which can be undone by moving the files back), keep the brief, animation off, budget low, approach compare. The run's first line says so, for example `prep (unattended): archived to runs/2026-10-26T205600Z, brief kept, animation off, approach compare`. A scheduled run that is meant to continue its plan passes `--resume`.

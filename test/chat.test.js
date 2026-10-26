@@ -237,3 +237,19 @@ test('one player draws trouble and cela too, from a kind: line in STATE', () => 
   assert.match(screen, / H1 {2}stale edge cache after deploy +\[#+\.+\] {2}0\.61/);
   assert.match(read('chat/pack/knowledge/graph-render.md'), /`STATE` is `kind: trouble` \(or `kind: cela`\)/);
 });
+
+test('the animation budget: one rule set for chat, the same three levels, honest at every level', () => {
+  const render = read('chat/pack/knowledge/graph-render.md');
+  assert.match(render, /^## Budget$/m);
+  for (const level of ['low', 'medium', 'creator']) assert.match(render, new RegExp(`\\| ${level} `), level);
+  assert.match(render, /never as intent/);
+  assert.match(render, /No estimates, no progress percentages nobody printed, no activity invented/);
+  for (const host of HOSTS) assert.match(read(`chat/${host}/INSTRUCTIONS.md`), /`budget low\|medium\|creator`/, host);
+  assert.match(read('chat/m365/appPackage/instruction.txt'), /in a code block as the budget says: low only when asked, medium when the graph's shape changed, creator every turn that changed it\./);
+  assert.match(read('chat/pack/knowledge/ceci.chat.md'), /the budget too: low \(only meaningful updates, the default\), medium .*creator/);
+  assert.match(read('chat/pack/knowledge/help.md'), /budget creator {3}every real step, for a live audience/);
+  // The CLI's table and the chat's table name the same levels in the same order.
+  const levels = (md) => (md.match(/^\| \| (low) \| (medium) \| (creator) \|$/m) || []).slice(1);
+  assert.deepEqual(levels(render), ['low', 'medium', 'creator']);
+  assert.deepEqual(levels(read('packages/ceci/skill/playbooks/graph.md')), ['low', 'medium', 'creator']);
+});

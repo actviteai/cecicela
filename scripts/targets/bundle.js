@@ -82,11 +82,12 @@ function readme(plugin) {
   lines.push('', '## Install', '', 'In Claude Code:', '', '```', `/plugin install ${plugin} --marketplace actviteai/cecicela`, '```', '', 'In claude.ai, the desktop app, or Cowork, add it from **Customize > Plugins**.');
   if (has('ceci')) {
     lines.push('', '## What ceci asks when it starts', '');
-    lines.push('Before it plans, ceci reads the job folder (`ceci prep`, which changes nothing) and asks up to four questions in one go:', '');
+    lines.push('Before it plans, ceci reads the job folder (`ceci prep`, which changes nothing) and asks these questions, up to four at a time:', '');
     lines.push('1. **Plan**, when an older plan is there: resume it, start a new one and archive the old one into `runs/` (nothing is deleted), or start a new one in another folder. `--resume`, `--fresh`, or `--new-dir PATH` answers it.');
     lines.push('2. **Brief**, when a brief is there: keep its rules, or edit them before any job starts.');
     lines.push('3. **Animation**: the job graph live in this chat, in your terminal (`ceci status --watch`), or not at all. `--animate chat|terminal|off` answers it.');
-    lines.push('4. **Approach**, for a new plan: compare the options first, or name the approach yourself.', '');
+    lines.push('4. **Approach**, for a new plan: compare the options first, or name the approach yourself.');
+    lines.push('5. **Budget**, when the animation is on: low (only meaningful updates), medium (real milestones), or content creator (every real step, for a live audience). `--budget low|medium|creator` answers it. Every budget shows only work that really happened.', '');
     lines.push('With nobody there to answer, ceci archives the old plan, keeps the brief, turns the animation off, and says so in its first line.');
   }
   lines.push('', '## What runs on your machine', '');

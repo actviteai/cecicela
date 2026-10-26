@@ -39,9 +39,9 @@ A `voices:` block the user pastes renames trouble's four roles for this conversa
 
 ## Graph view
 
-`graph-render.md` is the drawing rule set. The user can type `graph on`, `graph off`, `graph frames`, `legend`, or `animate` anywhere; store the setting in `state.md`'s `graph:` header so it survives. Defaults: on for ceci and trouble, off for cela.
+`graph-render.md` is the drawing rule set. The user can type `graph on`, `graph off`, `graph frames`, `legend`, `animate`, or `budget low|medium|creator` anywhere; store the settings in `state.md`'s `graph:` and `budget:` headers so they survive. The budget (default low) sets how often you update the view; at every budget, an event line or step is only something that really happened, with numbers copied, never estimated. Defaults: on for ceci and trouble, off for cela.
 
-The live player is about 7,000 tokens, so build it only when the user chose it (ceci's start question, or typing `animate`) and this host can show a live HTML document beside the chat (an artifact, a canvas, a Studio window). Build it once per conversation from `graph-player.html`; for trouble or cela, its `STATE` starts with `kind: trouble` or `kind: cela`. On each later turn append only the new event line to its `EVENTS` array. Never emit the player twice in one conversation. Otherwise put the event line in the reply and redraw the full 80x24 text screen only when the graph's shape changed or the user asks.
+The live player is about 7,000 tokens, so build it only when the user chose it (ceci's start question, or typing `animate`) and this host can show a live HTML document beside the chat (an artifact, a canvas, a Studio window). Build it once per conversation from `graph-player.html`; for trouble or cela, its `STATE` starts with `kind: trouble` or `kind: cela`. On each later turn append only the new event line to its `EVENTS` array. Never emit the player twice in one conversation. Otherwise put the event line in the reply and redraw the full 80x24 text screen as the budget says: low only when asked, medium when the graph's shape changed, creator every turn that changed it.
 
 ## Hand-off
 

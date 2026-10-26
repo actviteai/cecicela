@@ -23,7 +23,7 @@ ceci in chat plans; it does not run jobs. It hands back brief.md (your rules) an
 Before planning it asks, in one message:
   1 plan       resume the state.md you attached, or start a new one (only when one is attached)
   2 brief      keep the rules in your brief.md, or edit them first (only when one is attached)
-  3 animation  live player beside the chat, text screens, or off
+  3 animation  live player beside the chat, text screens, or off; and the budget: low, medium, creator
   4 approach   compare options first, or you name the approach (new plans)
 Answer in one line, like: 1a 2a 3b 4a
 
@@ -57,6 +57,10 @@ Type any of these, any time:
   graph off     stop drawing for the rest of the plan (saved in state.md)
   graph frames  reveal the screen column by column
   legend        show or hide the legend row
+  budget low       only meaningful updates (the default; the fewest tokens)
+  budget medium    plus up to three real milestones per turn, with a NOW ticker
+  budget creator   every real step, for a live audience (the most tokens)
+Every budget shows only what really happened; a lower one shows less, never something made up.
 In the player: G graph, F frames, L legend, space pause, S step, T theme, - + speed, R replay.
 ```
 

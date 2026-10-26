@@ -168,7 +168,7 @@ function instructions(host) {
       .replace('If a `state.md` is in knowledge or attached', 'If a `state.md` is attached')
       .replace('Validate it as `trouble.chat.md` says.', 'Validate it as the trouble skill says.')
       .replace('`graph-render.md` is the drawing rule set.', 'The graph-view skill is the drawing rule set.')
-      .replace(/The live player is about 7,000 tokens[\s\S]*?redraw the full 80x24 text screen only when the graph's shape changed or the user asks\./, 'Copilot chat has no live HTML surface, so `animate` is not available: put the event line in the reply and redraw the full 80x24 text screen in a code block only when the graph\'s shape changed or the user asks.')
+      .replace(/The live player is about 7,000 tokens[\s\S]*?redraw the full 80x24 text screen as the budget says: low only when asked, medium when the graph's shape changed, creator every turn that changed it\./, 'Copilot chat has no live HTML surface, so `animate` is not available: put the event line in the reply and redraw the full 80x24 text screen in a code block as the budget says: low only when asked, medium when the graph\'s shape changed, creator every turn that changed it.')
       .replace('read `help.md` and reply', 'load the help skill and reply');
   }
   const out = `${t}\n\nPack: ceciCela ${version}.\n`;
