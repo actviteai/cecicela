@@ -208,6 +208,10 @@ test('the live player is opt-in: chat ceci asks first, and the router builds it 
   assert.match(read('chat/m365/appPackage/instruction.txt'), /`animate` is not available/);
   const ceci = read('chat/pack/knowledge/ceci.chat.md');
   assert.match(ceci, /^## Prep in chat$/m);
+  for (const text of [...HOSTS.map((host) => read(`chat/${host}/INSTRUCTIONS.md`)), read('chat/m365/appPackage/instruction.txt')]) {
+    assert.match(text, /continue from it only after the user chose to resume it/, 'the router does not resume a plan the Prep step has not asked about');
+    assert.doesNotMatch(text, /read it first and continue from it\./);
+  }
   assert.match(ceci, /a live player beside this chat \(built once, about 7,000 tokens/);
   assert.doesNotMatch(ceci, /ceci (prep|player|archive) --work-dir|AskUserQuestion/, 'the CLI-only start step is replaced, not copied');
   assert.doesNotMatch(ceci, /What each view costs/, 'the CLI cost table stays out of chat');

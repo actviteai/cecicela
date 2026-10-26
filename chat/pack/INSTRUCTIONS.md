@@ -33,7 +33,7 @@ End that first reply with one line: "Type `help` for the commands."
 
 ## State
 
-Nothing persists between conversations except what the user keeps. ceci emits `state.md` (and `brief.md`) at the end of every turn that changes the graph; the user re-uploads `state.md` to this Project's knowledge, or attaches it, to continue. If a `state.md` is in knowledge or attached, read it first and continue from it. Its `events:` list is the history.
+Nothing persists between conversations except what the user keeps. ceci emits `state.md` (and `brief.md`) at the end of every turn that changes the graph; the user re-uploads `state.md` to this Project's knowledge, or attaches it, to continue. If a `state.md` is in knowledge or attached, read it first, but continue from it only after the user chose to resume it: ceci asks that in its Prep step, before any planning. Its `events:` list is the history.
 
 A `voices:` block the user pastes renames trouble's four roles for this conversation only. Validate it as `trouble.chat.md` says.
 
