@@ -26,8 +26,8 @@ const LIMITS = {
 };
 
 test('every host instruction file is within its limit, and the build refuses one that is not', () => {
-  for (const host of [...HOSTS, 'm365']) {
-    const file = host === 'm365' ? 'chat/m365/appPackage/instruction.txt' : `chat/${host}/INSTRUCTIONS.md`;
+  for (const host of [...HOSTS, 'm365', 'm365-builder']) {
+    const file = { m365: 'chat/m365/appPackage/instruction.txt', 'm365-builder': 'chat/m365-builder/INSTRUCTIONS.txt' }[host] || `chat/${host}/INSTRUCTIONS.md`;
     assert.ok(read(file).length <= chat.LIMITS[host], `${file} is ${read(file).length} characters`);
   }
   const saved = chat.LIMITS.grok;
@@ -40,8 +40,8 @@ test('every host instruction file is within its limit, and the build refuses one
 });
 
 test('the router makes every protocol state its limits in its first reply', () => {
-  for (const host of [...HOSTS, 'm365']) {
-    const text = host === 'm365' ? read('chat/m365/appPackage/instruction.txt') : read(`chat/${host}/INSTRUCTIONS.md`);
+  for (const host of [...HOSTS, 'm365', 'm365-builder']) {
+    const text = read({ m365: 'chat/m365/appPackage/instruction.txt', 'm365-builder': 'chat/m365-builder/INSTRUCTIONS.txt' }[host] || `chat/${host}/INSTRUCTIONS.md`);
     assert.match(text, /The first reply of every run states/);
     for (const [skill, limit] of Object.entries(LIMITS)) assert.match(text, limit, `${host}: ${skill}`);
     assert.match(text, /npx --yes @actvite\/cecicela install --all/, `${host}: every pack ends with the install line`);
@@ -178,4 +178,20 @@ test('the Microsoft 365 skills name only what the package carries', () => {
   assert.ok(fs.existsSync(path.join(dir, 'trouble', 'voices.default.yaml')));
   const manifest = JSON.parse(fs.readFileSync(path.join(REPO, 'chat/m365/appPackage/manifest.json'), 'utf8'));
   assert.equal(manifest.developer.termsOfUseUrl, 'https://www.actvite.com/tos');
+});
+
+test('the Agent Builder kit is text files only, at most 20, naming nothing the agent does not have', () => {
+  const dir = path.join(REPO, 'chat/m365-builder/knowledge');
+  const files = fs.readdirSync(dir).sort();
+  assert.ok(files.length <= 20 && files.length >= 10, `${files.length} files`);
+  for (const name of files) {
+    assert.match(name, /\.txt$/, name);
+    const body = fs.readFileSync(path.join(dir, name), 'utf8');
+    assert.doesNotMatch(body, /`(graph-render\.md|voices\.default\.yaml|[a-z]+\.chat\.md)`|Project knowledge|Project's knowledge/, name);
+  }
+  assert.deepEqual(files.filter((f) => /\.chat\.txt$/.test(f)), ['ceci.chat.txt', 'cela.chat.txt', 'trouble.chat.txt']);
+  const instr = read('chat/m365-builder/INSTRUCTIONS.txt');
+  assert.match(instr, /`trouble\.chat\.txt`/);
+  assert.doesNotMatch(instr, /Project|agent skill/);
+  assert.match(read('chat/m365-builder/LISTING.md'), /seal-192\.png/);
 });
