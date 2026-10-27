@@ -32,6 +32,7 @@ test('bin prints its version and usage', () => {
   assert.equal(version.stdout.trim(), pkg.version);
   assert.equal(ceci([]).status, 2);
   assert.match(ceci(['--help']).stdout, /ceci install/);
+  assert.match(ceci(['--help']).stdout, /\|feedback\|/, 'the usage lists every task command, feedback included');
 });
 
 test('bin forwards task commands to the skill tool', () => {

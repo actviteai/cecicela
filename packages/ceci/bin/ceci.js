@@ -5,7 +5,7 @@
  * npm entry point.
  *
  *   ceci install [--all|--claude|--grok|--codex|...]       copy the skill into harness homes
- *   ceci prep|init|status|event|log|archive|player|resolve-gpu --work-dir PATH  run the skill's tool
+ *   ceci prep|init|status|event|feedback|log|archive|player|resolve-gpu --work-dir PATH  run the skill's tool
  *   ceci help [COMMAND]                                     the tool's usage or one command's page
  */
 
@@ -19,7 +19,7 @@ function usage() {
   const { harness } = require('../lib/core');
   return `Usage:
   ceci install [--all] [--<harness> ...]
-  ceci prep|init|status|event|log|archive|player|resolve-gpu --work-dir PATH [...]
+  ceci prep|init|status|event|feedback|log|archive|player|resolve-gpu --work-dir PATH [...]
   ceci help [COMMAND]        the task commands' usage, or one command's page
   ceci --help | --version
 

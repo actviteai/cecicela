@@ -321,6 +321,7 @@ test('task commands route to the bundled engine', () => {
   assert.match(gate.out, /UNCLEAR_TASK/);
   const help = run(['--help'], env);
   assert.match(help.out, /cela check/);
+  assert.match(help.out, /state, outcome, memory/, 'the task commands include outcome');
 });
 
 test('init --hook merges the Stop hook into existing settings', () => {

@@ -163,6 +163,7 @@ test('chat knowledge names no tool step the chat cannot take', () => {
   const ceci = fs.readFileSync(path.join(REPO, 'chat/pack/knowledge/ceci.chat.md'), 'utf8');
   assert.match(ceci, /Rule 1: a first chat has no `brief\.md` or `state\.md`/);
   assert.doesNotMatch(ceci, /^## Playbooks$/m);
+  assert.match(ceci, /`event`, `feedback`, `log`/, 'chat lists ceci feedback among the commands it cannot run');
   for (const host of ['chatgpt', 'claude', 'grok']) {
     assert.match(fs.readFileSync(path.join(REPO, 'chat', host, 'SETUP.md'), 'utf8').trimEnd(), /npx --yes @actvite\/cecicela install --all`$/, host);
   }
@@ -264,6 +265,7 @@ test('the chat front door: a start menu, a memory review that reads, prompt tuni
   assert.match(door, /^# Playbook: feedback$/m);
   assert.match(door, /The user files it\. Never open, post, or submit it yourself\./);
   assert.doesNotMatch(door, /ceci\.js|ceci prep|ceci feedback/, 'no command the chat cannot run');
+  assert.doesNotMatch(door, /playbooks\/feedback\.md/, 'the feedback playbook is inlined; chat has no playbooks/ folder');
   for (const host of HOSTS) {
     assert.equal(read(`chat/${host}/knowledge/cecicela.chat.md`), door, host);
     const instr = read(`chat/${host}/INSTRUCTIONS.md`);

@@ -44,7 +44,7 @@ Draw the graph as the graph-view skill says when the graph view is on (the defau
 
 - Rule 1: a first chat has no `brief.md` or `state.md`. Write them yourself from what the user said; do not stop.
 - Prep is the section above; there is nothing to archive, because the user keeps the old files. The player is built once and then edited, as `INSTRUCTIONS.md` says; it is never republished.
-- Every `ceci <command>` the protocol names (`prep`, `init`, `status`, `event`, `log`, `archive`, `player`, `resolve-gpu`) is not available here. Do its job in text instead: write the event line into `events:` yourself, keep the log line in your reply, and leave `gpu:` for the coding agent to resolve.
+- Every `ceci <command>` the protocol names (`prep`, `init`, `status`, `event`, `feedback`, `log`, `archive`, `player`, `resolve-gpu`) is not available here. Do its job in text instead: write the event line into `events:` yourself, keep the log line in your reply, and leave `gpu:` for the coding agent to resolve.
 - The playbooks it mentions are already included below; there are no other files to open.
 
 The protocol the coding-agent skill follows comes next. Everything else in it applies.
