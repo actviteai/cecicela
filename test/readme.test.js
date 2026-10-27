@@ -33,8 +33,9 @@ test('the README names the budgets, keys, and player cost the code has', () => {
   assert.match(README, /the 35 KB player once, about 10,000 tokens/);
 });
 
-test('the README links the video, the issue tracker, and every package on npm', () => {
+test('the README links the video, the channel, the issue tracker, and every package on npm', () => {
   assert.match(README, /\[ceciCela, explained\]\(https:\/\/youtu\.be\/i5Ge36L_MTk\)/);
+  assert.match(README, /\[actVite YouTube channel\]\(https:\/\/www\.youtube\.com\/channel\/UCPlRHTUre-GPCK__77zI5IQ\)/);
   assert.match(README, /\[open an issue\]\(https:\/\/github\.com\/actviteai\/cecicela\/issues\/new\)/);
   for (const name of ['ceci', 'cela', 'trouble', 'cecicela']) assert.ok(README.includes(`https://www.npmjs.com/package/@actvite/${name})`), name);
   assert.match(README, /^## Feedback$/m);

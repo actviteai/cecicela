@@ -8,7 +8,7 @@
 
 > ceci plans this, cela proves that, trouble fixes what breaks.
 
-▶ **Video:** [ceciCela, explained](https://youtu.be/i5Ge36L_MTk) on YouTube.
+▶ **Video:** [ceciCela, explained](https://youtu.be/i5Ge36L_MTk) on the [actVite YouTube channel](https://www.youtube.com/channel/UCPlRHTUre-GPCK__77zI5IQ).
 
 **ceciCela** is three agent skills for coding agents, shipped as one product:
 
