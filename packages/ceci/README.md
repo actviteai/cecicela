@@ -27,6 +27,11 @@ ceci is standalone. It contains no bot names, project names, hostnames, or envir
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.3.1 <!-- keep-version -->
+
+- `ceci status --watch` exits 2 at once, with a hint, when its output is not a terminal. An agent's shell tool captures output until a command ends, which `--watch` never does, so no CLI agent can play the animation in its own window: run `--watch` in a second terminal window, or use `--screen` for one frame.
+- The start question's option reads "Yes, in a second terminal window" (it said "in my terminal").
+
 ### Changes in 2.3.0 <!-- keep-version -->
 
 - The screen tells the truth about a big graph: depths wrap into bands, the view follows the running or gate job, and row 16 counts what is out of view (`<< 3 earlier`, `2 later >>`). Row 17 names the job that needs attention, or the newest step.

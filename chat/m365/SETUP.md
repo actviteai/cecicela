@@ -1,6 +1,6 @@
 # ceciCela for Microsoft 365 Copilot: build, test, publish
 
-This folder is a Microsoft 365 Agents Toolkit project for a declarative agent (manifest schema v1.9). The router is the agent's `instructions` (at most 8,000 characters; the build checks). The three protocols, the drawing rules, and the help page ship as agent skills (`appPackage/skills/*/SKILL.md`, at most eight). The agent declares Code Interpreter. There is no live HTML surface in Copilot chat, so the graph view is the text screen and `animate` is not offered. The **Help** conversation starter (or typing `help`) prints the short manual.
+This folder is a Microsoft 365 Agents Toolkit project for a declarative agent (manifest schema v1.9). The router is the agent's `instructions` (at most 8,000 characters; the build checks). The front door (start menu, `optimize`, feedback), the three protocols, the drawing rules, and the help page ship as agent skills (`appPackage/skills/*/SKILL.md`, at most eight). The agent declares Code Interpreter. There is no live HTML surface in Copilot chat, so the graph view is the text screen and `animate` is not offered. The **Start here** conversation starter (or typing `cecicela`) offers the four-choice start menu; **Help** (or typing `help`) prints the short manual.
 
 Custom skills in declarative agents are a **preview for Microsoft Frontier tenants**, and they do not run in tenants that use Purview Information Barriers. Microsoft does not yet accept declarative agents with custom skills in Partner Center: ISVs must not submit this package to the Commercial Marketplace until Microsoft opens that route. Embedded knowledge files, the other way to carry the protocols, are not enabled for the Agents Toolkit either. So today this package is for testing and for organizations in Frontier; the marketplace submission waits on Microsoft. Re-check https://learn.microsoft.com/microsoft-365/copilot/extensibility/declarative-agent-skills before each release.
 
@@ -9,7 +9,7 @@ Custom skills in declarative agents are a **preview for Microsoft Frontier tenan
 1. Set `TEAMSFX_AGENT_SKILLS=true` before you start the Agents Toolkit (`export TEAMSFX_AGENT_SKILLS=true` on macOS or Linux; on Windows set it as a user environment variable and restart VS Code).
 2. Open this folder in VS Code with the Microsoft 365 Agents Toolkit extension, or use the `atk` CLI.
 3. Sign in to the test tenant and provision (`atk provision --env dev`). That zips `appPackage/` and sideloads it.
-4. Open Microsoft 365 Copilot, pick the ceciCela agent, and run each conversation starter. The first reply must state its limits.
+4. Open Microsoft 365 Copilot, pick the ceciCela agent, and run each conversation starter. **Start here** shows the four-choice menu and **Help** the manual; each protocol starter's first reply states its limits.
 
 ## Publish to the Commercial Marketplace (when Microsoft accepts skills)
 

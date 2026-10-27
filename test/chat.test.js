@@ -296,3 +296,22 @@ test('chat ceci keeps the typed commands and the view line, done by editing the 
   assert.match(render, /never guess one/);
   assert.match(render, / type: help {2}budget <level> {2}animate {2}graph on\|off {2}legend/);
 });
+
+test('every setup page names every file its kit ships, and the testing guide counts what the kits hold', () => {
+  const files = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+  for (const host of HOSTS) {
+    const setup = read(`chat/${host}/SETUP.md`);
+    const shipped = files(path.join(REPO, 'chat', host, 'knowledge')).map((f) => path.basename(f));
+    if (!setup.includes('every file in `knowledge/`')) for (const name of shipped) assert.ok(setup.includes(name), `${host}/SETUP.md does not list ${name}`);
+    assert.ok(setup.includes('graph-player.html'), `${host}/SETUP.md does not list graph-player.html`);
+  }
+  const total = files(path.join(REPO, 'chat', 'pack', 'knowledge')).length + 1;
+  assert.match(read('chat/chatgpt/SETUP.md'), new RegExp(`\`graph-player.html\`, ${total} files\\.`));
+  const guide = read('docs/testing-chat.md');
+  assert.match(guide, new RegExp(`Files added: ${total} \\(the ${total - 1} in \`knowledge/\``));
+  const tests = guide.slice(guide.indexOf('## 2. The tests'), guide.indexOf('## 3. Host notes')).match(/^\| \d+ \|/gm).length;
+  assert.match(guide, new RegExp(`Run the same ${['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'][tests]} tests`));
+  const results = guide.slice(guide.indexOf('## 4. Results')).match(/^\| \d+ /gm).length;
+  assert.equal(results, tests, 'the results table has a row for every test');
+  assert.ok(Buffer.byteLength(read('chat/pack/INSTRUCTIONS.md')) < 8000);
+});
