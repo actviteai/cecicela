@@ -65,7 +65,12 @@ function bump(plan) {
     fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
     process.stdout.write(`bumped @actvite/${name} ${was} -> ${data.version}\n`);
   }
-  // Keep package-lock.json in step, or the next npm ci reads the old versions.
+}
+
+// Keep package-lock.json in step, or the next npm ci reads the old versions.
+// Runs after stamp, which re-pins the bundle's dependencies: before it, the
+// lock would pin the bundle to the old skill versions and fetch them from npm.
+function relock() {
   const lock = npm(['install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund']);
   if (lock.status !== 0) throw new Error(`could not update package-lock.json: ${lock.stderr}`);
 }
@@ -180,6 +185,7 @@ function main(argv) {
   const opts = parseArgs(argv);
   if (Object.keys(opts.bump).length) bump(opts.bump);
   require('./stamp').stampAll((line) => process.stdout.write(`${line}\n`));
+  if (Object.keys(opts.bump).length) relock();
   if (!opts.skipTests) {
     const res = npm(['test'], { stdio: 'inherit', encoding: undefined });
     if (res.status !== 0) throw new Error('npm test failed; nothing was staged');

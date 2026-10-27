@@ -6,12 +6,12 @@
   },
   "metadata": {
     "description": "ceciCela marketplace: ceci plans this, cela proves that, trouble fixes what breaks. The bundle and each skill on its own.",
-    "version": "1.2.0"
+    "version": "1.2.1"
   },
   "plugins": [
     {
       "name": "cecicela",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. The /ceci job graph with human gates, the /cela evidence gate where a tool names the result, and the /trouble four-roles debug protocol, in one plugin.",
       "source": "./bundle/plugins/cecicela",
       "homepage": "https://github.com/actviteai/cecicela",
@@ -51,7 +51,7 @@
     },
     {
       "name": "cela",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "cela is an evidence-first protocol for AI coding agents. A bundled tool runs the checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work. Part of ceciCela.",
       "source": "./bundle/plugins/cela",
       "homepage": "https://github.com/actviteai/cecicela",
@@ -69,7 +69,7 @@
     },
     {
       "name": "trouble",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Stop looping on a bug you cannot close. /trouble is a four-roles debug protocol that collects verbatim evidence, ranks hypotheses with Bayesian math, and refuses a fix until the roles unanimously agree. Part of ceciCela.",
       "source": "./bundle/plugins/trouble",
       "homepage": "https://github.com/actviteai/cecicela",

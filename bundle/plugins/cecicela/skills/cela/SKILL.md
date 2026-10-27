@@ -3,7 +3,7 @@ name: cela
 description: Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself.
 disable-model-invocation: true
 ---
-# cela 1.0.0
+# cela 1.0.1
 
 cela makes "done" something a tool measures, not something you claim. You plan the change, `tool/cela.js` runs the checks, and its verdict names the result. Follow this for the current task only.
 
