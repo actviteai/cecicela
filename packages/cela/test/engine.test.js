@@ -50,6 +50,13 @@ const REQ = ['--req', 'adds'];
 const cover = (root) => cela(root, ['cover', 'R1', 'test/add.test.js', 'adds']);
 const readLog = (root) => fs.readFileSync(path.join(root, '.cela', 'state.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
 
+test('start in a git repo keeps .cela out of git', () => {
+  const root = fixture();
+  cela(root, ['start', '--risk', 'LOW', '--files', 'src/add.js', '--run', TEST_CMD]);
+  assert.match(fs.readFileSync(path.join(root, '.cela', '.gitignore'), 'utf8'), /^\*$/m);
+  assert.equal(git(root, 'status', '--porcelain', '--untracked-files=all'), '');
+});
+
 test('gate is CONTINUE before any check and UNCLEAR_TASK before start', () => {
   const root = fixture();
   assert.match(cela(root, ['gate']).out, /UNCLEAR_TASK/);

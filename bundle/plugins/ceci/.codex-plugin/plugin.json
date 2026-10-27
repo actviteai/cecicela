@@ -1,6 +1,6 @@
 {
   "name": "ceci",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "ceci turns a goal into a job graph, runs ready jobs in dependency order, stops at human gates before contact, posting, payment, or pricing, places GPU jobs, and gates code changes with /cela. Part of ceciCela.",
   "author": {
     "name": "actvite",

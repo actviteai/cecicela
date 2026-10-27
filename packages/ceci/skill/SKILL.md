@@ -62,7 +62,7 @@ feedback:                # optional, last: how results landed, newest last
 ## CLI
 The skill uses `tool/ceci.js` (zero-dependency Node):
 - `ceci prep --work-dir PATH --json` — what the work dir holds: title, job counts, gate jobs, last log line, brief fields, archived runs, the start questions that apply. Read-only.
-- `ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given] [--budget low|medium|creator]` — creates any missing `brief.md`, `state.md`, or `log.md` and never overwrites one. The start flags set only those lines and `prepped:` in brief.md. It does not record a deadline.
+- `ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given] [--budget low|medium|creator]` — creates any missing `brief.md`, `state.md`, or `log.md` and never overwrites one. The start flags set only those lines and `prepped:` in brief.md. It does not record a deadline. When it creates the work dir inside a git repo, it adds a `.gitignore` there.
 - `ceci status --work-dir PATH` — lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. `--screen` prints the 80x24 graph view once; `--watch` redraws it as state.md changes.
 - `ceci event --work-dir PATH --line TEXT` — applies one event line to the job it names, appends it to `events:` with the UTC minute, and prints the line as stored. `<job> step <text>` records real work on a running job, within the budget.
 - `ceci feedback --work-dir PATH --verdict good|adjust|retry|report [--job ID] --note TEXT` — records how a result landed, in the user's words, at the end of state.md. `ceci prep` shows the newest three.

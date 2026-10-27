@@ -63,6 +63,22 @@ test('init fills a missing file and leaves an existing brief untouched', () => {
   assert.equal(fs.readFileSync(path.join(dir, 'brief.md'), 'utf8'), 'keep\n');
 });
 
+test('init keeps a work dir it creates in a git repo out of git, and leaves other dirs alone', () => {
+  const repo = tmp();
+  assert.equal(spawnSync('git', ['init', '-q'], { cwd: repo }).status, 0);
+  const made = path.join(repo, 'plans', 'run');
+  assert.equal(run(['init', '--work-dir', made]).status, 0);
+  assert.match(fs.readFileSync(path.join(made, '.gitignore'), 'utf8'), /^\*$/m);
+  assert.equal(spawnSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: repo, encoding: 'utf8' }).stdout, '');
+  const theirs = path.join(repo, 'theirs');
+  fs.mkdirSync(theirs);
+  assert.equal(run(['init', '--work-dir', theirs]).status, 0);
+  assert.equal(fs.existsSync(path.join(theirs, '.gitignore')), false);
+  const outside = path.join(tmp(), 'run');
+  assert.equal(run(['init', '--work-dir', outside]).status, 0);
+  assert.equal(fs.existsSync(path.join(outside, '.gitignore')), false);
+});
+
 test('resolve-gpu picks the highest-priority free match and exports CUDA', () => {
   const dir = tmp();
   assert.equal(run(['init', '--work-dir', dir]).status, 0);
