@@ -107,7 +107,7 @@ function knowledge() {
     '',
     '# Playbook: improve my prompt',
     '',
-    demote(skill('cecicela', 'playbooks/optimize.md')).replace(/^## [^\n]*\n\n/, '').replace('the Pick table in `SKILL.md`', 'the routing table in the instructions').trim(),
+    demote(skill('cecicela', 'playbooks/optimize.md')).replace(/^## [^\n]*\n\n/, '').replace('the Pick table in `SKILL.md`', 'the routing table in the instructions').replace('as `playbooks/feedback.md` says', 'as the feedback playbook below says').trim(),
     '',
     '# Playbook: feedback',
     '',

@@ -57,7 +57,7 @@ The user asked to tighten a request before it runs. The goal is a prompt the rig
 - Add no facts. Anything you supplied rather than the user is marked `[assumed: ...]` inside the prompt, for the user to confirm or delete.
 - Keep the user's words for the goal; tighten the structure, not the intent.
 - One rewrite per turn. If the user edits it, show the whole new prompt again, not a diff.
-- After the user runs it, ask for feedback on the result as `playbooks/feedback.md` says, not on the prompt.
+- After the user runs it, ask for feedback on the result as the feedback playbook below says, not on the prompt.
 
 ### Example
 

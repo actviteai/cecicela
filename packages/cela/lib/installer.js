@@ -191,7 +191,7 @@ Commands:
   status           Show install status for every harness
 
 Task commands (run inside a repository; see SKILL.md):
-  start, plan, req, cover, check, gate, claim, note, state, memory, export, protocol, hook-stop
+  start, plan, req, cover, check, gate, claim, note, state, outcome, memory, export, protocol, hook-stop
   e.g. cela start --risk LOW --files src/a.js --run "npm test"; cela check; cela gate
 
 Options:
