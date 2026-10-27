@@ -368,3 +368,13 @@ test('status --screen prints the 80x24 graph view and still validates the graph'
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /a\.txt is missing/);
 });
+
+test('status --watch refuses at once when its output is not a terminal, as in an agent shell tool', () => {
+  const dir = tmp();
+  run(['init', '--work-dir', dir]);
+  const res = spawnSync(process.execPath, [CLI, 'status', '--work-dir', dir, '--watch'], { encoding: 'utf8', timeout: 10000 });
+  assert.equal(res.signal, null, 'it exited by itself');
+  assert.equal(res.status, 2);
+  assert.equal(res.stdout, '');
+  assert.match(res.stderr, /--watch needs a terminal: run it in your own terminal window, not through an agent\. For one frame here, use --screen\./);
+});
