@@ -2,12 +2,12 @@
   "version": 1,
   "plugins": {
     "cecicela": {
-      "version": "1.2.1",
+      "version": "1.3.0",
       "components": {
         "skills": [
           {
             "name": "cecicela",
-            "description": "Front door for ceciCela. Use on /cecicela, or when the user is unsure whether to plan a goal (ceci), prove a change (cela), or debug what broke (trouble). Names the skill that fits and hands off."
+            "description": "Front door for ceciCela. Use on /cecicela, or when the user is unsure whether to plan a goal (ceci), prove a change (cela), or debug what broke (trouble). Offers a start menu, help, a review of what is remembered, prompt tuning, and feedback; names the skill that fits and hands off."
           },
           {
             "name": "ceci",
@@ -25,7 +25,7 @@
       }
     },
     "ceci": {
-      "version": "2.2.0",
+      "version": "2.3.0",
       "components": {
         "skills": [
           {
@@ -36,7 +36,7 @@
       }
     },
     "cela": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "components": {
         "skills": [
           {
@@ -47,7 +47,7 @@
       }
     },
     "trouble": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "components": {
         "skills": [
           {

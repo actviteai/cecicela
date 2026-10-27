@@ -3,7 +3,7 @@
 The user typed `graph frames` where no artifact, canvas, or Studio window is available. Reveal the first screen column by column in exactly three blocks, then continue with one event line per turn.
 
 ```text
- ceciCela  TUI | ceci: ship
+ ceciCela | ceci: ship the
   +==============+    +====
   |j1 scaffold re|-+->|j2 c
   | done  cela OK| |  | don
@@ -19,18 +19,18 @@ The user typed `graph frames` where no artifact, canvas, or Studio window is ava
                       | pen
                       +----
 
-
- LEGEND +--+ pending  +==+
+ [###########.....] 4/6 don
+ RUN   j5: deploy
 +-- log.md ----------------
-| turn 09  j3 done gate:app
-| turn 10  j6 blocked
-| turn 11  j5 running cela:
+| #09     j3 done gate:appr
+| #10     j6 blocked
+| #11     j5 running cela:p
 +--------------------------
- [G]raph [F]rames [L]egend
+ type: help  budget <level>
 ```
 
 ```text
- ceciCela  TUI | ceci: ship the docs site
+ ceciCela | ceci: ship the docs site
   +==============+    +==============+    +===========
   |j1 scaffold re|-+->|j2 content mod|--->|j4 build pa
   | done  cela OK| |  | done  cela OK|    | done  cela
@@ -46,18 +46,18 @@ The user typed `graph frames` where no artifact, canvas, or Studio window is ava
                       | pending      |
                       +--------------+
 
-
- LEGEND +--+ pending  +==+ done  |/-\ running  ! GATE
+ [###########.....] 4/6 done  1 running
+ RUN   j5: deploy
 +-- log.md -------------------------------------------
-| turn 09  j3 done gate:approved
-| turn 10  j6 blocked
-| turn 11  j5 running cela:pending_
+| #09     j3 done gate:approved
+| #10     j6 blocked
+| #11     j5 running cela:pending_
 +-----------------------------------------------------
- [G]raph [F]rames [L]egend [SPC]pause [S]tep [T]heme [
+ type: help  budget <level>  animate  graph on|off  le
 ```
 
 ```text
- ceciCela  TUI | ceci: ship the docs site                  turn 11/11  graph:on
+ ceciCela | ceci: ship the docs site                              4/6 done  low
   +==============+    +==============+    +==============+    +--------------+
   |j1 scaffold re|-+->|j2 content mod|--->|j4 build pages|*+->|j5 deploy     |
   | done  cela OK| |  | done  cela OK|    | done  cela OK| |  | | run  cela..|
@@ -73,12 +73,12 @@ The user typed `graph frames` where no artifact, canvas, or Studio window is ava
                       | pending      |
                       +--------------+
 
-
- LEGEND +--+ pending  +==+ done  |/-\ running  ! GATE waiting  * packet --> deps
+ [###########.....] 4/6 done  1 running
+ RUN   j5: deploy
 +-- log.md --------------------------------------------------------------------+
-| turn 09  j3 done gate:approved                                               |
-| turn 10  j6 blocked                                                          |
-| turn 11  j5 running cela:pending_                                            |
+| #09     j3 done gate:approved                                                |
+| #10     j6 blocked                                                           |
+| #11     j5 running cela:pending_                                             |
 +------------------------------------------------------------------------------+
- [G]raph [F]rames [L]egend [SPC]pause [S]tep [T]heme [-+]speed [R]eset 11ev=207B
+ type: help  budget <level>  animate  graph on|off  legend            11 ev 207B
 ```

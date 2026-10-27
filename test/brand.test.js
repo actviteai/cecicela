@@ -117,5 +117,5 @@ test('fonts come from Cloudflare: no tracked file loads Google Fonts', () => {
 
 test('the graph player names a system monospace fallback after its Cloudflare font', () => {
   const player = fs.readFileSync(path.join(REPO, 'packages/ceci/skill/tool/graph-player.html'), 'utf8');
-  assert.match(player, /font: 14px\/1\.2 "JetBrains Mono", ui-monospace,[^;]*monospace;/);
+  assert.match(player, /font: clamp\(7px, min\(1\.95vw, 3\.4vh\), 34px\)\/1\.2 "JetBrains Mono", ui-monospace,[^;]*monospace;/);
 });

@@ -305,7 +305,11 @@ test('state.md keeps its title, graph mode, budget, and events through a round t
   assert.match(text, /^title: "ship: it"\ngraph: off\nbudget: creator\njobs:\n/);
   assert.match(text, /\nevents:\n {2}- "a ready"\n {2}- "a running cela:pending"\n$/);
   const doc = parseDoc(text);
-  assert.deepEqual(doc, { title: 'ship: it', graph: 'off', budget: 'creator', jobs, events: meta.events });
+  assert.deepEqual(doc, { title: 'ship: it', graph: 'off', budget: 'creator', jobs, events: meta.events, feedback: null });
+  const rated = formatState(jobs, { ...meta, feedback: ['2026-10-27T05:40Z adjust a: fewer jobs'] });
+  assert.match(rated, /\nevents:\n[\s\S]*\nfeedback:\n {2}- "2026-10-27T05:40Z adjust a: fewer jobs"\n$/, 'feedback closes the file, after events');
+  assert.deepEqual(parseDoc(rated).feedback, ['2026-10-27T05:40Z adjust a: fewer jobs']);
+  assert.throws(() => parseDoc('jobs: []\nfeedback:\n  - "x"\nevents: []\n'), /bad state\.md line 4/, 'events come before feedback');
   assert.equal(formatState(jobs), formatState(doc.jobs, { title: null, graph: null, budget: null, events: null }));
   assert.throws(() => parseDoc('graph: sideways\njobs: []\n'), /graph must be on, off, or frames/);
   assert.throws(() => parseDoc('budget: huge\njobs: []\n'), /budget must be low, medium, or creator/);
@@ -336,7 +340,8 @@ test('event moves a job, stores the cela token, and appends the line', () => {
   const doc = parseDoc(fs.readFileSync(path.join(dir, 'state.md'), 'utf8'));
   assert.equal(doc.jobs[0].status, 'done');
   assert.equal(doc.jobs[0].cela_gate, 'COMPLETE');
-  assert.deepEqual(doc.events, ['a running cela:pending', 'a done cela:ok', 'b ready']);
+  for (const line of doc.events) assert.match(line, /^@\d{4}-\d\d-\d\dT\d\d:\d\dZ /, 'each event carries the UTC minute it was recorded');
+  assert.deepEqual(doc.events.map((line) => line.replace(/^@\S+ /, '')), ['a running cela:pending', 'a done cela:ok', 'b ready']);
   assert.equal(run(['status', '--work-dir', dir]).status, 0);
 });
 
@@ -352,7 +357,7 @@ test('status --screen prints the 80x24 graph view and still validates the graph'
   const lines = res.stdout.replace(/\n$/, '').split('\n');
   assert.equal(lines.length, 24);
   for (const line of lines) assert.equal(line.length, 80);
-  assert.match(res.stdout, /^ ceciCela {2}TUI \| ceci: /);
+  assert.match(res.stdout, /^ ceciCela \| ceci: /);
   assert.match(res.stdout, /\|a build {7}\|/);
   assert.match(res.stdout, /\| \/ running {4}\|/);
   assert.match(res.stdout, /^[ -~\n]*$/, 'pure ASCII');

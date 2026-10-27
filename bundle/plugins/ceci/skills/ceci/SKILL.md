@@ -36,7 +36,8 @@ Unattended (nobody can answer): new plan, archive the old one with `ceci archive
 6. GPU jobs: run `ceci resolve-gpu` with the preference map, record its first line in the job's gpu field, and export the CUDA lines it prints for that job only. If it prints no CUDA_VISIBLE_DEVICES for a specific device, follow its stderr note before the job starts.
 7. After every job, update state.md and append exactly one line to log.md. Schedule the next ready job if one exists.
 8. Every status change also appends one event line to the `events:` list in state.md: `<job> <status>`, plus `cela:<ok|pending|stalled|blocked|missing_test>` or `gate:<word>` when they apply. Use `ceci event`.
-9. Animation costs tokens only when you update the view; `budget:` in state.md says how often (Budget in `playbooks/graph.md`: which `step` events to write and when to republish). Every step is real work already done, with numbers copied from its output. With `animate: chat`, run `ceci player --work-dir PATH --out PATH/graph-player.html` in the same shell call as the event and republish the file by path; the page replays every event. Never read or paste the page. With `animate: terminal`, print `node <this skill>/tool/ceci.js status --work-dir PATH --watch` once for the user; never run `--watch` yourself, it does not exit. Check the graph with plain `ceci status`; run `--screen` only when the user asks to see it.
+9. Animation costs tokens only when you update the view; `budget:` in state.md says how often (Budget in `playbooks/graph.md`: which `step` events to write and when to update). Every step is real work already done, with numbers copied from its output. With `animate: chat`, update the player the one way this host allows (Player in `playbooks/graph.md`): by path when a tool shows a local file as a page, else by appending the lines `ceci event` printed to the page you built once. After each update, say in one line what it shows: `view: <done>/<total> done, as of <HH:MM>Z`; when you skip or cannot make an update, say `view not updated` instead. With `animate: terminal`, print `node <this skill>/tool/ceci.js status --work-dir PATH --watch` once for the user; never run `--watch` yourself, it does not exit. Check the graph with plain `ceci status`; run `--screen` only when the user asks to see it.
+10. When the user types `budget low|medium|creator`, `animate chat|terminal|off`, `graph on|off`, `legend`, `show graph`, or `help` (Commands below), do it before anything else that turn and confirm in one line what changed.
 ## State schema
 ```yaml
 title: string            # optional: the goal in a few words
@@ -54,14 +55,17 @@ jobs:
     gpu: null | "host:device"
     cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
 events:                  # optional: one line per status change or step, oldest first
-  - "j1 done cela:ok"
+  - "@2026-10-27T05:40Z j1 done cela:ok"   # ceci event adds the UTC minute
+feedback:                # optional, last: how results landed, newest last
+  - "2026-10-27T06:02Z adjust j3: fewer jobs, no paid tools"
 ```
 ## CLI
 The skill uses `tool/ceci.js` (zero-dependency Node):
 - `ceci prep --work-dir PATH --json` — what the work dir holds: title, job counts, gate jobs, last log line, brief fields, archived runs, the start questions that apply. Read-only.
-- `ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given]` — creates any missing `brief.md`, `state.md`, or `log.md` and never overwrites one. The start flags set only those lines and `prepped:` in brief.md. It does not record a deadline.
+- `ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given] [--budget low|medium|creator]` — creates any missing `brief.md`, `state.md`, or `log.md` and never overwrites one. The start flags set only those lines and `prepped:` in brief.md. It does not record a deadline.
 - `ceci status --work-dir PATH` — lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. `--screen` prints the 80x24 graph view once; `--watch` redraws it as state.md changes.
-- `ceci event --work-dir PATH --line TEXT` — applies one event line to the job it names and appends it to `events:`. `<job> step <text>` records real work on a running job, within the budget.
+- `ceci event --work-dir PATH --line TEXT` — applies one event line to the job it names, appends it to `events:` with the UTC minute, and prints the line as stored. `<job> step <text>` records real work on a running job, within the budget.
+- `ceci feedback --work-dir PATH --verdict good|adjust|retry|report [--job ID] --note TEXT` — records how a result landed, in the user's words, at the end of state.md. `ceci prep` shows the newest three.
 - `ceci resolve-gpu --work-dir PATH --gpu-pref PATH --model NAME [--busy HOST:DEVICE]`
 - `ceci log --work-dir PATH --line TEXT`
 - `ceci archive --work-dir PATH [--to NAME] [--keep-brief]` — moves brief.md, state.md, log.md, and every artifact state.md names into `runs/<UTC time>/`. Never deletes; refuses an existing destination; prints the new path.
@@ -74,5 +78,12 @@ Prefer these commands over free-form file writes.
 - `playbooks/gates.md` — stop conditions, blank-price rule, hand-back format.
 - `playbooks/gpu.md` — preference YAML, CUDA env, fallback, logging.
 - `playbooks/cela.md` — when and how to call /cela, how to store the gate.
+## Commands
+The user may type these at any point; rule 10 says when to act on them.
+- `budget low|medium|creator` — `ceci init --work-dir PATH --budget <level>`; say what changes (Budget in `playbooks/graph.md`). In the player and in `--watch`, the B key explains the budgets; in `--watch` it also saves the choice to state.md.
+- `animate chat|terminal|off` — `ceci init --work-dir PATH --animate <where>`; build or stop the view as rule 9 says.
+- `graph on|off`, `legend` — the view's `graph:` header and legend row.
+- `show graph` — `ceci status --work-dir PATH --screen`, once, in a code block.
+- `help` — the commands above, `ceci help` for the command line, and `/cecicela help` for everything else.
 ## Done
-A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md, the blank-price line if an offer exists, and the player link when there is one.
+A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md, the blank-price line if an offer exists, and the player link when there is one. Then ask once how it landed: good, adjust (the user says what; apply it to this result and show what changed), retry (a different approach, never the same one again), or report a problem with ceciCela (draft a GitHub issue for https://github.com/actviteai/cecicela/issues/new, show it first, and let the user file it). Record the answer, in the user's words, with `ceci feedback`. At Prep, `ceci prep` shows the newest feedback: start the next run from it and say how.

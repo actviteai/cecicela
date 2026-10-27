@@ -1,6 +1,6 @@
 # Graph view: drawing rules
 
-The graph view is an 80x24 screen in plain ASCII, drawn the way a BBS door game would: boxes for jobs, `-->` edges, a title bar, a log panel, hotkeys along the bottom. Plain ASCII is identical on every host and every terminal; never use Unicode box-drawing characters. The same rules drive `ceci status --watch` in a terminal and the HTML player, from one renderer (`tui.js`), so a screen drawn here should match theirs character for character.
+The graph view is an 80x24 screen in plain ASCII, drawn the way a BBS door game would: boxes for jobs, `-->` edges, a title bar, a log panel, and a command line along the bottom. Plain ASCII is identical on every host and every terminal; in text, never use Unicode box-drawing characters (the player's ansi theme draws its own). The same rules drive `ceci status --watch` in a terminal and the HTML player, from one renderer (`tui.js`), so a screen drawn here should match theirs character for character.
 
 ## You emit events, not frames
 
@@ -15,21 +15,21 @@ After every state change, emit one event line. Never draw animation frames yours
 | trouble | `vote <role> <yes\|no> <N>` | that role's gate vote and its N/10 score |
 | cela | `check <id> <ok\|fail\|open> <label>` | a checklist item's state |
 
-A line may start with `tNN` to set the turn number; otherwise each event is the next turn. Examples: `j4 running cela:pending`, `j4 done cela:ok`, `j3 done gate:approved`, `h H1 0.61 stale edge cache after deploy`, `vote detective no 5`.
+A line may start with `@YYYY-MM-DDTHH:MMZ`, the UTC minute it happened, when you know the time from this conversation (the host told you, or the user's pasted output shows it); never guess one. Without it, the log numbers the events (`#07`). A line may also start with `tNN` to set the turn number. Examples: `j4 running cela:pending`, `j4 done cela:ok`, `j3 done gate:approved`, `h H1 0.61 stale edge cache after deploy`, `vote detective no 5`.
 
 ## Layout (ceci)
 
-- Row 0 is the title bar: ` ceciCela  TUI | ceci: <title>`, and on the right `turn NN/NN  graph:<mode>`.
-- Rows 1 to 16 are the graph. Column = depth (a job with no dependencies is depth 0; otherwise 1 + the deepest dependency). Row = order within that column, at most three rows; more show as `+N more`. At most four columns; more show as `>> +N jobs`.
-- Boxes are 16 wide and 4 tall. Columns start at x = 2 and step by 23 (20 when there are four columns). Rows start at y = 1 and step by 5.
-- Border: `+--------------+` when the job is not done, `+==============+` when it is done.
-- Line 2 of a box: `|<id> <goal>|`, cut to 14 characters.
-- Line 3 of a box, the status: ` done  cela OK` (done, gate COMPLETE), ` done`, ` | run  cela..` (running with cela pending; the first mark is the spinner `| / - \`), ` | running`, ` ! GATE: human` (a gate job; it blinks), ` ready`, ` pending`, or ` cela:STALLED` and the like.
-- Edges leave the parent's right side on its line 2, run to the gutter before the child's column, bend once with `+`, run vertically with `|`, and enter the child's line 2 with `->`. Crossing lines become `+`. Edges from a done parent are bright; from an unfinished parent, dim.
-- Packets (`*` with an `o` trail) move along every edge from a done parent into a running or gate job.
-- Row 17: the legend, ` LEGEND +--+ pending  +==+ done  |/-\ running  ! GATE waiting  * packet --> deps`, shown unless the user typed `legend` to hide it.
-- Rows 18 to 22: the log panel, `+-- log.md ----...+`, the last three events as `| turn NN  <event>`, a `_` cursor after the newest.
-- Row 23: ` [G]raph [F]rames [L]egend [SPC]pause [S]tep [T]heme [-+]speed [R]eset` and, on the right, `<n>ev=<bytes>B`: the number of events and their total size.
+Every row comes from `state.md`; nothing on the screen is decoration that claims work.
+
+- Row 0, the title bar: ` ceciCela | ceci: <title>` on the left; `<done>/<total> done  <budget>` on the right (` graph:<mode>` in front when it is not `on`).
+- Rows 1 to 15, the graph. Depth = 0 for a job with no dependencies, else 1 + the deepest dependency. Four depths to a band, side by side; a fifth depth wraps to a new band under the first, and the edge into it runs down the right gutter, back along the gap row, and down into the new band. A band is as tall as its busiest depth (at most three boxes); more boxes show as `+N more`.
+- When the graph does not fit, the view follows the work: it starts one depth before the earliest running or gate job (else the earliest ready or blocked one). Row 16 says what is out of view: `<< N earlier`, `N later >>`.
+- Boxes are 16 wide and 4 tall: border `+--------------+` when not done, `+==============+` when done; line 2 `|<id> <goal>|`, cut to 14; line 3 the status: ` done  cela OK`, ` done`, ` | run  cela..` (the first mark is the spinner `| / - \`), ` | running`, ` | 2 steps` (creator), ` ! GATE: human` (it blinks), ` ready`, ` pending`, or ` cela:STALLED` and the like.
+- Edges leave the parent's line 2 and enter the child's line 2 with `->`; corners and crossings are `+`. Packets (`*` with an `o` trail) move along edges from a done parent into a running or gate job.
+- Row 16, the summary: a 16-cell bar and the real counts (` [###########.....] 4/6 done  1 running  1 at gate  2 ready`).
+- Row 17, the focus: `NOW   <job> > <newest step>` (medium and creator, when there is a step), else `GATE`, `RUN`, or `NEXT` with the job that needs attention, else `DONE`. `legend` swaps in ` LEGEND +--+ pending  +==+ done  |/-\ running  ! GATE waiting  * packet --> deps`.
+- Rows 18 to 22, the log panel: `+-- log.md ---...+` and the last three events, each labelled with its minute (`05:56Z`), its turn (`turn 12`), or its number (`#11`); a `_` cursor after the newest.
+- Row 23, in text: ` type: help  budget <level>  animate  graph on|off  legend` and, on the right, `as of <HH:MM>Z` (the newest stamped event), or `<n> ev <bytes>B` when no event is stamped. The player puts its keys here instead (below).
 
 trouble and cela keep the same title bar, log panel, and footer. trouble's centre panel is one posterior bar per hypothesis (` H1  <label>  [##########....]  0.61`) and the gate: one line of votes (` GATE  keeper YES 7   detective NO 5   maintainer YES 8   physicist YES 7`) and, under it, the outcome (`       -> distill`, `-> fix`, or `-> waiting`). cela's is the checklist (` [x] C1   <label>`, `[!]` for fail, `[ ]` for open).
 
@@ -42,7 +42,7 @@ trouble and cela keep the same title bar, log panel, and footer. trouble's centr
 | Event lines | state changes only: job status, posteriors and votes, checklist items | plus up to three `step` lines per turn, at real milestones | plus a `step` line for every real thing that happened this turn |
 | Player, when built | one edit per turn that changed something, appending that turn's lines | the same | the same |
 | Text screen, without a player | only when the user asks | when the graph's shape changes | every turn that changed something (about 600 tokens each) |
-| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
+| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, step counts on running boxes, and, in the player, effects on real changes only: the newest event's job flashes, a job that just finished throws sparks, the title cycles colours; the ansi theme by default |
 
 A step is honest at every budget:
 
@@ -52,7 +52,13 @@ A step is honest at every budget:
 
 ## Toggles
 
-`graph on`, `graph off`, `graph frames`, `legend`, `animate`, and `budget low|medium|creator` may appear anywhere in a user turn. `animate` builds the live player where the host has a surface for it (below), and turns the graph on. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80.
+`graph on`, `graph off`, `graph frames`, `legend`, `animate`, and `budget low|medium|creator` may appear anywhere in a user turn. `animate` builds the live player where the host has a surface for it (below), and turns the graph on. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80. `show graph` draws the text screen once, in a code block, at any budget. `help` lists these. Confirm each one in one line before anything else that turn.
+
+## The player
+
+The player's bottom row is its only key panel; each `[X]` is also a button: G graph, L legend, B budget, T theme (phosphor, amber, or ansi: the 16-colour BBS palette with box-drawing lines), space pause, R replay the events from the first, - + speed. B opens a panel that explains the three budgets and copies `budget <level>` for the user to paste here: the page cannot change how often you update it, only the chat can. Its footer shows the newest event's minute and its age (`05:40Z 12m ago`), so a page you have not updated looks stale instead of current.
+
+After each update, say in one line what it now shows: `view: <done>/<total> done, as of <HH:MM>Z` (leave out `as of` when no event is stamped). When the budget skips an update, or you cannot make one, say `view not updated`. Never let the page show a state that `state.md` does not have.
 
 ## Where the screen goes
 
@@ -63,6 +69,6 @@ A step is honest at every budget:
 | Grok | a Grok Studio window built once from `graph-player.html`, when it opens from this chat | edit in place: append the event line |
 | Microsoft 365 Copilot, anywhere without a live HTML surface, or the user did not choose the player | the reply | the event line; the full 80x24 screen in a code block only when the graph's shape changed or the user asks |
 
-The player is about 23 KB (roughly 7,000 tokens), so it is built only when the user chose it: ceci's start question, or typing `animate`. Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
+The player is about 35 KB (roughly 10,000 tokens), so it is built only when the user chose it: ceci's start question, or typing `animate`. Emitting it again every turn would undo what the event lines save, so a conversation contains it once. A new conversation rebuilds it once from `state.md`, whose `events:` list carries the history.
 
 To build it, replace the `STATE` string with the `state.md` text above its `events:` list, and put the events in `EVENTS`, one per line. For trouble or cela there is no `state.md`: `STATE` is `kind: trouble` (or `kind: cela`) and a `title:` line, for example `"kind: trouble\ntitle: \"stale page after deploy\"\n"`, and the `h`, `vote`, or `check` lines go in `EVENTS`.

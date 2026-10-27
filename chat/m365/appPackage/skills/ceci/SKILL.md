@@ -17,7 +17,7 @@ There is no `ceci prep`: read the attached or Project-knowledge `brief.md` and `
 
 1. **Plan**, only when a `state.md` with jobs is there. One sentence: its title, N of M jobs done, the jobs at a gate, the newest event. a) resume it; b) start a new plan (the user keeps the old files; you start a fresh `state.md`).
 2. **Brief**, only when a `brief.md` is there. Its fields, one per line. a) keep it; b) edit it first: ask for the new rules in the user's words and write them into `brief.md` before planning any job.
-3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one edit per turn; offer it only where this host has a live HTML surface); b) text: event lines, with the 80x24 screen as the budget says; c) off. Unless it is off, the budget too: low (only meaningful updates, the default), medium (up to three real milestones per turn), or creator (every real step, for a live audience; the most tokens).
+3. **Animation.** a) a live player beside this chat (built once, about 10,000 tokens, then one edit per turn; offer it only where this host has a live HTML surface); b) text: event lines, with the 80x24 screen as the budget says; c) off. Unless it is off, the budget too: low (only meaningful updates, the default), medium (up to three real milestones per turn), or creator (every real step, for a live audience; the most tokens).
 4. **Approach**, for a new plan. a) compare options first: the first job is `options` (artifact `options.md`, the possible approaches and the evidence for each), and every other job depends on it; b) the user names the approach.
 
 Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`, and its budget part when they typed `budget <level>`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`; the budget goes in `state.md` as `budget:` (leave it out for low). With 3a, build the player as `INSTRUCTIONS.md` says.
@@ -80,6 +80,8 @@ If a flag is absent, do not assume a value and do not reference any external age
 6. GPU jobs: run `ceci resolve-gpu` with the preference map, record its first line in the job's gpu field, and export the CUDA lines it prints for that job only. If it prints no CUDA_VISIBLE_DEVICES for a specific device, follow its stderr note before the job starts.
 7. After every job, update state.md and append exactly one line to log.md. Schedule the next ready job if one exists.
 8. Every status change also appends one event line to the `events:` list in state.md: `<job> <status>`, plus `cela:<ok|pending|stalled|blocked|missing_test>` or `gate:<word>` when they apply. Use `ceci event`.
+9. Animation costs tokens only when you update the view; `budget:` in state.md says how often (Budget in the graph-view skill). Every step is real work the user reported or pasted. With `animate: chat`, update the player the way `INSTRUCTIONS.md` says. After each update, say in one line what it shows: `view: <done>/<total> done, as of <HH:MM>Z`; when you skip or cannot make an update, say `view not updated` instead.
+10. When the user types `budget low|medium|creator`, `animate chat|terminal|off`, `graph on|off`, `legend`, `show graph`, or `help` (Commands below), do it before anything else that turn and confirm in one line what changed.
 ### State schema
 ```yaml
 title: string            # optional: the goal in a few words
@@ -97,10 +99,19 @@ jobs:
     gpu: null | "host:device"
     cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
 events:                  # optional: one line per status change or step, oldest first
-  - "j1 done cela:ok"
+  - "@2026-10-27T05:40Z j1 done cela:ok"   # ceci event adds the UTC minute
+feedback:                # optional, last: how results landed, newest last
+  - "2026-10-27T06:02Z adjust j3: fewer jobs, no paid tools"
 ```
+### Commands
+The user may type these at any point; rule 10 says when to act on them.
+- `budget low|medium|creator` — set `budget:` in state.md (leave it out for low) and say what changes (Budget in the graph-view skill). In the player, the B key explains the budgets and copies the words to type here.
+- `animate chat|terminal|off` — set `animate:` in brief.md; build or stop the view as rule 9 says. `terminal` is for a coding agent: say so and offer chat or off.
+- `graph on|off`, `legend` — the view's `graph:` header and legend row.
+- `show graph` — the 80x24 screen, once, in a code block, as the graph-view skill says.
+- `help` — the commands above, and `/cecicela help` for everything else.
 ### Done
-A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md, the blank-price line if an offer exists, and the player link when there is one.
+A run ends when the next action is a human gate, the deadline is reached, or no ready jobs remain. Hand back the current state.md, the blank-price line if an offer exists, and the player link when there is one. Then ask once how it landed: good, adjust (the user says what; apply it to this result and show what changed), retry (a different approach, never the same one again), or report a problem with ceciCela (draft a GitHub issue for https://github.com/actviteai/cecicela/issues/new, show it first, and let the user file it). Record the answer, in the user's words, in the `feedback:` list at the end of state.md. At Prep, read the newest feedback there: start the next plan from it and say how.
 
 # Playbook: job graph
 
@@ -127,9 +138,11 @@ jobs:
     cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
 events:
   - "job status [cela:token] [gate:word]"
+feedback:
+  - "2026-10-27 adjust j3: fewer sources, and none behind a paywall"
 ```
 
-`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
+`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first. `feedback:` is an optional list after it, in the same form: how each result landed, in the user's words, newest last. It never changes a job.
 
 `jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
 
@@ -181,31 +194,7 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 <job> step <what was done, with its real result>
 ```
 
-`ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
-
-### Graph view
-
-`ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column. Hotkeys in `--watch`: G graph, F frames, L legend, space pause, S step, T theme, - and + speed, R reset, Q quit.
-
-### Budget
-
-`budget:` in state.md sets how often you update the graph view, and that is all the animation costs: the spinner, packets, blink, typing, and ticker are computed by the renderer and cost no tokens at any budget. The default is `low`. Set it with `ceci init --budget`, the `--budget` flag, or when the user asks.
-
-| | low | medium | creator |
-| --- | --- | --- | --- |
-| Step events (`<job> step ...`) | none | up to 3 per job, at real milestones | one after every action on a running job |
-| Republish the player (`animate: chat`) | when a job ends (done, gate, blocked) and at a stop | also when a job starts and after each step | after every event |
-| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
-| Rough cost per job | one publish | up to five publishes and three steps | a step and a publish per action |
-
-`ceci event` enforces the step column: it refuses a step under `low` and a fourth step on a job under `medium`.
-
-Honest at every budget:
-
-- Write a step after the action, never before it or instead of it: `j4 step npm test: 41 pass, 0 fail`, not `j4 step running tests`.
-- Copy every number from the output that printed it. No estimates, no percentages a tool did not print, no activity invented to keep the screen busy. A quiet job looks quiet.
-- A step belongs to a running job; `ceci event` refuses one on any other.
-- A lower budget shows less, never something different: it skips updates, it does not merge them into a claim nobody checked.
+`ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. It stores the line with the UTC minute in front (`@2026-10-27T05:40Z j4 done cela:ok`) and prints it as stored. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
 
 ### Log
 

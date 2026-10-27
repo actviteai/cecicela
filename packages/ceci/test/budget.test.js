@@ -59,9 +59,10 @@ test('budget creator records a step for every action, and the screen shows them'
   const dir = work('creator');
   for (let i = 1; i <= 12; i += 1) assert.equal(step(dir, `build step command ${i}: exit 0`).status, 0);
   const screen = run(['status', '--work-dir', dir, '--screen', '--tick', '0']).stdout.split('\n');
-  assert.match(screen[0], /turn 12\/12 {2}graph:on {2}creator $/, 'the title names the budget');
+  assert.match(screen[0], /0\/2 done {2}creator $/, 'the title names the budget');
   assert.match(screen.join('\n'), /\| \| 12 steps {3}\|/, 'the running box counts real steps');
-  assert.match(screen[17], /^ NOW {2}build > command 12: exit 0 +$/, 'the ticker is the newest step');
+  assert.match(screen[17], /^ NOW {3}build > command 12: exit 0 +$/, 'the ticker is the newest step');
+  assert.match(screen[23], /as of \d\d:\d\dZ$/, 'the footer says when the newest event was recorded');
 });
 
 test('every budget is honest: a step needs a running job and says what was done', () => {
@@ -75,7 +76,7 @@ test('every budget is honest: a step needs a running job and says what was done'
   // medium and low draw nothing that low would not, except the ticker of real steps.
   const low = work(null);
   const lowScreen = run(['status', '--work-dir', low, '--screen']).stdout;
-  assert.match(lowScreen, /LEGEND/);
+  assert.match(lowScreen, / RUN {3}build: /, 'low names the running job, from state.md alone');
   assert.doesNotMatch(lowScreen, / NOW /);
 });
 

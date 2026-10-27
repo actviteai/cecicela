@@ -63,24 +63,57 @@ function chatAudit(md) {
   return out;
 }
 
-/** ceci's protocol without the commands chat cannot run; ceci.delta.md says what replaces Prep and rule 9. */
+/** The typed commands as chat carries them out: by editing the files it hands back. */
+const CHAT_COMMANDS = `## Commands
+The user may type these at any point; rule 10 says when to act on them.
+- \`budget low|medium|creator\` — set \`budget:\` in state.md (leave it out for low) and say what changes (Budget in \`graph-render.md\`). In the player, the B key explains the budgets and copies the words to type here.
+- \`animate chat|terminal|off\` — set \`animate:\` in brief.md; build or stop the view as rule 9 says. \`terminal\` is for a coding agent: say so and offer chat or off.
+- \`graph on|off\`, \`legend\` — the view's \`graph:\` header and legend row.
+- \`show graph\` — the 80x24 screen, once, in a code block, as \`graph-render.md\` says.
+- \`help\` — the commands above, and \`/cecicela help\` for everything else.
+`;
+
+/** ceci's protocol without the commands chat cannot run; ceci.delta.md says what replaces Prep. */
 function chatCeci(md) {
-  const out = dropSection(md, 'Prep')
+  const at = md.indexOf('\n## Commands\n');
+  const next = md.indexOf('\n## ', at + 1);
+  if (at === -1 || next === -1) throw new Error('ceci protocol has no Commands section');
+  const out = dropSection(md.slice(0, at + 1) + CHAT_COMMANDS + md.slice(next + 1), 'Prep')
     .replace(/^## Playbooks\n(?:- `playbooks\/.*\n)+/m, '')
-    .replace(/^9\. Animation .*\n/m, '');
-  if (/ceci (prep|player|archive)|AskUserQuestion/.test(out)) throw new Error('chat ceci protocol still names a CLI-only start step');
+    .replace(/^9\. Animation .*\n/m, '9. Animation costs tokens only when you update the view; `budget:` in state.md says how often (Budget in `graph-render.md`). Every step is real work the user reported or pasted. With `animate: chat`, update the player the way `INSTRUCTIONS.md` says. After each update, say in one line what it shows: `view: <done>/<total> done, as of <HH:MM>Z`; when you skip or cannot make an update, say `view not updated` instead.\n')
+    .replace(/Record the answer, in the user's words, with `ceci feedback`\. At Prep, `ceci prep` shows the newest feedback: start the next run from it and say how\./, 'Record the answer, in the user\'s words, in the `feedback:` list at the end of state.md. At Prep, read the newest feedback there: start the next plan from it and say how.');
+  if (/ceci (prep|player|archive|feedback|init)|AskUserQuestion|--watch/.test(out)) throw new Error('chat ceci protocol still names a CLI-only start step');
   return out;
 }
 
-/** The graph playbook without the CLI's cost table: chat has its own rule in INSTRUCTIONS.md. */
+/** The graph playbook without the terminal's view, budget, and player: graph-render.md and INSTRUCTIONS.md are chat's. */
 function chatGraph(md) {
-  const out = md.replace(/\nWhat each view costs you \(the model\):\n\n(?:\|.*\n)+/, '');
-  if (out.includes('What each view costs')) throw new Error('chat graph playbook still carries the CLI cost table');
+  const out = ['Graph view', 'Budget', 'Player'].reduce(dropSection, md);
+  if (/What each view costs|ceci player|--watch/.test(out)) throw new Error('chat graph playbook still carries the terminal view');
+  return out;
+}
+
+/** The feedback playbook without the coding agent's record command. */
+function chatFeedback(md) {
+  const out = md.replace(/^- \*\*ceci with a work dir:\*\*.*\n/m, '').replace('- **ceci in a chat:** append the same line to', '- **ceci:** append a line to');
+  if (/ceci\.js|ceci prep/.test(out)) throw new Error('chat feedback playbook still names the ceci command');
   return out;
 }
 
 function knowledge() {
   const files = new Map();
+  files.set('cecicela.chat.md', text([
+    read(SRC, 'cecicela.delta.md').trimEnd(),
+    '',
+    '# Playbook: improve my prompt',
+    '',
+    demote(skill('cecicela', 'playbooks/optimize.md')).replace(/^## [^\n]*\n\n/, '').replace('the Pick table in `SKILL.md`', 'the routing table in the instructions').trim(),
+    '',
+    '# Playbook: feedback',
+    '',
+    chatFeedback(demote(skill('cecicela', 'playbooks/feedback.md'))).replace(/^## [^\n]*\n\n/, '').trim(),
+    '',
+  ].join('\n')));
   files.set('ceci.chat.md', text([
     read(SRC, 'ceci.delta.md').trimEnd(),
     '',
@@ -134,7 +167,7 @@ function knowledge() {
 function framesExample() {
   const T = tui();
   const model = T.fromStateMd(read(SRC, 'state.example.md'));
-  const blocks = [27, 54, 80].map((reveal) => `\`\`\`text\n${T.render(model, { tick: 0, reveal }).lines.map((l) => l.trimEnd()).join('\n')}\n\`\`\``);
+  const blocks = [27, 54, 80].map((reveal) => `\`\`\`text\n${T.render(model, { tick: 0, reveal, footer: 'chat' }).lines.map((l) => l.trimEnd()).join('\n')}\n\`\`\``);
   return [
     '# Worked example: `graph frames` without a live surface',
     '',
@@ -168,8 +201,9 @@ function instructions(host) {
       .replace('If a `state.md` is in knowledge or attached', 'If a `state.md` is attached')
       .replace('Validate it as `trouble.chat.md` says.', 'Validate it as the trouble skill says.')
       .replace('`graph-render.md` is the drawing rule set.', 'The graph-view skill is the drawing rule set.')
-      .replace(/The live player is about 7,000 tokens[\s\S]*?redraw the full 80x24 text screen as the budget says: low only when asked, medium when the graph's shape changed, creator every turn that changed it\./, 'Copilot chat has no live HTML surface, so `animate` is not available: put the event line in the reply and redraw the full 80x24 text screen in a code block as the budget says: low only when asked, medium when the graph\'s shape changed, creator every turn that changed it.')
-      .replace('read `help.md` and reply', 'load the help skill and reply');
+      .replace(/The live player is about 10,000 tokens[\s\S]*?redraw the full 80x24 text screen as the budget says: low only when asked, medium when the graph's shape changed, creator every turn that changed it\./, 'Copilot chat has no live HTML surface, so `animate` is not available: put the event line in the reply and redraw the full 80x24 text screen in a code block as the budget says: low only when asked, medium when the graph\'s shape changed, creator every turn that changed it.')
+      .replace('read `help.md` and reply', 'load the help skill and reply')
+      .replace(/`cecicela\.chat\.md`/g, 'the cecicela skill');
   }
   const out = `${t}\n\nPack: ceciCela ${version}.\n`;
   if (out.length > LIMITS[host]) throw new Error(`chat/${host}: instructions are ${out.length} characters; the limit is ${LIMITS[host]}`);
@@ -233,10 +267,11 @@ function m365Files() {
       { title: 'Help', text: 'help' },
     ],
     capabilities: [{ name: 'CodeInterpreter' }],
-    agent_skills: ['ceci', 'cela', 'trouble', 'graph-view', 'help'].map((s) => ({ folder: `./skills/${s}` })),
+    agent_skills: ['cecicela', 'ceci', 'cela', 'trouble', 'graph-view', 'help'].map((s) => ({ folder: `./skills/${s}` })),
     disclaimer: { text: 'ceciCela in chat cannot read your files or run commands. trouble caps confidence at 6, ceci plans without running jobs, and cela reviews without measuring. The measured versions run in coding agents.' },
   })));
   files.set('appPackage/instruction.txt', text(instr));
+  files.set('appPackage/skills/cecicela/SKILL.md', agentSkill('cecicela', 'ceciCela front door: the start menu, a review of what the files and memory hold, prompt tuning, and feedback with a GitHub issue draft. Use on cecicela, start, menu, optimize, feedback, or a first message that names no task.', k.get('cecicela.chat.md').text));
   files.set('appPackage/skills/ceci/SKILL.md', agentSkill('ceci', 'ceciCela planner: turns a goal into a job graph with human gates and hands state back as brief.md and state.md. Use when the user wants a goal planned.', k.get('ceci.chat.md').text));
   files.set('appPackage/skills/cela/SKILL.md', agentSkill('cela', 'ceciCela review checklist: reviews whether a pasted change is really done, without a tool and without a gate. Use when the user asks if a change is done.', k.get('cela.chat.md').text));
   files.set('appPackage/skills/trouble/SKILL.md', agentSkill('trouble', 'ceciCela four-roles debug protocol in untooled mode: verbatim evidence, Bayesian ranking, unanimous gate, TROUBLE_VERDICT. Use for a bug or incident earlier attempts did not fix.', k.get('trouble.chat.md').text));

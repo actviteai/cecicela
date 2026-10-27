@@ -1,4 +1,4 @@
-# cela Skill v1.0.1
+# cela Skill v1.0.2
 
 `SKILL.md` is the instruction source. This README is not a second copy of the protocol.
 

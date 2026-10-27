@@ -85,7 +85,7 @@ test('graph frames, in text, is three blocks of the same 80x24 screen revealed b
   for (const block of blocks) assert.equal(block.length, 24);
   const widths = blocks.map((b) => Math.max(...b.map((l) => l.length)));
   assert.ok(widths[0] <= 27 && widths[1] <= 54 && widths[2] <= 80, widths.join(','));
-  assert.equal(blocks[2].join('\n'), T.render(T.fromStateMd(read('chat/src/state.example.md')), { tick: 0 }).lines.map((l) => l.trimEnd()).join('\n'));
+  assert.equal(blocks[2].join('\n'), T.render(T.fromStateMd(read('chat/src/state.example.md')), { tick: 0, footer: 'chat' }).lines.map((l) => l.trimEnd()).join('\n'));
 });
 
 test('a 10-turn ceci run costs one player emission plus ten one-line edits', () => {
@@ -102,7 +102,7 @@ test('a 10-turn ceci run costs one player emission plus ten one-line edits', () 
   }
   assert.equal(transcript.join('').split('<!doctype html>').length - 1, 1, 'the transcript holds one copy of the player');
   const scripts = [...doc.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-  const el = { innerHTML: '' };
+  const el = { innerHTML: '', addEventListener() {} };
   const ctx = { document: { getElementById: () => el, querySelectorAll: () => [], addEventListener() {}, documentElement: { setAttribute() {} } }, setTimeout: () => 0, JSON, Math, Object, Array };
   ctx.window = ctx;
   ctx.self = ctx;
@@ -110,7 +110,7 @@ test('a 10-turn ceci run costs one player emission plus ten one-line edits', () 
   for (const code of scripts) vm.runInContext(code, ctx);
   assert.equal(vm.runInContext('EVENTS.length', ctx), 11 + 10);
   ctx.typed = null;
-  assert.match(vm.runInContext('screen()', ctx).lines.join('\n'), /turn 21 {2}j6 gate gate:human/);
+  assert.match(vm.runInContext('screen()', ctx).lines.join('\n'), /turn 21 +j6 gate gate:human/);
 });
 
 test('graph off in a turn stops the drawing and survives a state.md re-upload', () => {
@@ -212,7 +212,7 @@ test('the live player is opt-in: chat ceci asks first, and the router builds it 
     assert.match(text, /continue from it only after the user chose to resume it/, 'the router does not resume a plan the Prep step has not asked about');
     assert.doesNotMatch(text, /read it first and continue from it\./);
   }
-  assert.match(ceci, /a live player beside this chat \(built once, about 7,000 tokens/);
+  assert.match(ceci, /a live player beside this chat \(built once, about 10,000 tokens/);
   assert.doesNotMatch(ceci, /ceci (prep|player|archive) --work-dir|AskUserQuestion/, 'the CLI-only start step is replaced, not copied');
   assert.doesNotMatch(ceci, /What each view costs/, 'the CLI cost table stays out of chat');
 });
@@ -225,7 +225,7 @@ test('one player draws trouble and cela too, from a kind: line in STATE', () => 
     .replace(/var EVENTS = \[\n[\s\S]*?(?= {2}\/\/ append new event lines above this one)/, 'var EVENTS = [\n')
     .replace(marker, `  "h H1 0.61 stale edge cache after deploy",\n  "vote keeper yes 7",\n${marker}`);
   const scripts = [...filled.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-  const el = { innerHTML: '' };
+  const el = { innerHTML: '', addEventListener() {} };
   const ctx = { document: { getElementById: () => el, querySelectorAll: () => [], addEventListener() {}, documentElement: { setAttribute() {} } }, setTimeout: () => 0, JSON, Math, Object, Array };
   ctx.window = ctx;
   ctx.self = ctx;
@@ -233,7 +233,7 @@ test('one player draws trouble and cela too, from a kind: line in STATE', () => 
   for (const code of scripts) vm.runInContext(code, ctx);
   ctx.typed = null;
   const screen = vm.runInContext('screen()', ctx).lines.join('\n');
-  assert.match(screen, /TUI \| trouble: stale page after deploy/);
+  assert.match(screen, /ceciCela \| trouble: stale page after deploy/);
   assert.match(screen, / H1 {2}stale edge cache after deploy +\[#+\.+\] {2}0\.61/);
   assert.match(read('chat/pack/knowledge/graph-render.md'), /`STATE` is `kind: trouble` \(or `kind: cela`\)/);
 });
@@ -252,4 +252,47 @@ test('the animation budget: one rule set for chat, the same three levels, honest
   const levels = (md) => (md.match(/^\| \| (low) \| (medium) \| (creator) \|$/m) || []).slice(1);
   assert.deepEqual(levels(render), ['low', 'medium', 'creator']);
   assert.deepEqual(levels(read('packages/ceci/skill/playbooks/graph.md')), ['low', 'medium', 'creator']);
+});
+
+test('the chat front door: a start menu, a memory review that reads, prompt tuning, and feedback in every kit', () => {
+  const door = read('chat/pack/knowledge/cecicela.chat.md');
+  for (const choice of ['Start something new', 'Review what is remembered', 'See all options', 'Improve my prompt']) assert.ok(door.includes(`**${choice}**`), choice);
+  assert.match(door, /Read, never guess/);
+  assert.match(door, /\*\*This app's memory\*\*.*Quote it/);
+  assert.match(door, /you cannot read them unless this host gave you a tool/);
+  assert.match(door, /^# Playbook: improve my prompt$/m);
+  assert.match(door, /^# Playbook: feedback$/m);
+  assert.match(door, /The user files it\. Never open, post, or submit it yourself\./);
+  assert.doesNotMatch(door, /ceci\.js|ceci prep|ceci feedback/, 'no command the chat cannot run');
+  for (const host of HOSTS) {
+    assert.equal(read(`chat/${host}/knowledge/cecicela.chat.md`), door, host);
+    const instr = read(`chat/${host}/INSTRUCTIONS.md`);
+    assert.match(instr, /^## Start$/m, host);
+    assert.match(instr, /read `cecicela\.chat\.md` and offer its start menu/, host);
+    assert.match(instr, /How did that land\? 1 good · 2 adjust · 3 retry · 4 report/, host);
+    assert.match(instr, /`view: <done>\/<total> done, as of <HH:MM>Z`, or `view not updated`/, host);
+  }
+  const m365 = read('chat/m365/appPackage/instruction.txt');
+  assert.match(m365, /read the cecicela skill and offer its start menu/);
+  assert.doesNotMatch(m365, /cecicela\.chat\.md/);
+  assert.ok(fs.existsSync(path.join(REPO, 'chat/m365/appPackage/skills/cecicela/SKILL.md')));
+  assert.ok(JSON.parse(read('chat/m365/appPackage/declarativeAgent.json')).agent_skills.some((s) => s.folder === './skills/cecicela'));
+  const help = read('chat/pack/knowledge/help.md');
+  for (const line of ['start ', 'optimize <text>', 'memories ', 'feedback ', 'help feedback', 'show graph', 'B budget']) assert.ok(help.includes(line), line);
+  assert.match(help, /^## help feedback$/m);
+});
+
+test('chat ceci keeps the typed commands and the view line, done by editing the files it hands back', () => {
+  const ceci = read('chat/pack/knowledge/ceci.chat.md');
+  assert.match(ceci, /^9\. Animation costs tokens only when you update the view.*`view not updated`/m);
+  assert.match(ceci, /^10\. When the user types `budget low\|medium\|creator`/m);
+  assert.match(ceci, /- `budget low\|medium\|creator` — set `budget:` in state\.md/);
+  assert.match(ceci, /in the `feedback:` list at the end of state\.md/);
+  assert.doesNotMatch(ceci.split('# Protocol: /ceci')[1].split('# Playbook: job graph')[0], /ceci (prep|player|archive|feedback|init)|--watch|AskUserQuestion/);
+  assert.match(ceci, /Budget in `graph-render\.md`/);
+  assert.match(ceci, /^feedback: {16}# optional, last/m, 'the schema carries the feedback list');
+  const render = read('chat/pack/knowledge/graph-render.md');
+  assert.match(render, /^## The player$/m);
+  assert.match(render, /never guess one/);
+  assert.match(render, / type: help {2}budget <level> {2}animate {2}graph on\|off {2}legend/);
 });

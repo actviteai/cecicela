@@ -1,6 +1,6 @@
 {
   "name": "cela",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "cela is an evidence-first protocol for AI coding agents. A bundled tool runs the checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work. Part of ceciCela.",
   "author": {
     "name": "actvite",
