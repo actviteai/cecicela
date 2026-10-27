@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "cecicela",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. The /ceci job graph with human gates, the /cela evidence gate where a tool names the result, and the /trouble four-roles debug protocol, in one plugin.",
       "source": {
         "type": "local",
@@ -35,7 +35,7 @@
     },
     {
       "name": "ceci",
-      "version": "2.3.0",
+      "version": "2.3.1",
       "description": "ceci turns a goal into a job graph, runs ready jobs in dependency order, stops at human gates before contact, posting, payment, or pricing, places GPU jobs, and gates code changes with /cela. Part of ceciCela.",
       "source": {
         "type": "local",

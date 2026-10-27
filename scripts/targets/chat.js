@@ -219,7 +219,7 @@ function packTargets() {
     'The host-agnostic ceciCela chat pack, rendered by `npm run chat:build` from `chat/src/` and the CLI skills in `packages/`. Do not edit it here.',
     '',
     '- `INSTRUCTIONS.md`: the router, for the Project\'s instructions slot.',
-    '- `knowledge/`: the three protocols (`ceci.chat.md`, `cela.chat.md`, `trouble.chat.md`), the help page (`help.md`), the drawing rules, the default role names, an example `state.md`, and worked examples.',
+    '- `knowledge/`: the front door (`cecicela.chat.md`: the start menu, `optimize`, feedback), the three protocols (`ceci.chat.md`, `cela.chat.md`, `trouble.chat.md`), the help page (`help.md`), the drawing rules, the default role names, an example `state.md`, and worked examples.',
     '- `graph-player.html`: the 80x24 player; the model emits it once per conversation and appends event lines after that.',
     '',
     'Per-host kits with setup steps: `chat/claude/`, `chat/chatgpt/`, `chat/grok/`, `chat/m365/`.',
@@ -261,6 +261,7 @@ function m365Files() {
     description: 'Plan it, prove it, fix it. trouble runs a four-roles Bayesian debug protocol on a stuck bug; ceci plans a goal as a job graph with human gates; cela reviews whether a change is really done. The chat entry point to the ceciCela coding-agent skills.',
     instructions: '$[file(\'instruction.txt\')]',
     conversation_starters: [
+      { title: 'Start here', text: 'cecicela' },
       { title: 'Stuck bug', text: 'Nothing I try fixes this bug. Here is the error:' },
       { title: 'Plan a goal', text: 'Plan this goal as a job graph with gates:' },
       { title: 'Is it done?', text: 'Is this change really done? Here is the diff and the test output:' },

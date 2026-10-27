@@ -5,7 +5,7 @@ Claude Projects hold project instructions (always in context) and project knowle
 1. In Claude, create a Project named **ceciCela**.
 2. Choose **Set project instructions** and paste the whole of `INSTRUCTIONS.md`.
 3. With the **+** button in the Project's knowledge, add these files one by one (folders do not upload):
-   - `knowledge/ceci.chat.md`, `knowledge/cela.chat.md`, `knowledge/trouble.chat.md`
+   - `knowledge/cecicela.chat.md` (the start menu, `optimize`, and feedback), `knowledge/ceci.chat.md`, `knowledge/cela.chat.md`, `knowledge/trouble.chat.md`
    - `knowledge/help.md`, `knowledge/graph-render.md`, `knowledge/state.example.md`, `knowledge/voices.default.yaml`
    - `knowledge/examples/ceci.md`, `cela.md`, `trouble.md`, `graph-frames.md`
    - `graph-player.html`

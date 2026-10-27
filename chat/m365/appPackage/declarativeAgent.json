@@ -6,6 +6,10 @@
   "instructions": "$[file('instruction.txt')]",
   "conversation_starters": [
     {
+      "title": "Start here",
+      "text": "cecicela"
+    },
+    {
       "title": "Stuck bug",
       "text": "Nothing I try fixes this bug. Here is the error:"
     },
