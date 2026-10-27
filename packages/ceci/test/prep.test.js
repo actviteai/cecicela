@@ -209,3 +209,31 @@ test('status warns when prepped is missing', () => {
   assert.equal(run(['init', '--work-dir', dir, '--start', 'resumed', '--animate', 'off']).status, 0);
   assert.equal(run(['status', '--work-dir', dir]).stderr, '');
 });
+
+test('feedback appends the user\'s words to state.md, and prep shows the newest three', () => {
+  const dir = plan();
+  for (const [verdict, note] of [['good', 'clear plan'], ['adjust', 'fewer jobs'], ['retry', 'try partners first'], ['report', 'the gate blinked twice']]) {
+    const res = run(['feedback', '--work-dir', dir, '--verdict', verdict, '--job', 'pitch', '--note', note]);
+    assert.equal(res.status, 0, res.stderr);
+    assert.match(res.stdout, new RegExp(`^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\dZ ${verdict} pitch: ${note}\\n$`), 'prints the stored line');
+  }
+  const state = fs.readFileSync(path.join(dir, 'state.md'), 'utf8');
+  assert.match(state, /\nevents:\n[\s\S]*\nfeedback:\n(?: {2}- "[^"]+"\n){4}$/);
+  assert.equal(run(['status', '--work-dir', dir]).status, 0, 'feedback never changes a job');
+  const report = JSON.parse(run(['prep', '--work-dir', dir, '--json']).stdout);
+  assert.deepEqual(report.state.feedback.map((l) => l.replace(/^\S+ /, '')), ['adjust pitch: fewer jobs', 'retry pitch: try partners first', 'report pitch: the gate blinked twice']);
+  assert.match(run(['prep', '--work-dir', dir]).stdout, /the gate blinked twice/);
+  assert.notEqual(run(['feedback', '--work-dir', dir, '--verdict', 'meh', '--note', 'x']).status, 0, 'only the four verdicts');
+  assert.notEqual(run(['feedback', '--work-dir', dir, '--verdict', 'good', '--note', '']).status, 0, 'never an empty note');
+  assert.notEqual(run(['feedback', '--work-dir', dir, '--verdict', 'good', '--job', 'nope', '--note', 'x']).status, 0, 'a job the plan has');
+});
+
+test('event stores the line with its UTC minute and prints it, for a page built once to append', () => {
+  const dir = plan();
+  fs.writeFileSync(path.join(dir, 'state.md'), PLAN.replace(/(id: contact\n(?:.*\n){4}) {4}status: gate/, '$1    status: blocked').replace('"contact gate gate:contact"', '"contact blocked"'));
+  const res = run(['event', '--work-dir', dir, '--line', 'contact gate gate:contact']);
+  assert.equal(res.status, 0, res.stderr);
+  const printed = res.stdout.trim();
+  assert.match(printed, /^@\d{4}-\d\d-\d\dT\d\d:\d\dZ contact gate gate:contact$/);
+  assert.ok(fs.readFileSync(path.join(dir, 'state.md'), 'utf8').includes(`  - ${JSON.stringify(printed)}\n`), 'state.md holds exactly what was printed');
+});

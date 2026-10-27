@@ -35,7 +35,7 @@ A rule in the brief limits every job after it ("public tenders only"). This ques
 
 | Option | Does | Records |
 | --- | --- | --- |
-| Yes, in this chat | `ceci player` writes the page and you publish it now, then republish it after each job (rule 9). Offer this only when the host can publish an HTML page beside the chat (in Claude Code, the Artifact tool). | `animate: chat` |
+| Yes, in this chat | a live page beside the chat, updated as the budget says (Player in `playbooks/graph.md`). Offer it only when the host can show an HTML page: by path (Claude Code's artifact publish costs no tokens) or as a page you build once (about 10,000 tokens, then one line per update); say which in the option. | `animate: chat` |
 | Yes, in my terminal | print the `ceci status --watch` command for the user to run in a second terminal; it costs no tokens | `animate: terminal` |
 | No | event lines only | `animate: off` |
 
@@ -51,8 +51,10 @@ A rule in the brief limits every job after it ("public tenders only"). This ques
 | Option | Does | Records |
 | --- | --- | --- |
 | Low (Recommended) | only meaningful updates: the view changes when a job ends or stops at a gate | `budget: low` |
-| Medium | up to three real milestones per job, and the view updates when a job starts | `budget: medium` |
-| Content creator | a step after every action and an update after every event, for a live audience; uses the most tokens | `budget: creator` |
+| Medium | up to three real milestones per job, a NOW line with the newest one, and an update when a job starts | `budget: medium` |
+| Content creator | a step after every action and an update after every event, with BBS colours and effects on each real change, for a live audience; uses the most tokens | `budget: creator` |
+
+The user can change it later by typing `budget low`, `budget medium`, or `budget creator`, or with the B key in `--watch`. Say so in the question.
 
 ## 3. Record
 
@@ -60,7 +62,7 @@ A rule in the brief limits every job after it ("public tenders only"). This ques
 ceci init --work-dir PATH --start resumed|fresh|new-dir --animate chat|terminal|off [--approach compare|given] [--budget low|medium|creator]
 ```
 
-It creates whatever is missing and sets only those lines in brief.md, plus `prepped: <UTC minute>`. `ceci status` warns when `prepped:` is missing: that plan skipped this step. Then go on to rule 1.
+It creates whatever is missing and sets only those lines in brief.md, plus `prepped: <UTC minute>`. `ceci status` warns when `prepped:` is missing: that plan skipped this step. When `ceci prep` listed feedback from an earlier run, say in one line how this run uses it. Then go on to rule 1.
 
 ## Flags that skip a question
 

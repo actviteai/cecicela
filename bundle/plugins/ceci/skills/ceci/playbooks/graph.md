@@ -21,9 +21,11 @@ jobs:
     cela_gate: null | COMPLETE | STALLED | BLOCKED | MISSING_TEST
 events:
   - "job status [cela:token] [gate:word]"
+feedback:
+  - "2026-10-27 adjust j3: fewer sources, and none behind a paywall"
 ```
 
-`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first.
+`title:`, `graph:`, and `budget:` are optional header lines before `jobs:`, in that order. `title` is the goal in a few words. `graph` is `on`, `off`, or `frames`; it is absent when it is `on`. `budget` is the animation's token budget (below); absent means `low`. `events:` is an optional list after the jobs, one double-quoted line per item, oldest first. `feedback:` is an optional list after it, in the same form: how each result landed, in the user's words, newest last. It never changes a job.
 
 `jobs: []` is the empty graph. A job starts with `  - id:`. Other keys are indented four spaces, in the order above. Flow lists use `[]` or `[a, b]`. A plain value is read as written, spaces included. Use a double-quoted, JSON-escaped string for a value that is empty, is the word `null`, starts with `"` or `[`, or is a list item that contains a comma. `gpu: null` and `cela_gate: null` are the empty values. Paths in `artifact` are relative to `--work-dir`, with no `..` segment, and name a file or directory inside it (not `.`).
 
@@ -75,11 +77,22 @@ Every status change is one event line, appended to `events:` by `ceci event --wo
 <job> step <what was done, with its real result>
 ```
 
-`ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
+`ceci event` sets that job's `status`, sets `cela_gate` from `cela:` (`ok` is `COMPLETE`; `pending` leaves it null), refuses a job or status the graph does not have, and refuses a change the status transitions above forbid, and refuses `done` while the artifact is missing. It stores the line with the UTC minute in front (`@2026-10-27T05:40Z j4 done cela:ok`) and prints it as stored. Events are history for the graph view and for a new conversation that rebuilds the picture from state.md alone; the job fields stay the truth.
 
 ## Graph view
 
-`ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column. Hotkeys in `--watch`: G graph, F frames, L legend, space pause, S step, T theme, - and + speed, R reset, Q quit.
+`ceci status --work-dir PATH --screen` prints the graph as an 80x24 ASCII screen once. `--watch` redraws it in place as state.md changes: a spinner on running jobs, a blinking `! GATE: human` on gate jobs, packets moving along the edges into them. Box borders: `+--+` not done, `+==+` done. `graph: off` in state.md turns the drawing off; `graph: frames` reveals the first screen column by column.
+
+Everything on the screen comes from state.md:
+
+- Row 0: the title, `<done>/<total> done`, and the budget.
+- Rows 1 to 15: the jobs by depth, four to a band; a long chain wraps onto the next band. When the graph is bigger than the screen, the view follows the work (one depth before the earliest running or gate job) and says what it hides: `<< 3 earlier`, `2 later >>`, `+2 more`.
+- Row 16: a bar and the real counts (done, running, at a gate, ready).
+- Row 17: the newest step (`NOW`, medium and creator), else the job that needs attention (`GATE`, `RUN`, `NEXT`), else `DONE`; `L` swaps in the legend.
+- Rows 18 to 22: the last three events, each with the minute it was recorded.
+- Row 23: the only key panel, and `as of <HH:MM>Z`, the newest event's minute; the player shows `<HH:MM>Z 12m ago`, its age.
+
+Keys, in `--watch` and in the player (where each one on the bottom row is also a button): G graph, L legend, B budget, T theme (phosphor, amber, or ansi: the 16-colour BBS palette with box-drawing lines), space pause, R replay the events from the first, S step the replay, F frames, - and + speed, Q quit (`--watch`). In `--watch`, B saves the budget you pick to state.md; in the player it shows the words to type in the chat, because only the chat changes how often the page is updated.
 
 What each view costs you (the model):
 
@@ -88,7 +101,8 @@ What each view costs you (the model):
 | `ceci status` | a few short lines | you, to check the graph |
 | `ceci status --screen` | about 2 KB (24 lines of 80) | you, only when the user asks to see it here |
 | `ceci status --watch` | nothing: it runs in the user's terminal and never exits | the user; you print the command once |
-| `ceci player --out FILE` | one short command and one publish by path; the 23 KB page never passes through you | you, after each job when `animate: chat` |
+| `ceci player --out FILE` | one short command and one publish by path; the 35 KB page never passes through you | you, when `animate: chat` and the budget says |
+| a page built once, then edited | about 10,000 tokens once, then one line per event | you, where no tool shows a file by path (Player, below) |
 
 ## Budget
 
@@ -97,8 +111,8 @@ What each view costs you (the model):
 | | low | medium | creator |
 | --- | --- | --- | --- |
 | Step events (`<job> step ...`) | none | up to 3 per job, at real milestones | one after every action on a running job |
-| Republish the player (`animate: chat`) | when a job ends (done, gate, blocked) and at a stop | also when a job starts and after each step | after every event |
-| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
+| Update the player (`animate: chat`) | when a job ends (done, gate, blocked) and at a stop | also when a job starts and after each step | after every event |
+| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, step counts on running boxes, and effects on real changes: the job of the newest event flashes, a job that just finished throws sparks, the title cycles colours; the ansi theme by default |
 | Rough cost per job | one publish | up to five publishes and three steps | a step and a publish per action |
 
 `ceci event` enforces the step column: it refuses a step under `low` and a fourth step on a job under `medium`.
@@ -109,6 +123,16 @@ Honest at every budget:
 - Copy every number from the output that printed it. No estimates, no percentages a tool did not print, no activity invented to keep the screen busy. A quiet job looks quiet.
 - A step belongs to a running job; `ceci event` refuses one on any other.
 - A lower budget shows less, never something different: it skips updates, it does not merge them into a claim nobody checked.
+
+## Player
+
+`animate: chat` means a page beside the conversation that shows this graph. Update it the first way this host allows, and only when the budget says:
+
+1. **By path.** When a tool shows a local file to the user as a page (Claude Code's artifact publish, a chat app's file preview that renders HTML), run `ceci player --work-dir PATH --out PATH/graph-player.html` and show that same path again. The URL stays the same and the page never passes through you.
+2. **Built once, then edited.** When no tool shows a file by path but you can create a live HTML document in the reply (a chat artifact or canvas), build it once from the file `ceci player` wrote. That is the only time the page passes through you, about 10,000 tokens. Each later update appends, above the `// append new event lines above this one` marker in its `EVENTS` array, exactly the lines `ceci event` printed, one quoted line each. Never rebuild it in the same conversation.
+3. **Neither.** Say the player cannot show here, record `animate: off`, and offer `animate terminal` or `show graph`.
+
+The page must never show a state that state.md does not have: update it when the budget says, or say `view not updated`. Its footer shows `as of <HH:MM>Z`, the minute of the newest event, and how long ago that was, so a stale page looks stale.
 
 ## Log
 

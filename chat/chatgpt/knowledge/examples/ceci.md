@@ -10,7 +10,7 @@ Answer in one line (for example `1 none, 2 me, 3b, 4b`):
 
 1. Is there a theme you must use?
 2. Who approves the launch post?
-3. Animation: a) a live player beside this chat (built once, about 7,000 tokens); b) text, with the screen only when the graph changes; c) off.
+3. Animation: a) a live player beside this chat (built once, about 10,000 tokens); b) text, with the screen only when the graph changes; c) off.
 4. Approach: a) compare options first; b) you already know it: a static site from the CLI's docs.
 
 Type `help` for the commands.

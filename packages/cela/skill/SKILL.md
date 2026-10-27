@@ -3,7 +3,7 @@ name: cela
 description: Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself.
 disable-model-invocation: true
 ---
-# cela 1.0.1
+# cela 1.0.2
 
 cela makes "done" something a tool measures, not something you claim. You plan the change, `tool/cela.js` runs the checks, and its verdict names the result. Follow this for the current task only.
 
@@ -82,6 +82,7 @@ Classes: USER_SPECIFIED, OBSERVED, VERIFIED_EXTERNAL, INFERRED. When a record pr
 - The tool owns `.cela/`. Do not edit those files by hand.
 - An unrun test is not a pass. Do not describe results you did not see.
 - Never run `git reset --hard`, `git clean -fd`, or `git push --force` without explicit permission.
+- After the result, ask once how it landed, as `/cecicela feedback` does. Never unattended, never to skip a gate.
 
 ## Commands the user may type
 

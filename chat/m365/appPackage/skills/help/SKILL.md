@@ -17,7 +17,11 @@ ceciCela  ceci plans this, cela proves that, trouble fixes what breaks.
   cela      "is this change really done?": a review checklist for what you paste
 
 Just describe what you need. Or type:
-  help ceci | help trouble | help cela | help graph
+  start               the menu: start something new, review what is remembered, options, improve my prompt
+  optimize <text>     rewrite a request so the right protocol gets what it needs; you run it, edit it, or keep yours
+  memories            what the files here and this app's memory hold about your ceciCela work
+  feedback            how the last result landed: good, adjust, retry, or report a problem
+  help ceci | help trouble | help cela | help graph | help feedback
 ```
 
 ## help ceci
@@ -61,11 +65,28 @@ Type any of these, any time:
   graph off     stop drawing for the rest of the plan (saved in state.md)
   graph frames  reveal the screen column by column
   legend        show or hide the legend row
+  show graph    draw the text screen once
   budget low       only meaningful updates (the default; the fewest tokens)
   budget medium    plus up to three real milestones per turn, with a NOW ticker
   budget creator   every real step, for a live audience (the most tokens)
 Every budget shows only what really happened; a lower one shows less, never something made up.
-In the player: G graph, F frames, L legend, space pause, S step, T theme, - + speed, R replay.
+In the player, the keys are on its bottom row (click them or press them):
+  G graph  L legend  B budget  T theme (phosphor, amber, ansi)  space pause  R replay  - + speed
+  B explains the budgets and copies "budget <level>" for you to paste here: only the chat changes it.
+  "05:56Z 3m ago" at the end of the bottom row is when the page last got a real update.
+```
+
+## help feedback
+
+```text
+After each result you get one question: How did that land?
+  1 good      noted; nothing changes
+  2 adjust    say what to change; it is applied to the same result and you see what changed
+  3 retry     a different approach from the one that ran, with one line on why it may land better
+  4 report    a problem with ceciCela itself: a GitHub issue draft for github.com/actviteai/cecicela,
+              shown to you first, with no file contents or names unless you add them; you file it
+For ceci, the answer goes in state.md's feedback: list, and the next plan starts from it.
+Type feedback any time to answer for the last result.
 ```
 
 ## Footer

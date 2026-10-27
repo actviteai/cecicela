@@ -1,7 +1,7 @@
 ---
 name: cela
 description: "Use when the user asks for cela or evidence-gated work. A bundled tool runs the checks and names the verdict, so the model never grades its own work."
-version: 1.0.1
+version: 1.0.2
 license: GPL-3.0-or-later
 platforms: [linux, macos, windows]
 metadata:
@@ -9,7 +9,7 @@ metadata:
     tags: [quality-gates, evidence-first, sdlc, coding-agent]
     requires_toolsets: [terminal]
 ---
-# cela 1.0.1
+# cela 1.0.2
 
 cela makes "done" something a tool measures, not something you claim. You plan the change, `scripts/cela.js` runs the checks, and its verdict names the result. Follow this for the current task only.
 
@@ -88,6 +88,7 @@ Classes: USER_SPECIFIED, OBSERVED, VERIFIED_EXTERNAL, INFERRED. When a record pr
 - The tool owns `.cela/`. Do not edit those files by hand.
 - An unrun test is not a pass. Do not describe results you did not see.
 - Never run `git reset --hard`, `git clean -fd`, or `git push --force` without explicit permission.
+- After the result, ask once how it landed, as `/cecicela feedback` does. Never unattended, never to skip a gate.
 
 ## Commands the user may type
 

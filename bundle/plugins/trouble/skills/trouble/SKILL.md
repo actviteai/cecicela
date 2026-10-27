@@ -194,4 +194,6 @@ rules:
   - never fabricate logs, outputs, or fingerprints; if you cannot run it, say so
   - end with four N/10 scores on the shipped fix, plus one lever each that would raise that score; an optional aggregate is the minimum of the four, and it must be labeled
 
-checklist: [announce, mode, exit triage if a command failed, inputs, phases 0-6, gate or distill, phase 7 only after the gate, verify, verdict, four scores]
+feedback: after the scores, ask once how it landed: good; adjust (apply it, show what changed); retry (a different hypothesis or fix, never the same); or report a trouble bug (draft an issue for github.com/actviteai/cecicela; the user files it). Never unattended.
+
+checklist: [announce, mode, exit triage if a command failed, inputs, phases 0-6, gate or distill, phase 7 only after the gate, verify, verdict, four scores, feedback]

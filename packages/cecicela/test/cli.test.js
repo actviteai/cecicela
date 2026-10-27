@@ -57,11 +57,33 @@ test('the front-door skill routes and never installs', () => {
   }
 });
 
+test('the front door offers a start menu, a help card, prompt tuning, and feedback the user files', () => {
+  const skill = fs.readFileSync(path.join(ROOT, 'skill', 'SKILL.md'), 'utf8');
+  for (const choice of ['Start something new', 'Review what is remembered', 'See all options', 'Improve my prompt']) assert.ok(skill.includes(`**${choice}**`), choice);
+  const card = skill.match(/## Help card\n[\s\S]*?```text\n([\s\S]*?)```/)[1];
+  for (const cmd of ['/ceci <goal>', '/cela <task>', '/trouble <error>', '/cecicela optimize', '/cecicela memories', '/cecicela feedback', 'budget low|medium|creator', 'animate chat|terminal|off', 'ceci help']) assert.ok(card.includes(cmd), cmd);
+  assert.match(skill, /--budget low\|medium\|creator/);
+  assert.match(skill, /Read, never guess/);
+  const optimize = fs.readFileSync(path.join(ROOT, 'skill', 'playbooks', 'optimize.md'), 'utf8');
+  assert.match(optimize, /never run it until the user says so/);
+  assert.match(optimize, /\[assumed: \.\.\.\]/);
+  assert.match(optimize, /\*\*run it\*\*.*\*\*edit it\*\*.*\*\*keep mine\*\*/);
+  const feedback = fs.readFileSync(path.join(ROOT, 'skill', 'playbooks', 'feedback.md'), 'utf8');
+  for (const verdict of ['good', 'adjust', 'retry', 'report']) assert.match(feedback, new RegExp(`\\| ${verdict} \\|`), verdict);
+  assert.match(feedback, /https:\/\/github\.com\/actviteai\/cecicela\/issues\/new\?title=/);
+  assert.match(feedback, /The user files it\. Never open, post, or submit it yourself\./);
+  assert.match(feedback, /Never argue with the verdict, and never record words the user did not say\./);
+  assert.match(feedback, /ceci\.js feedback --work-dir/);
+  const agent = fs.readFileSync(path.join(ROOT, 'agents', 'cecicela.agent.md'), 'utf8');
+  assert.match(agent, /load the `cecicela` skill: it offers the start menu/);
+  assert.match(agent, /good, adjust, retry another way, or report/);
+});
+
 test('npm pack ships the CLI, the front door, the Copilot agent, and the vendored core', () => {
   const res = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32' });
   assert.equal(res.status, 0, res.stderr);
   const files = JSON.parse(res.stdout)[0].files.map((f) => f.path);
-  for (const want of ['LICENSE', 'README.md', 'bin/cecicela.js', 'lib/bundle.js', 'lib/core/index.js', 'skill/SKILL.md', 'agents/cecicela.agent.md']) assert.ok(files.includes(want), want);
+  for (const want of ['LICENSE', 'README.md', 'bin/cecicela.js', 'lib/bundle.js', 'lib/core/index.js', 'skill/SKILL.md', 'skill/playbooks/optimize.md', 'skill/playbooks/feedback.md', 'agents/cecicela.agent.md']) assert.ok(files.includes(want), want);
   assert.deepEqual(files.filter((f) => f.startsWith('test/')), []);
 });
 

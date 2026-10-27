@@ -29,6 +29,9 @@
   ],
   "agent_skills": [
     {
+      "folder": "./skills/cecicela"
+    },
+    {
       "folder": "./skills/ceci"
     },
     {

@@ -27,6 +27,14 @@ ceci is standalone. It contains no bot names, project names, hostnames, or envir
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.3.0 <!-- keep-version -->
+
+- The screen tells the truth about a big graph: depths wrap into bands, the view follows the running or gate job, and row 16 counts what is out of view (`<< 3 earlier`, `2 later >>`). Row 17 names the job that needs attention, or the newest step.
+- Events carry the UTC minute they were recorded (`@2026-10-27T05:40Z j4 done cela:ok`); `ceci event` prints the stored line, and the bottom row says `as of 05:40Z`, so a stale view looks stale. The player shows its age instead (`05:40Z 12m ago`).
+- One key panel, on the bottom row; in the player each key is also a button. `B` opens the budget panel: in `--watch` it saves your choice to `state.md`, in the player it copies the words to type in the chat. `T` adds an ansi theme (the 16-colour BBS palette, box-drawing lines); creator effects fire only on real changes.
+- `ceci feedback` records how a result landed (good, adjust, retry, report) in the user's words, at the end of `state.md`; `ceci prep` shows the newest three. The run asks once, after it hands back.
+- The player is now about 35 KB (about 10,000 tokens when a chat builds it once).
+
 ### Changes in 2.2.0 <!-- keep-version -->
 
 - An animation budget: `budget: low | medium | creator` in `state.md`, set by a fifth start question, `--budget`, or `ceci init --budget`. Low updates the view only on meaningful changes; medium adds up to three real milestones per job; creator records every action for a live audience. See [Graph view](#graph-view).
@@ -344,7 +352,15 @@ No match exits `1` and the GPU job does not start.
 node skill/tool/ceci.js event --work-dir /path/to/run --line 'score done cela:ok'
 ```
 
-Applies one event line to the job it names and appends it to the `events:` list in `state.md`: `<job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]`. It refuses an unknown job, a transition the table under [How a goal becomes jobs](#how-a-goal-becomes-jobs) forbids, `done` while the artifact is missing, and `ready` or `running` with an unfinished dependency. `cela:ok` stores `COMPLETE` in `cela_gate`.
+Applies one event line to the job it names, appends it to the `events:` list in `state.md` with the UTC minute in front (`@2026-10-27T05:40Z score done cela:ok`), and prints the stored line: `<job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]`. It refuses an unknown job, a transition the table under [How a goal becomes jobs](#how-a-goal-becomes-jobs) forbids, `done` while the artifact is missing, and `ready` or `running` with an unfinished dependency. `cela:ok` stores `COMPLETE` in `cela_gate`.
+
+### `feedback`
+
+```bash
+node skill/tool/ceci.js feedback --work-dir /path/to/run --verdict adjust --job score --note 'fewer sources'
+```
+
+Appends `<UTC minute> <verdict>[ <job>]: <note>` to the `feedback:` list at the end of `state.md` and prints it. `--verdict` is `good`, `adjust`, `retry`, or `report`; `--note` is one line, in the user's words. It never changes a job. `ceci prep` shows the newest three, and the next run starts from them.
 
 ### `log`
 
@@ -513,24 +529,24 @@ Record the chosen `host:device` on the job, export the CUDA lines for the local 
 
 ## Graph view
 
-`ceci status --screen` prints the graph as an 80x24 pure-ASCII screen; `ceci status --watch` redraws it in place as `state.md` changes. Jobs are boxes laid out by depth, edges run left to right, a spinner turns on running jobs, `! GATE: human` blinks on a gate, and packets travel along the edges into the job that is working. The log panel shows the last three event lines.
+`ceci status --screen` prints the graph as an 80x24 pure-ASCII screen; `ceci status --watch` redraws it in place as `state.md` changes. Jobs are boxes laid out by depth, four depths to a band; a longer chain wraps to the next band. A spinner turns on running jobs, `! GATE: human` blinks on a gate, and packets travel along the edges into the job that is working. When the graph is bigger than the screen, the view follows the work and counts what it hides. Row 16 is a bar with the real counts, row 17 the job that needs attention (or the newest step), rows 18 to 22 the last three events with their minute, and row 23 the keys and `as of <HH:MM>Z`.
 
 ```text
- ceciCela  TUI | ceci: ship the docs site                  turn 09/09  graph:on
+ ceciCela | ceci: ship the docs site                              4/6 done  low
   +==============+    +==============+    +==============+    +--------------+
   |j1 scaffold re|-+->|j2 content mod|--->|j4 build pages|*+->|j5 deploy     |
   | done  cela OK| |  | done  cela OK|    | done  cela OK| |  | | run  cela..|
   +==============+ |  +==============+    +==============+ |  +--------------+
 ```
 
-Hotkeys in `--watch`: `G` graph on/off, `F` frames, `L` legend, space pause, `S` step, `T` green/amber, `-`/`+` speed, `R` reset, `Q` quit. `graph: off` in `state.md` turns the drawing off for every reader, including the chat versions. The renderer is the same module the chat player uses, and a test asserts both print the same 80x24 screen.
+Keys, on the bottom row in `--watch` and in the player (where each is also a button): `G` graph on/off, `L` legend, `B` budget, `T` theme (phosphor, amber, ansi), space pause, `R` replay, `S` step the replay, `F` frames, `-`/`+` speed, `Q` quit (`--watch`). `graph: off` in `state.md` turns the drawing off for every reader, including the chat versions. The renderer is the same module the chat player uses, and a test asserts both print the same 80x24 screen.
 
 Where the graph is shown is the `animate` start choice, and the skill is built so the animation costs your tokens only when it is on screen:
 
 | `animate` | What the agent does | Tokens per update |
 | --- | --- | --- |
 | `terminal` | prints `ceci status --watch` once; you run it in a second terminal | none |
-| `chat` | after each job, `ceci player --out FILE` writes the page and the agent republishes it by path (in Claude Code, as an artifact); the 23 KB page never passes through the model | two short tool calls |
+| `chat` | where a tool shows a file as a page (Claude Code's artifacts), `ceci player --out FILE` writes it and the agent republishes it by path: the 35 KB page never passes through the model. Elsewhere (claude.ai, ChatGPT canvas) the agent builds the page once and then appends the line `ceci event` printed. After each update it says `view: <done>/<total> done, as of <HH:MM>Z`, or `view not updated` | two short tool calls, or about 10,000 tokens once and then one line per event |
 | `off` | event lines in `state.md` only | none |
 
 The agent checks progress with plain `ceci status` and runs `--screen` (about 2 KB) only when you ask to see the graph in the conversation.
@@ -541,7 +557,7 @@ How often the view updates is the `budget:` header in `state.md`. The drawing is
 | --- | --- | --- | --- |
 | `low` (default) | none | when a job ends or stops, and at a stop | nothing |
 | `medium` | up to 3 per job, at real milestones | also when a job starts and after each step | a NOW ticker with the newest step |
-| `creator` | one after every action on a running job | after every event | the ticker, and step counts on running boxes |
+| `creator` | one after every action on a running job | after every event | the ticker, step counts on running boxes, and effects on real changes: the newest event's job flashes, a finished job throws sparks; the ansi theme by default |
 
 Every budget is honest: a step is written after the work happened, with numbers copied from the output (`j4 step npm test: 41 pass, 0 fail`), only on a running job, and never as an estimate or to fill the screen. `ceci event` enforces the running-job rule and the step limit. A lower budget shows less, never something different.
 
@@ -627,7 +643,7 @@ npm test --workspace @actvite/ceci     # this package
 npm test                               # the whole repository, from its root
 ```
 
-`test/ceci.test.js` checks init, GPU priority, `--busy` and the CUDA lines, one-line logs, `status` grouping, `state.md` round trips (header and events included), `ceci event` transitions, the `--screen` view, and flag parsing. The scoring scenario runs the real cela engine from `packages/cela`, so a gate-format change in cela fails ceci's tests in the same commit. `test/harness.test.js` installs into every harness under a scratch home. `test/package.test.js` covers the bin and the npm `files` list.
+`test/prep.test.js` checks the start questions, archive, the player, feedback, and stamped events. `test/budget.test.js` checks the three budgets. `test/ceci.test.js` checks init, GPU priority, `--busy` and the CUDA lines, one-line logs, `status` grouping, `state.md` round trips (header and events included), `ceci event` transitions, the `--screen` view, and flag parsing. The scoring scenario runs the real cela engine from `packages/cela`, so a gate-format change in cela fails ceci's tests in the same commit. `test/harness.test.js` installs into every harness under a scratch home. `test/package.test.js` covers the bin and the npm `files` list.
 
 ## Harnesses
 

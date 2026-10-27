@@ -41,6 +41,7 @@ const USAGE = `usage: ceci prep --work-dir PATH [--json]
                  [--budget low|medium|creator]
        ceci status --work-dir PATH [--screen [--tick N] | --watch]
        ceci event --work-dir PATH --line TEXT
+       ceci feedback --work-dir PATH --verdict good|adjust|retry|report [--job ID] --note TEXT
        ceci log --work-dir PATH --line TEXT
        ceci archive --work-dir PATH [--to NAME] [--keep-brief]
        ceci player --work-dir PATH --out FILE
@@ -67,13 +68,23 @@ only those lines, even when all three files exist. Without them it refuses when 
 stderr when brief.md has no prepped: line (the plan skipped the Prep step).
 --screen prints the 80x24 graph view once (about 2 KB; --tick N moves the spinner and packets).
 --watch redraws it as state.md changes and never exits: run it in your own terminal, not in an agent.
-Keys in --watch: G graph, F frames, L legend, space pause, S step, T theme, - + speed, R reset, Q quit.`,
+Keys in --watch: G graph, L legend, B budget (choose one and press Enter to save it in state.md),
+T theme (phosphor, amber, ansi), space pause, R replay the events, S step the replay, F frames,
+- + speed, Q quit. The bottom row lists them; nothing else on the screen is a control.`,
   event: `Applies one event line to the job it names and appends it to events: in state.md:
   <job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
   <job> step <what was done, with its real result>
 It refuses an unknown job, a forbidden transition, done without the artifact, and ready or running
 with an unfinished dependency. A step needs a running job and room in the budget: low records
-none, medium three per job, creator any number. Record a step only after the work happened.`,
+none, medium three per job, creator any number. Record a step only after the work happened.
+Each event is stored with the UTC minute it was recorded (@2026-10-27T05:40Z), so the screen can
+say how fresh it is, and printed as stored: that line is what a player's EVENTS array gets.`,
+  feedback: `Records how a result landed, in the feedback: list at the end of state.md, with the UTC minute:
+  good     keep going this way
+  adjust   keep the plan, change what the note says
+  retry    redo the result another way; the note says what was wrong
+  report   a problem with ceciCela itself; the note is the text of a GitHub issue to file
+--job ties it to one job. ceci prep shows the newest three, so the next run starts from them.`,
   log: 'Appends one line to log.md: YYYY-MM-DDTHH:MMZ | job_id | status | note',
   archive: `Moves brief.md, state.md, log.md, and every artifact state.md names into runs/<UTC time>/
 (or runs/NAME with --to), keeping their paths. It never deletes, refuses a destination that exists,
@@ -180,7 +191,7 @@ function parseFlow(raw) {
  */
 function parseDoc(text) {
   const lines = String(text).replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
-  const doc = { title: null, graph: null, budget: null, jobs: [], events: null };
+  const doc = { title: null, graph: null, budget: null, jobs: [], events: null, feedback: null };
   let i = 0;
   for (const key of ['title', 'graph', 'budget']) {
     const head = new RegExp(`^${key}: (.*)$`).exec(lines[i] || '');
@@ -204,7 +215,7 @@ function parseDoc(text) {
     for (i += 1; i < lines.length; i += 1) {
       const line = lines[i];
       if (line.trim() === '') continue;
-      if (/^events:/.test(line)) break;
+      if (/^(events|feedback):/.test(line)) break;
       const start = /^ {2}- id: (.*)$/.exec(line);
       if (start) {
         if (current) doc.jobs.push(current);
@@ -223,13 +234,14 @@ function parseDoc(text) {
   } else {
     throw new Error(`state.md line ${i + 1}: expected jobs:`);
   }
-  while (i < lines.length && lines[i].trim() === '') i += 1;
-  if (i < lines.length) {
-    if (lines[i] === 'events: []') {
-      doc.events = [];
+  // Two optional lists close the file, in this order: events, then feedback.
+  for (const key of ['events', 'feedback']) {
+    while (i < lines.length && lines[i].trim() === '') i += 1;
+    if (lines[i] === `${key}: []`) {
+      doc[key] = [];
       i += 1;
-    } else if (lines[i] === 'events:') {
-      doc.events = [];
+    } else if (lines[i] === `${key}:`) {
+      doc[key] = [];
       for (i += 1; i < lines.length; i += 1) {
         if (lines[i].trim() === '') continue;
         const item = /^ {2}- (".*")$/.exec(lines[i]);
@@ -238,15 +250,15 @@ function parseDoc(text) {
         try {
           value = JSON.parse(item[1]);
         } catch {
-          throw new Error(`state.md line ${i + 1}: bad event`);
+          throw new Error(`state.md line ${i + 1}: bad ${key === 'events' ? 'event' : 'feedback line'}`);
         }
-        if (typeof value !== 'string' || !value || /[\r\n]/.test(value)) throw new Error(`state.md line ${i + 1}: an event is one non-empty line`);
-        doc.events.push(value);
+        if (typeof value !== 'string' || !value || /[\r\n]/.test(value)) throw new Error(`state.md line ${i + 1}: ${key === 'events' ? 'an event' : 'a feedback line'} is one non-empty line`);
+        doc[key].push(value);
       }
     }
-    while (i < lines.length && lines[i].trim() === '') i += 1;
-    if (i < lines.length) throw new Error(`bad state.md line ${i + 1}`);
   }
+  while (i < lines.length && lines[i].trim() === '') i += 1;
+  if (i < lines.length) throw new Error(`bad state.md line ${i + 1}`);
   doc.jobs.forEach(checkJob);
   checkGraph(doc.jobs);
   return doc;
@@ -325,13 +337,15 @@ function formatState(jobs, meta = {}) {
       });
     });
   }
-  if (meta.events) {
-    if (!meta.events.length) lines.push('events: []');
+  ['events', 'feedback'].forEach((key) => {
+    const items = meta[key];
+    if (!items) return;
+    if (!items.length) lines.push(`${key}: []`);
     else {
-      lines.push('events:');
-      meta.events.forEach((line) => lines.push(`  - ${JSON.stringify(line)}`));
+      lines.push(`${key}:`);
+      items.forEach((line) => lines.push(`  - ${JSON.stringify(line)}`));
     }
-  }
+  });
   return `${lines.join('\n')}\n`;
 }
 
@@ -490,7 +504,7 @@ function prepReport(dir) {
     report.brief = { fields, prepped: typeof fields.prepped === 'string' && fields.prepped ? fields.prepped : null };
   }
   if (has('state.md')) {
-    const state = { title: null, budget: null, jobs: 0, counts: Object.fromEntries([...STATUSES].map((s) => [s, 0])), gates: [], error: null };
+    const state = { title: null, budget: null, jobs: 0, counts: Object.fromEntries([...STATUSES].map((s) => [s, 0])), gates: [], feedback: [], error: null };
     try {
       const doc = parseDoc(read('state.md'));
       state.title = doc.title;
@@ -499,13 +513,11 @@ function prepReport(dir) {
       doc.jobs.forEach((job) => { state.counts[job.status] += 1; });
       const words = {};
       (doc.events || []).forEach((line) => {
-        const [id, , ...rest] = line.split(/\s+/);
-        rest.forEach((part) => {
-          const m = /^gate:(\S+)$/.exec(part);
-          if (m) words[id] = m[1];
-        });
+        const ev = tui.parseEvent(line);
+        if (ev && ev.type === 'job' && ev.gate) words[ev.job] = ev.gate;
       });
       state.gates = doc.jobs.filter((job) => job.status === 'gate').map((job) => ({ id: job.id, goal: job.goal, gate: words[job.id] || null }));
+      state.feedback = (doc.feedback || []).slice(-3);
     } catch (err) {
       state.error = err.message;
     }
@@ -554,6 +566,7 @@ function commandPrep(args) {
     lines.push('brief.md:', ...shown);
   }
   if (report.log && report.log.last) lines.push(`last log line: ${report.log.last}`);
+  if (report.state && report.state.feedback.length) lines.push('feedback (newest last):', ...report.state.feedback.map((f) => `  ${f}`));
   if (report.runs.length) lines.push(`archived runs: ${report.runs.map((r) => `runs/${r}`).join(', ')}`);
   lines.push(`questions: ${report.ask.join(', ')}`);
   process.stdout.write(`${lines.join('\n')}\n`);
@@ -597,16 +610,62 @@ function commandArchive(args) {
 }
 
 /**
- * The renderer without its comments or indentation: same code, fewer bytes,
- * because a chat model emits the player once per conversation.
+ * The renderer without its comments, its terminal-only blocks, or the spaces
+ * that separate nothing: same code, fewer bytes, because a chat model emits the
+ * player once per conversation. Line breaks stay, so no statement merges.
  */
 function compact(js) {
   return js
+    .replace(/[ \t]*\/\/ <terminal>[\s\S]*?\/\/ <\/terminal>\n/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => squeeze(line.trim()))
     .filter((line) => line && !line.startsWith('//'))
     .join('\n');
+}
+
+const WORD = /[A-Za-z0-9_$]/;
+
+/** One line with the spaces between punctuation removed; strings and regex literals are copied as they are. */
+function squeeze(line) {
+  let out = '';
+  let i = 0;
+  while (i < line.length) {
+    const c = line[i];
+    if (c === '"' || c === "'" || c === '`') {
+      let j = i + 1;
+      while (j < line.length && line[j] !== c) j += line[j] === '\\' ? 2 : 1;
+      out += line.slice(i, j + 1);
+      i = j + 1;
+    } else if (c === '/' && line[i + 1] === '/') {
+      break;
+    } else if (c === '/' && (/[(,=:[!&|?{};+\-*%<>~^]$/.test(out) || /\b(return|typeof)$/.test(out) || out === '')) {
+      let j = i + 1;
+      let inClass = false;
+      while (j < line.length && (inClass || line[j] !== '/')) {
+        if (line[j] === '\\') j += 1;
+        else if (line[j] === '[') inClass = true;
+        else if (line[j] === ']') inClass = false;
+        j += 1;
+      }
+      j += 1;
+      while (j < line.length && /[a-z]/.test(line[j])) j += 1;
+      out += line.slice(i, j);
+      i = j;
+    } else if (c === ' ' || c === '\t') {
+      let j = i;
+      while (j < line.length && (line[j] === ' ' || line[j] === '\t')) j += 1;
+      const prev = out[out.length - 1] || '';
+      const next = line[j] || '';
+      const keep = (WORD.test(prev) && WORD.test(next)) || (prev === '+' && next === '+') || (prev === '-' && next === '-');
+      if (keep) out += ' ';
+      i = j;
+    } else {
+      out += c;
+      i += 1;
+    }
+  }
+  return out.trimEnd();
 }
 
 /**
@@ -665,11 +724,14 @@ function screen(doc, tick) {
 
 function commandWatch(dir) {
   const file = path.join(dir, 'state.md');
-  const keys = { graph: null, legend: true, paused: false, theme: 'green', speed: 250, reveal: undefined };
+  const keys = { graph: null, legend: false, paused: false, theme: null, speed: 250, reveal: undefined, replay: null };
   let tick = 0;
   let last = '';
+  let seen = -1;
+  let freshAt = 0;
+  let panel = null;
+  let doc = null;
   const draw = () => {
-    let doc;
     try {
       doc = parseDoc(fs.readFileSync(file, 'utf8'));
     } catch (err) {
@@ -677,14 +739,28 @@ function commandWatch(dir) {
       return;
     }
     const model = screenModel(doc);
+    // A new event is what just changed: the creator effects mark it for a moment.
+    if (model.events.length !== seen) {
+      if (seen !== -1) freshAt = tick;
+      seen = model.events.length;
+    }
+    if (keys.theme === null) keys.theme = model.budget === 'creator' ? 'ansi' : 'phosphor';
     if (keys.graph) model.graph = keys.graph;
     model.legend = keys.legend;
     if (model.graph === 'frames' && keys.reveal === undefined) keys.reveal = 0;
-    const opts = { tick };
+    const opts = { tick, footer: 'cli', fresh: tick - freshAt, now: Date.now(), glyphs: keys.theme === 'ansi' ? 'cp437' : 'ascii' };
+    if (keys.replay !== null) {
+      // Replay shows each event in order; jobs an event touches start as not started.
+      const touched = new Set(model.events.map((line) => tui.parseEvent(line)).filter((ev) => ev && ev.type === 'job').map((ev) => ev.job));
+      model.jobs = model.jobs.map((job) => (touched.has(job.id) ? { ...job, status: job.depends_on.length ? 'blocked' : 'ready', cela: null } : job));
+      opts.step = keys.replay;
+      opts.replay = true;
+    }
     if (keys.reveal !== undefined) {
       opts.reveal = keys.reveal;
       keys.reveal = keys.reveal >= tui.W ? undefined : keys.reveal + 4;
     }
+    if (panel) opts.panel = panel;
     const text = tui.toAnsi(tui.render(model, opts), keys.theme);
     if (text !== last) process.stdout.write(`\u001b[H${text}`);
     last = text;
@@ -692,7 +768,15 @@ function commandWatch(dir) {
   process.stdout.write('\u001b[?25l\u001b[2J');
   let timer = null;
   const loop = () => {
-    if (!keys.paused) tick += 1;
+    if (!keys.paused) {
+      tick += 1;
+      if (keys.replay !== null && tick % 6 === 0) {
+        if (doc && keys.replay < (doc.events || []).length) {
+          keys.replay += 1;
+          freshAt = tick;
+        } else keys.replay = null;
+      }
+    }
     draw();
     timer = setTimeout(loop, keys.speed);
   };
@@ -701,24 +785,47 @@ function commandWatch(dir) {
     process.stdout.write('\u001b[0m\u001b[?25h\n');
     process.exit(0);
   };
+  const budgetPanel = (sel, note) => ({ type: 'budget', sel, action: `save budget: ${sel} in state.md`, note: note || 'The agent reads it before its next event.' });
   if (process.stdin.isTTY) {
     process.stdin.setRawMode(true);
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', (key) => {
       const k = key.toLowerCase();
       if (k === 'q' || key === '\u0003') stop();
-      else if (k === 'g') keys.graph = keys.graph === 'off' ? 'on' : 'off';
+      else if (panel) {
+        const at = tui.BUDGETS.indexOf(panel.sel);
+        if (key === '\u001b[A') panel = budgetPanel(tui.BUDGETS[(at + 2) % 3]);
+        else if (key === '\u001b[B') panel = budgetPanel(tui.BUDGETS[(at + 1) % 3]);
+        else if (key === '\r' || key === '\n') {
+          // The one write --watch makes: the budget line, through the same validation as ceci init.
+          try {
+            const fresh = parseDoc(fs.readFileSync(file, 'utf8'));
+            fs.writeFileSync(file, formatState(fresh.jobs, { ...fresh, budget: panel.sel }));
+            panel = budgetPanel(panel.sel, `Saved budget: ${panel.sel} in state.md.`);
+          } catch (err) {
+            panel = budgetPanel(panel.sel, `Not saved: ${err.message}`);
+          }
+        } else if (k === 'b' || key === '\u001b') panel = null;
+      } else if (k === 'g') keys.graph = keys.graph === 'off' ? 'on' : 'off';
       else if (k === 'f') keys.reveal = 0;
       else if (k === 'l') keys.legend = !keys.legend;
+      else if (k === 'b') panel = budgetPanel((doc && doc.budget) || 'low');
       else if (k === ' ') keys.paused = !keys.paused;
-      else if (k === 's') tick += 1;
-      else if (k === 't') keys.theme = keys.theme === 'green' ? 'amber' : 'green';
+      else if (k === 's') {
+        tick += 1;
+        if (keys.replay !== null && doc && keys.replay < (doc.events || []).length) {
+          keys.replay += 1;
+          freshAt = tick;
+        }
+      } else if (k === 't') keys.theme = tui.THEMES[(tui.THEMES.indexOf(keys.theme) + 1) % tui.THEMES.length];
       else if (k === '-') keys.speed = Math.min(2000, keys.speed * 2);
       else if (k === '+' || k === '=') keys.speed = Math.max(60, Math.floor(keys.speed / 2));
       else if (k === 'r') {
         tick = 0;
+        freshAt = 0;
         keys.graph = null;
         keys.reveal = undefined;
+        keys.replay = 0;
       }
       draw();
     });
@@ -799,8 +906,9 @@ function commandEvent(args) {
     die(`${id} cannot be ${status} with an unfinished dependency`, 1);
   }
   const jobs = doc.jobs.map((item) => (item.id === id ? next : item));
-  const events = (doc.events || []).concat(parts.join(' '));
-  fs.writeFileSync(path.join(dir, 'state.md'), formatState(jobs, { ...doc, events }));
+  const stored = `@${minute()} ${parts.join(' ')}`;
+  fs.writeFileSync(path.join(dir, 'state.md'), formatState(jobs, { ...doc, events: (doc.events || []).concat(stored) }));
+  process.stdout.write(`${stored}\n`);
 }
 
 /**
@@ -815,14 +923,35 @@ function commandStep(dir, id, words, parts) {
   if (job.status !== 'running') die(`${id} is ${job.status}; a step is recorded only on a running job`, 1);
   const budget = doc.budget || 'low';
   const cap = BUDGETS[budget];
-  const used = (doc.events || []).filter((line) => line.split(/\s+/)[0] === id && line.split(/\s+/)[1] === 'step').length;
+  const used = (doc.events || []).filter((line) => {
+    const ev = tui.parseEvent(line);
+    return ev && ev.type === 'step' && ev.job === id;
+  }).length;
   if (used >= cap) {
     die(cap === 0
       ? 'budget low records no step events; status events only'
       : `${id} already has ${used} steps, the most budget ${budget} allows`, 1);
   }
-  const events = (doc.events || []).concat(parts.join(' '));
-  fs.writeFileSync(path.join(dir, 'state.md'), formatState(doc.jobs, { ...doc, events }));
+  const stored = `@${minute()} ${parts.join(' ')}`;
+  fs.writeFileSync(path.join(dir, 'state.md'), formatState(doc.jobs, { ...doc, events: (doc.events || []).concat(stored) }));
+  process.stdout.write(`${stored}\n`);
+}
+
+const VERDICTS = ['good', 'adjust', 'retry', 'report'];
+
+/** How a result landed, in the user's words, kept with the plan so the next run starts from it. */
+function commandFeedback(args) {
+  const dir = workDir(args);
+  const verdict = args.verdict;
+  const note = args.note;
+  if (typeof verdict !== 'string' || !VERDICTS.includes(verdict)) die(`--verdict must be ${VERDICTS.join(', ')}`);
+  if (typeof note !== 'string' || !note.trim() || /[\r\n]/.test(note)) die('--note must be one non-empty line: what the user said');
+  const doc = readDoc(dir);
+  const job = args.job;
+  if (job !== undefined && (typeof job !== 'string' || !doc.jobs.some((item) => item.id === job))) die(`no job ${job} in state.md`, 1);
+  const line = `${minute()} ${verdict}${job ? ` ${job}` : ''}: ${note.trim()}`;
+  fs.writeFileSync(path.join(dir, 'state.md'), formatState(doc.jobs, { ...doc, feedback: (doc.feedback || []).concat(line) }));
+  process.stdout.write(`${line}\n`);
 }
 
 function commandGpu(args) {
@@ -871,6 +1000,7 @@ function main(argv) {
   else if (command === 'status') commandStatus(args);
   else if (command === 'log') commandLog(args);
   else if (command === 'event') commandEvent(args);
+  else if (command === 'feedback') commandFeedback(args);
   else if (command === 'archive') commandArchive(args);
   else if (command === 'player') commandPlayer(args);
   else if (command === 'resolve-gpu') commandGpu(args);

@@ -55,14 +55,16 @@ test('every screen is 80x24 pure ASCII, for every tick and every reveal', () => 
 test('the example draws boxes by state, edges, packets, the log, and the cost line', () => {
   const s = T.render(example(), { tick: 0 });
   const all = s.lines.join('\n');
-  assert.match(s.lines[0], /^ ceciCela {2}TUI \| ceci: ship the docs site +turn 11\/11 {2}graph:on $/);
+  assert.match(s.lines[0], /^ ceciCela \| ceci: ship the docs site +4\/6 done {2}low $/);
   assert.match(all, /\+==============\+/, 'done jobs have = borders');
   assert.match(all, /\|j5 deploy {5}\|/);
   assert.match(all, /\| \| run {2}cela\.\.\|/, 'running job with cela pending shows the spinner');
   assert.match(all, /->\|j2 content mod\|/, 'edges enter on the box line');
   assert.match(all, /[o*]/, 'packets move along live edges');
-  assert.match(s.lines[21], /^\| turn 11 {2}j5 running cela:pending_ +\|$/);
-  assert.match(s.lines[23], / 11ev=\d+B$/);
+  assert.match(s.lines[21], /^\| #11 {5}j5 running cela:pending_ +\|$/);
+  assert.match(s.lines[23], /^ \[G\]raph \[L\]egend \[B\]udget .* 11 ev \d+B$/, 'one key panel, then the events and their size');
+  assert.match(s.lines[16], /\[#+\.+\] 4\/6 done {2}1 running/, 'real counts under the graph');
+  assert.match(s.lines[17], /^ RUN {3}j5: deploy/, 'the job that is running, by its full goal');
   // Spinner and packets move with the tick; nothing else does.
   const next = T.render(example(), { tick: 1 }).lines;
   assert.match(next.join('\n'), /\| \/ run {2}cela\.\.\|/);
@@ -133,10 +135,12 @@ test('ceci status --screen and the chat player print the same 80x24 screen', () 
 test('the player loads, draws into the page, and keeps its events in one editable array', () => {
   const html = fs.readFileSync(PLAYER, 'utf8');
   const { context, el } = loadPlayer(html);
-  assert.match(el.innerHTML, /<span class="a-i"> ceciCela {2}TUI/);
+  assert.match(el.innerHTML, /<span class="a-i"> ceciCela \| ceci/);
+  assert.doesNotMatch(html, /<nav|<button/, 'the bottom row of the screen is the only key panel');
+  assert.match(el.innerHTML, /<span class="a-h">\[B\]<\/span>/, 'the budget key is on it');
   assert.equal(vm.runInContext('EVENTS.length', context), example().events.length);
   assert.equal((html.match(/append new event lines above this one/g) || []).length, 1);
-  assert.ok(Buffer.byteLength(html) < 32 * 1024, `the player is ${Buffer.byteLength(html)} bytes`);
+  assert.ok(Buffer.byteLength(html) < 36 * 1024, `the player is ${Buffer.byteLength(html)} bytes`);
 });
 
 test('step events and the budget: low draws what it always drew, medium and creator add only real steps', () => {
@@ -154,16 +158,16 @@ test('step events and the budget: low draws what it always drew, medium and crea
   const low = at('low');
   assertScreen(low);
   assert.deepEqual(low.lines.slice(1, 18), plain.lines.slice(1, 18), 'low: same graph and legend as before steps existed');
-  assert.match(low.lines[0], /graph:on $/, 'low is not named in the title');
+  assert.match(low.lines[0], /4\/6 done {2}low $/, 'the title names the budget, low included');
   for (const budget of ['medium', 'creator']) {
     const s = at(budget);
     assertScreen(s);
-    assert.match(s.lines[0], new RegExp(`graph:on {2}${budget} $`));
-    assert.match(s.lines[17], /^ NOW {2}j5 > wrangler deploy: exit 0 +$/);
-    assert.equal(s.attrs[17].slice(0, 5), 'iiiii', 'the NOW label is inverse');
+    assert.match(s.lines[0], new RegExp(`4/6 done {2}${budget} $`));
+    assert.match(s.lines[17], /^ NOW {3}j5 > wrangler deploy: exit 0 +$/);
+    assert.equal(s.attrs[17].slice(0, 6), 'nnnnnn', 'the NOW label is a tag');
   }
   assert.equal(T.fromStateMd('budget: lavish\njobs: []\n').budget, 'lavish', 'the lenient reader keeps it');
-  assert.match(T.render(T.fromStateMd('budget: lavish\njobs: []\n')).lines[0], /graph:on $/, 'an unknown budget draws as low');
+  assert.match(T.render(T.fromStateMd('budget: lavish\njobs: []\n')).lines[0], /0\/0 done {2}low $/, 'an unknown budget draws as low');
 });
 
 test('ceci status --screen and the player print the same creator screen, ticker and step counts included', () => {
@@ -179,12 +183,17 @@ test('ceci status --screen and the player print the same creator screen, ticker 
   const out = path.join(work, 'player.html');
   assert.equal(spawnSync(process.execPath, [CECI, 'player', '--work-dir', work, '--out', out]).status, 0);
   const { context } = loadPlayer(fs.readFileSync(out, 'utf8'));
+  // The CLI prints a fixed screen: no clock, no flash for a new event, ASCII glyphs.
+  context.clock = null;
+  context.freshAt = -100;
+  context.keys.theme = 'phosphor';
   for (const tick of [0, 3]) {
     const cli = spawnSync(process.execPath, [CECI, 'status', '--work-dir', work, '--screen', '--tick', String(tick)], { encoding: 'utf8' });
     context.typed = null;
     context.tick = tick;
     const shown = vm.runInContext('screen()', context);
     assert.equal(`${shown.lines.join('\n')}\n`, cli.stdout, `tick ${tick}`);
-    assert.match(cli.stdout, / NOW {2}j5 > wrangler deploy: exit 0/);
+    assert.match(cli.stdout, / NOW {3}j5 > wrangler deploy: exit 0/);
+    assert.match(cli.stdout, /as of \d\d:\d\dZ$/m, 'ceci event stamps each event with its UTC minute');
   }
 });

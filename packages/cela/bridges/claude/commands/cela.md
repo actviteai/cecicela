@@ -1,4 +1,4 @@
-# cela 1.0.1
+# cela 1.0.2
 
 The user invoked `/cela`. Before doing anything else, read the cela skill and follow it for this task.
 
