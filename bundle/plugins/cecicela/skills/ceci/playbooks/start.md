@@ -36,7 +36,7 @@ A rule in the brief limits every job after it ("public tenders only"). This ques
 | Option | Does | Records |
 | --- | --- | --- |
 | Yes, in this chat | a live page beside the chat, updated as the budget says (Player in `playbooks/graph.md`). Offer it only when the host can show an HTML page: by path (Claude Code's artifact publish costs no tokens) or as a page you build once (about 10,000 tokens, then one line per update); say which in the option. | `animate: chat` |
-| Yes, in my terminal | print the `ceci status --watch` command for the user to run in a second terminal; it costs no tokens | `animate: terminal` |
+| Yes, in a second terminal window | print the `ceci status --watch` command for the user to run in a second terminal window; the graph animates there, never inside this tool's own window; it costs no tokens | `animate: terminal` |
 | No | event lines only | `animate: off` |
 
 **Q4. Approach** (for a new plan; when Q1 is asked too, its answer is ignored if the user resumes). Header `Approach`. Question: "Do you already know how to reach the goal?"

@@ -67,7 +67,8 @@ only those lines, even when all three files exist. Without them it refuses when 
   status: `Lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. Warns on
 stderr when brief.md has no prepped: line (the plan skipped the Prep step).
 --screen prints the 80x24 graph view once (about 2 KB; --tick N moves the spinner and packets).
---watch redraws it as state.md changes and never exits: run it in your own terminal, not in an agent.
+--watch redraws it as state.md changes and never exits: run it in your own terminal, not in an agent;
+it exits 2 when its output is not a terminal.
 Keys in --watch: G graph, L legend, B budget (choose one and press Enter to save it in state.md),
 T theme (phosphor, amber, ansi), space pause, R replay the events, S step the replay, F frames,
 - + speed, Q quit. The bottom row lists them; nothing else on the screen is a control.`,
@@ -837,6 +838,8 @@ function commandWatch(dir) {
 function commandStatus(args) {
   const dir = workDir(args);
   if (args.watch !== undefined) {
+    // An agent's shell tool captures output and shows it only when the command ends, which --watch never does.
+    if (!process.stdout.isTTY) die('--watch needs a terminal: run it in your own terminal window, not through an agent. For one frame here, use --screen.');
     readDoc(dir);
     commandWatch(dir);
     return;

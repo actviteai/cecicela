@@ -388,7 +388,7 @@ Every run begins with `ceci prep` and, in one question call (AskUserQuestion whe
 | --- | --- | --- | --- |
 | Plan | an older plan exists | resume it; new plan, archive the old one into `runs/`; new plan in another folder | `--resume`, `--fresh`, `--new-dir PATH` |
 | Brief | a brief exists | keep it; edit it first | none |
-| Animation | always | live in this chat; in my terminal; no | `--animate chat\|terminal\|off` |
+| Animation | always | live in this chat; in a second terminal window; no | `--animate chat\|terminal\|off` |
 | Budget | the animation is on | low (only meaningful updates); medium; content creator | `--budget low\|medium\|creator` |
 | Approach | a new plan | compare options first (the first job is `options`, artifact `options.md`); I know the approach | none |
 
