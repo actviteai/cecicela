@@ -23,10 +23,11 @@ const START = { start: ['resumed', 'fresh', 'new-dir'], animate: ['chat', 'termi
 const PLAN_FILES = ['brief.md', 'state.md', 'log.md'];
 
 const STATE = 'jobs: []\n';
+const GITIGNORE = '# ceci made this work dir; its plan files stay out of git. Delete this file to commit them.\n*\n';
 const GRAPH_MODES = new Set(['on', 'off', 'frames']);
 // The animation's token budget (playbooks/graph.md, Budget): how many step events a job may record.
 const BUDGETS = { low: 0, medium: 3, creator: Infinity };
-const CELA_TOKENS = { ok: 'COMPLETE', pending: null, stalled: 'STALLED', blocked: 'BLOCKED', missing_test: 'MISSING_TEST' };
+const CELA_RESULTS = { ok: 'COMPLETE', pending: null, stalled: 'STALLED', blocked: 'BLOCKED', missing_test: 'MISSING_TEST' };
 // Allowed status changes (playbooks/graph.md, Status transitions). A job may restate its status.
 const MOVES = {
   blocked: ['blocked', 'ready', 'gate'],
@@ -63,7 +64,9 @@ and "ask" lists the start questions that apply (playbooks/start.md).`,
   init: `Creates any missing brief.md, state.md, or log.md and never overwrites one. With --start,
 --animate, or --approach it also records those choices and a prepped: time in brief.md, replacing
 only those lines, even when all three files exist. Without them it refuses when all three exist.
---budget sets the animation's token budget in state.md's header (low, medium, creator).`,
+--budget sets the animation's token budget in state.md's header (low, medium, creator).
+When it creates the work dir inside a git repo, it adds a .gitignore there so the plan stays out
+of commits; a work dir that already exists is left as it is.`,
   status: `Lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. Warns on
 stderr when brief.md has no prepped: line (the plan skipped the Prep step).
 --screen prints the 80x24 graph view once (about 2 KB; --tick N moves the spinner and packets).
@@ -472,13 +475,24 @@ function startChoices(args) {
   return out;
 }
 
+/** True when dir or a parent holds .git (a directory, or a file in a worktree or submodule). */
+function inGitRepo(dir) {
+  for (let at = dir; ; at = path.dirname(at)) {
+    if (fs.existsSync(path.join(at, '.git'))) return true;
+    if (path.dirname(at) === at) return false;
+  }
+}
+
 function commandInit(args) {
   const dir = workDir(args);
   const choices = startChoices(args);
   const record = Object.keys(choices).length > 0;
   const budget = args.budget;
   if (budget !== undefined && (Array.isArray(budget) || !Object.prototype.hasOwnProperty.call(BUDGETS, budget))) die('--budget must be low, medium, creator');
+  const made = !fs.existsSync(dir);
   fs.mkdirSync(dir, { recursive: true });
+  // A work dir ceci made inside a git repo stays out of commits; a dir the user already had is theirs.
+  if (made && inGitRepo(path.dirname(path.resolve(dir)))) fs.writeFileSync(path.join(dir, '.gitignore'), GITIGNORE);
   const existing = PLAN_FILES.filter((name) => fs.existsSync(path.join(dir, name)));
   if (existing.length === PLAN_FILES.length && !record && budget === undefined) die(`refusing to overwrite ${existing.join(', ')}`, 1);
   if (!existing.includes('brief.md')) fs.writeFileSync(path.join(dir, 'brief.md'), BRIEF);
@@ -680,7 +694,7 @@ function fillPlayer(template, tuiSource, stateText, opts = {}) {
   const head = at === -1 ? text : text.slice(0, at + 1);
   const events = at === -1 ? [] : tui.fromStateMd(text).events;
   let html = String(template).replace(/\r\n/g, '\n');
-  if (opts.offline) html = html.replace(/<!-- JetBrains Mono[^\n]*-->\n(?:<link rel="stylesheet" href="https:[^\n]*>\n)+/, '');
+  if (opts.offline) html = html.replace(/<!-- JetBrains Mono[^\n]*-->\n(?:<link rel="stylesheet"[^\n]*>\n)+/, '');
   return html
     .replace('/*@@TUI@@*/', () => compact(tuiSource))
     .replace('/*@@STATE@@*/', () => JSON.stringify(head))
@@ -892,10 +906,10 @@ function commandEvent(args) {
   let gate;
   for (const part of rest) {
     const kv = /^(cela|gate):(\S+)$/.exec(part);
-    if (!kv) die(`unknown event field ${part}; use cela:<token> or gate:<word>`);
+    if (!kv) die(`unknown event field ${part}; use cela:<result> or gate:<word>`);
     if (kv[1] === 'cela') {
-      if (!Object.prototype.hasOwnProperty.call(CELA_TOKENS, kv[2])) die(`cela: must be ${Object.keys(CELA_TOKENS).join(', ')}`);
-      gate = CELA_TOKENS[kv[2]];
+      if (!Object.prototype.hasOwnProperty.call(CELA_RESULTS, kv[2])) die(`cela: must be ${Object.keys(CELA_RESULTS).join(', ')}`);
+      gate = CELA_RESULTS[kv[2]];
     }
   }
   if (!MOVES[job.status].includes(status)) die(`${id} cannot move from ${job.status} to ${status}`, 1);

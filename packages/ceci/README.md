@@ -27,6 +27,11 @@ ceci is standalone. It contains no bot names, project names, hostnames, or envir
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.3.2 <!-- keep-version -->
+
+- `ceci init` adds a `.gitignore` to a work dir it creates inside a git repo, so the plan stays out of commits. A work dir that already exists is left as it is; delete the file to commit the plan.
+- The tool reads no credential and names no remote host, so a plugin marketplace's review has nothing to hold. It never did either; two names only looked like it (a table of cela results and the pattern that strips the optional web font).
+
 ### Changes in 2.3.1 <!-- keep-version -->
 
 - `ceci status --watch` exits 2 at once, with a hint, when its output is not a terminal. An agent's shell tool captures output until a command ends, which `--watch` never does, so no CLI agent can play the animation in its own window: run `--watch` in a second terminal window, or use `--screen` for one frame.

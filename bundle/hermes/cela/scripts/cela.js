@@ -12,6 +12,7 @@
  *   .cela/state.jsonl        append-only log: start, plan, req, cover, check, gate, claim, note, stop
  *   .cela/rounds/<n>.patch   the exact diff each check round measured
  *   .cela/archive/<time>/    the previous task's files, moved there by the next start
+ *   .cela/.gitignore         written in a git repo, so the task files stay out of commits
  *
  * Memory lives under $CELA_HOME (default ~/.cela), one record per line.
  */
@@ -108,8 +109,22 @@ function taskPaths(root) {
   return { dir, oracles: path.join(dir, 'oracles.json'), log: path.join(dir, 'state.jsonl'), rounds: path.join(dir, 'rounds'), archive: path.join(dir, 'archive') };
 }
 
+const madeTaskDirs = new Set();
+
+/** Creates .cela/; in a git repo it also ignores itself, so task files never land in a commit. */
+function makeTaskDir(root) {
+  const { dir } = taskPaths(root);
+  fs.mkdirSync(dir, { recursive: true });
+  if (madeTaskDirs.has(dir)) return;
+  madeTaskDirs.add(dir);
+  const ignore = path.join(dir, '.gitignore');
+  if (!fs.existsSync(ignore) && git(root, ['rev-parse', '--is-inside-work-tree'])) {
+    fs.writeFileSync(ignore, '# cela owns this folder; its task files stay out of git.\n*\n');
+  }
+}
+
 function writeSpec(root, spec) {
-  fs.mkdirSync(taskPaths(root).dir, { recursive: true });
+  makeTaskDir(root);
   fs.writeFileSync(taskPaths(root).oracles, `${JSON.stringify(spec, null, 2)}\n`);
 }
 
@@ -173,8 +188,8 @@ function readLogFile(log) {
 }
 
 function append(root, event) {
-  const { dir, log } = taskPaths(root);
-  fs.mkdirSync(dir, { recursive: true });
+  const { log } = taskPaths(root);
+  makeTaskDir(root);
   const line = { t: new Date().toISOString(), ...event };
   fs.appendFileSync(log, `${JSON.stringify(line)}\n`);
   return line;
@@ -286,6 +301,7 @@ function recordPatch(root, base, changed, round) {
   let text = parts.filter(Boolean).join('');
   if (text.length > PATCH_CAP) text = `${text.slice(0, PATCH_CAP)}\n... truncated at ${PATCH_CAP} bytes\n`;
   const { rounds } = taskPaths(root);
+  makeTaskDir(root);
   fs.mkdirSync(rounds, { recursive: true });
   fs.writeFileSync(path.join(rounds, `${round}.patch`), text);
   const stat = { patch: `rounds/${round}.patch`, files: changed.length, insertions: 0, deletions: 0 };

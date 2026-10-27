@@ -88,9 +88,10 @@ test('the bundle records the exact skill versions it was built from, matching it
     assert.equal(deps[`@actvite/${skill}`], pkg(skill).version, `@actvite/cecicela pins @actvite/${skill} exactly`);
   }
   assert.equal(built.version, pkg('cecicela').version);
-  assert.equal(pkg('ceci').version, '2.3.1', '@actvite/ceci 1.0.0 and 2.0.0 are already on npm');
-  assert.equal(pkg('cecicela').version, '1.3.1', '@actvite/cecicela 1.0.0 is already on npm');
-  for (const name of ['cela', 'trouble']) assert.equal(pkg(name).version, '1.0.2', `@actvite/${name} 1.0.0 is already on npm`);
+  assert.equal(pkg('ceci').version, '2.3.2', '@actvite/ceci 1.0.0 and 2.0.0 are already on npm');
+  assert.equal(pkg('cecicela').version, '1.3.2', '@actvite/cecicela 1.0.0 is already on npm');
+  assert.equal(pkg('cela').version, '1.0.3', '@actvite/cela 1.0.0 is already on npm');
+  assert.equal(pkg('trouble').version, '1.0.2', '@actvite/trouble 1.0.0 is already on npm');
 });
 
 test('plugin skill copies are real files, byte for byte the package skill', () => {
@@ -101,6 +102,24 @@ test('plugin skill copies are real files, byte for byte the package skill', () =
       assert.equal(fs.lstatSync(copy).isSymbolicLink(), false);
       assert.deepEqual(tree(copy), tree(src), `${plugin}/${skill}`);
       for (const rel of tree(src)) assert.deepEqual(fs.readFileSync(path.join(copy, rel)), fs.readFileSync(path.join(src, rel)), `${plugin}/${skill}/${rel}`);
+    }
+  }
+});
+
+// Marketplace review holds a plugin whose code both names a remote host and reads something
+// credential-named (an env var, or an identifier like FOO_TOKENS). The tools need neither.
+test('plugin tool code names no remote host and no credential', () => {
+  for (const name of PLUGINS) {
+    const tools = path.join(REPO, 'bundle', 'plugins', name, 'skills');
+    for (const skill of fs.readdirSync(tools)) {
+      const dir = path.join(tools, skill, 'tool');
+      if (!fs.existsSync(dir)) continue;
+      for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.js'))) {
+        const text = fs.readFileSync(path.join(dir, file), 'utf8');
+        const where = `${name}/skills/${skill}/tool/${file}`;
+        assert.doesNotMatch(text, /\bhttps?:/, `${where} names a remote host`);
+        assert.doesNotMatch(text, /\b[A-Z_]*(TOKENS?|API_?KEY|PASSWORD|CREDENTIALS?)[A-Z_]*\b/, `${where} has a credential-named identifier`);
+      }
     }
   }
 });
@@ -142,7 +161,7 @@ test('npm i -g @actvite/cecicela: install puts /ceci, /cela, /trouble, and /ceci
   const update = cecicela(['update'], home);
   assert.equal(update.status, 0, update.stderr);
   assert.match(update.stdout, /Updated 9 harness\(es\)/);
-  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.3\.1 \(ceci 2\.3\.1, cela 1\.0\.2, trouble 1\.0\.2\)/);
+  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.3\.2 \(ceci 2\.3\.2, cela 1\.0\.3, trouble 1\.0\.2\)/);
 });
 
 test('--only and a single package install just what was asked', () => {
