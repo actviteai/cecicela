@@ -1,10 +1,10 @@
 {
   "name": "cecicela",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "skills": {
-    "cecicela": "1.2.0",
+    "cecicela": "1.2.1",
     "ceci": "2.2.0",
-    "cela": "1.0.0",
-    "trouble": "1.0.0"
+    "cela": "1.0.1",
+    "trouble": "1.0.1"
   }
 }

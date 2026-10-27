@@ -14,7 +14,7 @@ Harnesses: Cursor, OpenAI Codex, Claude Code, GitHub Copilot, Grok Build, Google
 
 cela is part of **[ceciCela](https://github.com/actviteai/cecicela)**: *ceci plans this, cela proves that, trouble fixes what breaks.* [`/ceci`](../ceci) calls `/cela` on every job that changes code, data, or a model, and stores the token it prints. cela also works on its own: `cela start ... · cela check · cela gate`.
 
-This is cela **1.0.0**, the first release under this name. The engine, its oracles, the `state.jsonl` format, and the memory records carry over unchanged from the protocol's 2.1 line; only the names moved (`/cela`, `cela`, `.cela/`, `~/.cela`, `CELA_HOME`, `cela_nat`). Old project directories are left alone: a new `cela start` (or `cela init`) begins a `.cela/` beside them.
+This is cela **1.0.1**, the first release under this name. The engine, its oracles, the `state.jsonl` format, and the memory records carry over unchanged from the protocol's 2.1 line; only the names moved (`/cela`, `cela`, `.cela/`, `~/.cela`, `CELA_HOME`, `cela_nat`). Old project directories are left alone: a new `cela start` (or `cela init`) begins a `.cela/` beside them.
 
 ---
 
@@ -220,8 +220,8 @@ The agent never reads or rewrites task files; the tool appends to them. That spl
 `eval/` measures whether cela helps instead of asserting it. Eight small Node tasks (bug fixes, features, a refactor, and two traps whose visible tests pass on a naive fix) each ship hidden tests and a reference solution. `node eval/run.js --self-test` proves the hidden tests fail on the starting code and pass on the reference; `npm test` runs it.
 
 ```bash
-node eval/run.js --agents claude:claude-sonnet-5-5,claude:claude-haiku-4-5-20251001 --conditions none,lean,full --reps 2 --out eval/results/1.0.0
-node eval/report.js eval/results/1.0.0 --write
+node eval/run.js --agents claude:claude-sonnet-5-5,claude:claude-haiku-4-5-20251001 --conditions none,lean,full --reps 2 --out eval/results/1.0.1
+node eval/report.js eval/results/1.0.1 --write
 ```
 
 The headline number is the **false-DONE rate**: runs that ended with "STATUS: DONE" while the hidden tests fail. Agents run with a scoped tool allowlist (read, edit, `node`, `npm test`, `git`) and project settings only.
