@@ -1,7 +1,7 @@
 ---
 name: cela
 description: "Use when the user asks for cela or evidence-gated work. A bundled tool runs the checks and names the verdict, so the model never grades its own work."
-version: 1.0.3
+version: 1.0.4
 license: GPL-3.0-or-later
 platforms: [linux, macos, windows]
 metadata:
@@ -9,7 +9,7 @@ metadata:
     tags: [quality-gates, evidence-first, sdlc, coding-agent]
     requires_toolsets: [terminal]
 ---
-# cela 1.0.3
+# cela 1.0.4
 
 cela makes "done" something a tool measures, not something you claim. You plan the change, `scripts/cela.js` runs the checks, and its verdict names the result. Follow this for the current task only.
 
