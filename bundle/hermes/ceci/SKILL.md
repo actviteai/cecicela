@@ -1,7 +1,7 @@
 ---
 name: ceci
 description: "Use when the user invokes /ceci. It keeps the job graph, stops before a price, and calls /cela for evidence."
-version: 2.3.2
+version: 2.3.3
 platforms: [linux, macos, windows]
 metadata:
   hermes:

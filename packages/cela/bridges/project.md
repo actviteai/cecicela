@@ -1,4 +1,4 @@
-# cela 1.0.3
+# cela 1.0.4
 
 When the user types `/cela`, read the cela skill before doing anything else, then follow it for that task only. Do not use cela for other requests.
 
