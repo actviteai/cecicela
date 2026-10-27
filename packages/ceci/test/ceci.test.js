@@ -297,17 +297,18 @@ test('a scoring job stores the cela token and the run stops with a blank price',
   assert.doesNotMatch(fs.readFileSync(path.join(dir, 'brief.md'), 'utf8'), /notify|qa-bot|@/);
 });
 
-test('state.md keeps its title, graph mode, and events through a round trip', () => {
+test('state.md keeps its title, graph mode, budget, and events through a round trip', () => {
   const { formatState, parseDoc } = require(CLI);
   const jobs = [{ id: 'a', goal: 'g', owner: 'self', depends_on: [], schedule: 'once', status: 'ready', done_test: 't', artifact: 'a.txt', gpu: null, cela_gate: null }];
-  const meta = { title: 'ship: it', graph: 'off', events: ['a ready', 'a running cela:pending'] };
+  const meta = { title: 'ship: it', graph: 'off', budget: 'creator', events: ['a ready', 'a running cela:pending'] };
   const text = formatState(jobs, meta);
-  assert.match(text, /^title: "ship: it"\ngraph: off\njobs:\n/);
+  assert.match(text, /^title: "ship: it"\ngraph: off\nbudget: creator\njobs:\n/);
   assert.match(text, /\nevents:\n {2}- "a ready"\n {2}- "a running cela:pending"\n$/);
   const doc = parseDoc(text);
-  assert.deepEqual(doc, { title: 'ship: it', graph: 'off', jobs, events: meta.events });
-  assert.equal(formatState(jobs), formatState(doc.jobs, { title: null, graph: null, events: null }));
+  assert.deepEqual(doc, { title: 'ship: it', graph: 'off', budget: 'creator', jobs, events: meta.events });
+  assert.equal(formatState(jobs), formatState(doc.jobs, { title: null, graph: null, budget: null, events: null }));
   assert.throws(() => parseDoc('graph: sideways\njobs: []\n'), /graph must be on, off, or frames/);
+  assert.throws(() => parseDoc('budget: huge\njobs: []\n'), /budget must be low, medium, or creator/);
   assert.throws(() => parseDoc('jobs: []\nevents:\n  - "a\\nb"\n'), /one non-empty line/);
   assert.throws(() => parseDoc('jobs: []\nnotes: x\n'), /bad state.md line 2/);
 });

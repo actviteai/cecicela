@@ -27,6 +27,11 @@ ceci is standalone. It contains no bot names, project names, hostnames, or envir
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.2.0 <!-- keep-version -->
+
+- An animation budget: `budget: low | medium | creator` in `state.md`, set by a fifth start question, `--budget`, or `ceci init --budget`. Low updates the view only on meaningful changes; medium adds up to three real milestones per job; creator records every action for a live audience. See [Graph view](#graph-view).
+- `<job> step <text>` events record real work on a running job. `ceci event` refuses them on any other job and enforces the budget's limit. The screen gains a NOW ticker (medium, creator) and step counts on running boxes (creator).
+
 ### Changes in 2.1.0 <!-- keep-version -->
 
 - A [Prep step](#what-ceci-asks-when-it-starts) runs before every plan: `ceci prep` reads the job folder, and ceci asks about an existing plan, the brief, the animation, and the approach in one question call.
@@ -368,9 +373,10 @@ Every run begins with `ceci prep` and, in one question call (AskUserQuestion whe
 | Plan | an older plan exists | resume it; new plan, archive the old one into `runs/`; new plan in another folder | `--resume`, `--fresh`, `--new-dir PATH` |
 | Brief | a brief exists | keep it; edit it first | none |
 | Animation | always | live in this chat; in my terminal; no | `--animate chat\|terminal\|off` |
+| Budget | the animation is on | low (only meaningful updates); medium; content creator | `--budget low\|medium\|creator` |
 | Approach | a new plan | compare options first (the first job is `options`, artifact `options.md`); I know the approach | none |
 
-The answers go into `brief.md` (`start`, `animate`, `approach`, `prepped`). With nobody there to answer, the run archives the old plan, keeps the brief, turns the animation off, compares options, and says so in its first line; a scheduled run that should continue passes `--resume`.
+The answers go into `brief.md` (`start`, `animate`, `approach`, `prepped`), and the budget into `state.md` (`budget`). With nobody there to answer, the run archives the old plan, keeps the brief, turns the animation off, compares options, and says so in its first line; a scheduled run that should continue passes `--resume`.
 
 ## How a goal becomes jobs
 
@@ -528,6 +534,16 @@ Where the graph is shown is the `animate` start choice, and the skill is built s
 | `off` | event lines in `state.md` only | none |
 
 The agent checks progress with plain `ceci status` and runs `--screen` (about 2 KB) only when you ask to see the graph in the conversation.
+
+How often the view updates is the `budget:` header in `state.md`. The drawing is free at every budget; the budget only decides how many updates the agent spends tokens on:
+
+| `budget` | Step events | Player republished (`animate: chat`) | The screen adds |
+| --- | --- | --- | --- |
+| `low` (default) | none | when a job ends or stops, and at a stop | nothing |
+| `medium` | up to 3 per job, at real milestones | also when a job starts and after each step | a NOW ticker with the newest step |
+| `creator` | one after every action on a running job | after every event | the ticker, and step counts on running boxes |
+
+Every budget is honest: a step is written after the work happened, with numbers copied from the output (`j4 step npm test: 41 pass, 0 fail`), only on a running job, and never as an estimate or to fill the screen. `ceci event` enforces the running-job rule and the step limit. A lower budget shows less, never something different.
 
 ## `/cela`
 

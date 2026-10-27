@@ -21,12 +21,13 @@ In claude.ai, the desktop app, or Cowork, add it from **Customize > Plugins**.
 
 ## What ceci asks when it starts
 
-Before it plans, ceci reads the job folder (`ceci prep`, which changes nothing) and asks up to four questions in one go:
+Before it plans, ceci reads the job folder (`ceci prep`, which changes nothing) and asks these questions, up to four at a time:
 
 1. **Plan**, when an older plan is there: resume it, start a new one and archive the old one into `runs/` (nothing is deleted), or start a new one in another folder. `--resume`, `--fresh`, or `--new-dir PATH` answers it.
 2. **Brief**, when a brief is there: keep its rules, or edit them before any job starts.
 3. **Animation**: the job graph live in this chat, in your terminal (`ceci status --watch`), or not at all. `--animate chat|terminal|off` answers it.
 4. **Approach**, for a new plan: compare the options first, or name the approach yourself.
+5. **Budget**, when the animation is on: low (only meaningful updates), medium (real milestones), or content creator (every real step, for a live audience). `--budget low|medium|creator` answers it. Every budget shows only work that really happened.
 
 With nobody there to answer, ceci archives the old plan, keeps the brief, turns the animation off, and says so in its first line.
 

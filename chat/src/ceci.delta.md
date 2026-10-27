@@ -12,10 +12,10 @@ There is no `ceci prep`: read the attached or Project-knowledge `brief.md` and `
 
 1. **Plan**, only when a `state.md` with jobs is there. One sentence: its title, N of M jobs done, the jobs at a gate, the newest event. a) resume it; b) start a new plan (the user keeps the old files; you start a fresh `state.md`).
 2. **Brief**, only when a `brief.md` is there. Its fields, one per line. a) keep it; b) edit it first: ask for the new rules in the user's words and write them into `brief.md` before planning any job.
-3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one line per update; offer it only where this host has a live HTML surface); b) text: the event line each turn, and the 80x24 screen only when the graph's shape changes; c) off.
+3. **Animation.** a) a live player beside this chat (built once, about 7,000 tokens, then one edit per turn; offer it only where this host has a live HTML surface); b) text: event lines, with the 80x24 screen as the budget says; c) off. Unless it is off, the budget too: low (only meaningful updates, the default), medium (up to three real milestones per turn), or creator (every real step, for a live audience; the most tokens).
 4. **Approach**, for a new plan. a) compare options first: the first job is `options` (artifact `options.md`, the possible approaches and the evidence for each), and every other job depends on it; b) the user names the approach.
 
-Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`. With 3a, build the player as `INSTRUCTIONS.md` says.
+Skip question 3 when the user already typed `animate`, `graph on`, or `graph off`, and its budget part when they typed `budget <level>`. Record the answers in `brief.md`: `start: resumed` or `fresh`, `animate: chat` for 3a and `off` for 3b and 3c, `approach: compare` or `given` (with `approach_note:`), and `prepped:` with today's date. 3c also writes `graph: off` into `state.md`; the budget goes in `state.md` as `budget:` (leave it out for low). With 3a, build the player as `INSTRUCTIONS.md` says.
 
 ## What you do
 

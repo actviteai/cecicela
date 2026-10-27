@@ -14,6 +14,8 @@ After every state change, emit one event line. Never draw animation frames yours
 | Protocol | Event line | Meaning |
 | --- | --- | --- |
 | ceci | `<job> <status> [cela:<token>] [gate:<word>]` | status is ready, running, blocked, done, or gate; cela token is ok, pending, stalled, blocked, or missing_test |
+| ceci | `<job> step <what happened, with its real result>` | real work on a running job (medium and creator budgets) |
+| any | `step <what happened>` | real progress in this conversation: evidence received, the graph written (medium and creator) |
 | trouble | `h <H#> <p> <label>` | hypothesis H# now has posterior p (0 to 1) |
 | trouble | `vote <role> <yes\|no> <N>` | that role's gate vote and its N/10 score |
 | cela | `check <id> <ok\|fail\|open> <label>` | a checklist item's state |
@@ -36,9 +38,26 @@ A line may start with `tNN` to set the turn number; otherwise each event is the 
 
 trouble and cela keep the same title bar, log panel, and footer. trouble's centre panel is one posterior bar per hypothesis (` H1  <label>  [##########....]  0.61`) and the gate: one line of votes (` GATE  keeper YES 7   detective NO 5   maintainer YES 8   physicist YES 7`) and, under it, the outcome (`       -> distill`, `-> fix`, or `-> waiting`). cela's is the checklist (` [x] C1   <label>`, `[!]` for fail, `[ ]` for open).
 
+## Budget
+
+`budget:` in `state.md` (after `graph:`) is how often you update the view, and that is all the animation costs: the spinner, packets, blink, typing, and the NOW ticker are drawn by the player for free. The user sets it with ceci's start question or by typing `budget low`, `budget medium`, or `budget creator`. The default is `low`. trouble and cela keep it for the conversation.
+
+| | low | medium | creator |
+| --- | --- | --- | --- |
+| Event lines | state changes only: job status, posteriors and votes, checklist items | plus up to three `step` lines per turn, at real milestones | plus a `step` line for every real thing that happened this turn |
+| Player, when built | one edit per turn that changed something, appending that turn's lines | the same | the same |
+| Text screen, without a player | only when the user asks | when the graph's shape changes | every turn that changed something (about 600 tokens each) |
+| What the screen adds | nothing | the NOW ticker: the newest step | the ticker, and step counts on running boxes |
+
+A step is honest at every budget:
+
+- It is something that happened in this conversation: the user pasted output (copy its numbers exactly), you wrote or changed the graph, the user answered a gate. Never work the user has not reported, or anything in a coding agent you did not see.
+- It is written after it happened, never as intent: `step user pasted npm test: 41 pass, 0 fail`, not `step running tests`.
+- No estimates, no progress percentages nobody printed, no activity invented to keep the screen moving. A lower budget shows less, never something different.
+
 ## Toggles
 
-`graph on`, `graph off`, `graph frames`, `legend`, and `animate` may appear anywhere in a user turn. `animate` builds the live player where the host has a surface for it (below), and turns the graph on. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80.
+`graph on`, `graph off`, `graph frames`, `legend`, `animate`, and `budget low|medium|creator` may appear anywhere in a user turn. `animate` builds the live player where the host has a surface for it (below), and turns the graph on. Store `graph:` in `state.md` (omit it when it is `on`). `graph off` stops all drawing for the rest of the run, and stays off after `state.md` is re-uploaded. `graph frames` reveals the first screen column by column: in text, that is three code blocks of the same screen cut at column 27, 54, and 80.
 
 ## Where the screen goes
 

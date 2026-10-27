@@ -84,7 +84,7 @@ test('prep on an empty folder reports nothing found and writes nothing', () => {
   assert.equal(report.brief, null);
   assert.equal(report.state, null);
   assert.equal(report.log, null);
-  assert.deepEqual(report.ask, ['animate', 'approach']);
+  assert.deepEqual(report.ask, ['animate', 'approach', 'budget']);
   assert.match(report.summary, /^Nothing in /);
   assert.deepEqual(fs.readdirSync(dir), []);
   const missing = path.join(dir, 'not-yet');
@@ -104,7 +104,8 @@ test('prep on an existing plan reports the right counts and gate jobs, and chang
   assert.equal(report.log.last, '2026-10-26T20:56Z | contact | gate | waiting on a yes');
   assert.deepEqual(report.brief.fields.never, ['contact without yes', 'set a price', 'post or pay without yes']);
   assert.equal(report.brief.prepped, null);
-  assert.deepEqual(report.ask, ['plan', 'brief', 'animate', 'approach']);
+  assert.deepEqual(report.ask, ['plan', 'brief', 'animate', 'approach', 'budget']);
+  assert.equal(report.state.budget, 'low', 'no budget: line means low');
   assert.match(report.summary, /: 50k CAD a month of new business — 3 of 5 jobs done, 2 waiting on you \(price, contact\), last change \d{4}-\d\d-\d\d\.$/);
   const text = run(['prep', '--work-dir', dir]);
   assert.equal(text.status, 0);

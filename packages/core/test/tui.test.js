@@ -138,3 +138,53 @@ test('the player loads, draws into the page, and keeps its events in one editabl
   assert.equal((html.match(/append new event lines above this one/g) || []).length, 1);
   assert.ok(Buffer.byteLength(html) < 32 * 1024, `the player is ${Buffer.byteLength(html)} bytes`);
 });
+
+test('step events and the budget: low draws what it always drew, medium and creator add only real steps', () => {
+  assert.deepEqual((({ type, job, text }) => ({ type, job, text }))(T.parseEvent('t12 j5 step wrangler deploy: exit 0')), { type: 'step', job: 'j5', text: 'wrangler deploy: exit 0' });
+  assert.deepEqual((({ type, job, text }) => ({ type, job, text }))(T.parseEvent('step user pasted npm test: 41 pass')), { type: 'step', job: null, text: 'user pasted npm test: 41 pass' });
+  assert.equal(T.parseEvent('step done').type, 'job', 'a job named step keeps its status events');
+  const text = fs.readFileSync(EXAMPLE, 'utf8');
+  const steps = ['j5 step npm run build: 41 pages', 'j5 step wrangler deploy: exit 0'];
+  const at = (budget) => {
+    const model = T.fromStateMd(budget ? text.replace('title:', `budget: ${budget}\ntitle:`) : text);
+    model.events = model.events.concat(steps);
+    return T.render(model, { tick: 0 });
+  };
+  const plain = T.render(example(), { tick: 0 });
+  const low = at('low');
+  assertScreen(low);
+  assert.deepEqual(low.lines.slice(1, 18), plain.lines.slice(1, 18), 'low: same graph and legend as before steps existed');
+  assert.match(low.lines[0], /graph:on $/, 'low is not named in the title');
+  for (const budget of ['medium', 'creator']) {
+    const s = at(budget);
+    assertScreen(s);
+    assert.match(s.lines[0], new RegExp(`graph:on {2}${budget} $`));
+    assert.match(s.lines[17], /^ NOW {2}j5 > wrangler deploy: exit 0 +$/);
+    assert.equal(s.attrs[17].slice(0, 5), 'iiiii', 'the NOW label is inverse');
+  }
+  assert.equal(T.fromStateMd('budget: lavish\njobs: []\n').budget, 'lavish', 'the lenient reader keeps it');
+  assert.match(T.render(T.fromStateMd('budget: lavish\njobs: []\n')).lines[0], /graph:on $/, 'an unknown budget draws as low');
+});
+
+test('ceci status --screen and the player print the same creator screen, ticker and step counts included', () => {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'tui-creator-'));
+  const state = fs.readFileSync(EXAMPLE, 'utf8').replace('title: "ship the docs site"\n', 'title: "ship the docs site"\nbudget: creator\n');
+  fs.writeFileSync(path.join(work, 'state.md'), state);
+  for (const a of ['repo', 'site']) fs.mkdirSync(path.join(work, a));
+  for (const a of ['content-model.md', 'theme.md']) fs.writeFileSync(path.join(work, a), 'x');
+  for (const line of ['j5 step npm run build: 41 pages', 'j5 step wrangler deploy: exit 0']) {
+    const res = spawnSync(process.execPath, [CECI, 'event', '--work-dir', work, '--line', line], { encoding: 'utf8' });
+    assert.equal(res.status, 0, res.stderr);
+  }
+  const out = path.join(work, 'player.html');
+  assert.equal(spawnSync(process.execPath, [CECI, 'player', '--work-dir', work, '--out', out]).status, 0);
+  const { context } = loadPlayer(fs.readFileSync(out, 'utf8'));
+  for (const tick of [0, 3]) {
+    const cli = spawnSync(process.execPath, [CECI, 'status', '--work-dir', work, '--screen', '--tick', String(tick)], { encoding: 'utf8' });
+    context.typed = null;
+    context.tick = tick;
+    const shown = vm.runInContext('screen()', context);
+    assert.equal(`${shown.lines.join('\n')}\n`, cli.stdout, `tick ${tick}`);
+    assert.match(cli.stdout, / NOW {2}j5 > wrangler deploy: exit 0/);
+  }
+});

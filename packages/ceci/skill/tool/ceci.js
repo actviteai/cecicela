@@ -24,6 +24,8 @@ const PLAN_FILES = ['brief.md', 'state.md', 'log.md'];
 
 const STATE = 'jobs: []\n';
 const GRAPH_MODES = new Set(['on', 'off', 'frames']);
+// The animation's token budget (playbooks/graph.md, Budget): how many step events a job may record.
+const BUDGETS = { low: 0, medium: 3, creator: Infinity };
 const CELA_TOKENS = { ok: 'COMPLETE', pending: null, stalled: 'STALLED', blocked: 'BLOCKED', missing_test: 'MISSING_TEST' };
 // Allowed status changes (playbooks/graph.md, Status transitions). A job may restate its status.
 const MOVES = {
@@ -36,6 +38,7 @@ const MOVES = {
 
 const USAGE = `usage: ceci prep --work-dir PATH [--json]
        ceci init --work-dir PATH [--start resumed|fresh|new-dir] [--animate chat|terminal|off] [--approach compare|given]
+                 [--budget low|medium|creator]
        ceci status --work-dir PATH [--screen [--tick N] | --watch]
        ceci event --work-dir PATH --line TEXT
        ceci log --work-dir PATH --line TEXT
@@ -58,7 +61,8 @@ runs. It never writes. --json prints one JSON object; its "summary" is one sente
 and "ask" lists the start questions that apply (playbooks/start.md).`,
   init: `Creates any missing brief.md, state.md, or log.md and never overwrites one. With --start,
 --animate, or --approach it also records those choices and a prepped: time in brief.md, replacing
-only those lines, even when all three files exist. Without them it refuses when all three exist.`,
+only those lines, even when all three files exist. Without them it refuses when all three exist.
+--budget sets the animation's token budget in state.md's header (low, medium, creator).`,
   status: `Lists ready, running, blocked, and gate jobs; exits 1 if the graph is inconsistent. Warns on
 stderr when brief.md has no prepped: line (the plan skipped the Prep step).
 --screen prints the 80x24 graph view once (about 2 KB; --tick N moves the spinner and packets).
@@ -66,8 +70,10 @@ stderr when brief.md has no prepped: line (the plan skipped the Prep step).
 Keys in --watch: G graph, F frames, L legend, space pause, S step, T theme, - + speed, R reset, Q quit.`,
   event: `Applies one event line to the job it names and appends it to events: in state.md:
   <job> <status> [cela:ok|pending|stalled|blocked|missing_test] [gate:<word>]
+  <job> step <what was done, with its real result>
 It refuses an unknown job, a forbidden transition, done without the artifact, and ready or running
-with an unfinished dependency.`,
+with an unfinished dependency. A step needs a running job and room in the budget: low records
+none, medium three per job, creator any number. Record a step only after the work happened.`,
   log: 'Appends one line to log.md: YYYY-MM-DDTHH:MMZ | job_id | status | note',
   archive: `Moves brief.md, state.md, log.md, and every artifact state.md names into runs/<UTC time>/
 (or runs/NAME with --to), keeping their paths. It never deletes, refuses a destination that exists,
@@ -169,14 +175,14 @@ function parseFlow(raw) {
 }
 
 /**
- * state.md: optional `title:` and `graph:` header lines, the `jobs:` graph,
+ * state.md: optional `title:`, `graph:`, and `budget:` header lines, the `jobs:` graph,
  * and an optional `events:` list of double-quoted event lines.
  */
 function parseDoc(text) {
   const lines = String(text).replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
-  const doc = { title: null, graph: null, jobs: [], events: null };
+  const doc = { title: null, graph: null, budget: null, jobs: [], events: null };
   let i = 0;
-  for (const key of ['title', 'graph']) {
+  for (const key of ['title', 'graph', 'budget']) {
     const head = new RegExp(`^${key}: (.*)$`).exec(lines[i] || '');
     if (!head) continue;
     let value;
@@ -187,6 +193,7 @@ function parseDoc(text) {
     }
     if (typeof value !== 'string') throw new Error(`state.md line ${i + 1}: ${key} must be a string`);
     if (key === 'graph' && !GRAPH_MODES.has(value)) throw new Error(`state.md line ${i + 1}: graph must be on, off, or frames`);
+    if (key === 'budget' && !Object.prototype.hasOwnProperty.call(BUDGETS, value)) throw new Error(`state.md line ${i + 1}: budget must be low, medium, or creator`);
     doc[key] = value;
     i += 1;
   }
@@ -304,6 +311,7 @@ function formatState(jobs, meta = {}) {
   const lines = [];
   if (meta.title !== null && meta.title !== undefined) lines.push(`title: ${JSON.stringify(meta.title)}`);
   if (meta.graph !== null && meta.graph !== undefined) lines.push(`graph: ${meta.graph}`);
+  if (meta.budget !== null && meta.budget !== undefined) lines.push(`budget: ${meta.budget}`);
   if (!jobs.length) lines.push('jobs: []');
   else {
     lines.push('jobs:');
@@ -453,15 +461,22 @@ function commandInit(args) {
   const dir = workDir(args);
   const choices = startChoices(args);
   const record = Object.keys(choices).length > 0;
+  const budget = args.budget;
+  if (budget !== undefined && (Array.isArray(budget) || !Object.prototype.hasOwnProperty.call(BUDGETS, budget))) die('--budget must be low, medium, creator');
   fs.mkdirSync(dir, { recursive: true });
   const existing = PLAN_FILES.filter((name) => fs.existsSync(path.join(dir, name)));
-  if (existing.length === PLAN_FILES.length && !record) die(`refusing to overwrite ${existing.join(', ')}`, 1);
+  if (existing.length === PLAN_FILES.length && !record && budget === undefined) die(`refusing to overwrite ${existing.join(', ')}`, 1);
   if (!existing.includes('brief.md')) fs.writeFileSync(path.join(dir, 'brief.md'), BRIEF);
   if (!existing.includes('state.md')) fs.writeFileSync(path.join(dir, 'state.md'), STATE);
   if (!existing.includes('log.md')) fs.writeFileSync(path.join(dir, 'log.md'), '');
   if (record) {
     const file = path.join(dir, 'brief.md');
     fs.writeFileSync(file, setBriefFields(fs.readFileSync(file, 'utf8'), { ...choices, prepped: minute() }));
+  }
+  if (budget !== undefined) {
+    // The budget lives in state.md, beside graph:, so every reader of the graph sees it.
+    const doc = readDoc(dir);
+    fs.writeFileSync(path.join(dir, 'state.md'), formatState(doc.jobs, { ...doc, budget }));
   }
 }
 
@@ -475,10 +490,11 @@ function prepReport(dir) {
     report.brief = { fields, prepped: typeof fields.prepped === 'string' && fields.prepped ? fields.prepped : null };
   }
   if (has('state.md')) {
-    const state = { title: null, jobs: 0, counts: Object.fromEntries([...STATUSES].map((s) => [s, 0])), gates: [], error: null };
+    const state = { title: null, budget: null, jobs: 0, counts: Object.fromEntries([...STATUSES].map((s) => [s, 0])), gates: [], error: null };
     try {
       const doc = parseDoc(read('state.md'));
       state.title = doc.title;
+      state.budget = doc.budget || 'low';
       state.jobs = doc.jobs.length;
       doc.jobs.forEach((job) => { state.counts[job.status] += 1; });
       const words = {};
@@ -507,7 +523,7 @@ function prepReport(dir) {
   const plan = report.state && (report.state.jobs > 0 || report.state.error);
   if (plan) report.ask.push('plan');
   if (report.brief) report.ask.push('brief');
-  report.ask.push('animate', 'approach');
+  report.ask.push('animate', 'approach', 'budget');
   report.summary = summary(report);
   return report;
 }
@@ -637,6 +653,7 @@ function screenModel(doc) {
     kind: 'ceci',
     title: doc.title || '',
     graph: doc.graph || 'on',
+    budget: doc.budget || 'low',
     jobs: doc.jobs.map((job) => ({ id: job.id, label: job.goal, depends_on: job.depends_on, status: job.status, cela: job.cela_gate, gate: null })),
     events: doc.events || [],
   };
@@ -754,7 +771,11 @@ function commandEvent(args) {
   if (typeof line !== 'string' || Array.isArray(line) || !line.trim() || /[\r\n]/.test(line)) die('--line must be one non-empty line');
   const parts = line.trim().split(/\s+/);
   const [id, status, ...rest] = parts;
-  if (!STATUSES.has(status)) die(`event status must be one of ${[...STATUSES].join(', ')}`);
+  if (status === 'step') {
+    commandStep(dir, id, rest, parts);
+    return;
+  }
+  if (!STATUSES.has(status)) die(`event status must be one of ${[...STATUSES].join(', ')}, or step`);
   const doc = readDoc(dir);
   const job = doc.jobs.find((item) => item.id === id);
   if (!job) die(`no job ${id} in state.md`, 1);
@@ -779,7 +800,29 @@ function commandEvent(args) {
   }
   const jobs = doc.jobs.map((item) => (item.id === id ? next : item));
   const events = (doc.events || []).concat(parts.join(' '));
-  fs.writeFileSync(path.join(dir, 'state.md'), formatState(jobs, { title: doc.title, graph: doc.graph, events }));
+  fs.writeFileSync(path.join(dir, 'state.md'), formatState(jobs, { ...doc, events }));
+}
+
+/**
+ * `<job> step <text>`: one piece of real work on a running job, recorded after
+ * it happened. The budget caps how many a job may record; the status is unchanged.
+ */
+function commandStep(dir, id, words, parts) {
+  if (!words.length) die('a step says what was done: <job> step <what, with its real result>');
+  const doc = readDoc(dir);
+  const job = doc.jobs.find((item) => item.id === id);
+  if (!job) die(`no job ${id} in state.md`, 1);
+  if (job.status !== 'running') die(`${id} is ${job.status}; a step is recorded only on a running job`, 1);
+  const budget = doc.budget || 'low';
+  const cap = BUDGETS[budget];
+  const used = (doc.events || []).filter((line) => line.split(/\s+/)[0] === id && line.split(/\s+/)[1] === 'step').length;
+  if (used >= cap) {
+    die(cap === 0
+      ? 'budget low records no step events; status events only'
+      : `${id} already has ${used} steps, the most budget ${budget} allows`, 1);
+  }
+  const events = (doc.events || []).concat(parts.join(' '));
+  fs.writeFileSync(path.join(dir, 'state.md'), formatState(doc.jobs, { ...doc, events }));
 }
 
 function commandGpu(args) {
@@ -838,8 +881,12 @@ function main(argv) {
 
 /** The command's usage line, then its page. */
 function manual(command) {
-  const line = USAGE.split('\n').find((l) => l.includes(`ceci ${command} `) || l.endsWith(`ceci ${command}`));
-  return `${line.replace(/^usage: | {7}/, 'usage: ')}\n${MANUAL[command]}\n`;
+  const lines = USAGE.split('\n');
+  let at = lines.findIndex((l) => l.includes(`ceci ${command} `) || l.endsWith(`ceci ${command}`));
+  const usage = [lines[at].replace(/^usage: | {7}/, 'usage: ')];
+  // A long usage wraps onto lines that start with spaces and name no command.
+  while (/^ {8,}\S/.test(lines[at + 1] || '') && !/ceci [a-z]/.test(lines[at + 1])) usage.push(lines[(at += 1)]);
+  return `${usage.join('\n')}\n${MANUAL[command]}\n`;
 }
 
 if (require.main === module) {
