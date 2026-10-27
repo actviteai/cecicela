@@ -2,6 +2,8 @@
 
 > ceci plans this, cela proves that, trouble fixes what breaks.
 
+Video: [ceciCela, explained](https://youtu.be/i5Ge36L_MTk) on the [actVite YouTube channel](https://www.youtube.com/channel/UCPlRHTUre-GPCK__77zI5IQ).
+
 Installs the three ceciCela skills, and the `/cecicela` front door, into Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent.
 
 ```bash
