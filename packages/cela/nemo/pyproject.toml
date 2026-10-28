@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cela-nat"
-version = "1.1.0"
+version = "1.2.0"
 description = "cela for NVIDIA NeMo Agent Toolkit: a bundled engine runs the checks and names the verdict, so the agent never grades its own work."
 readme = "README.md"
 license = "GPL-3.0-or-later"
