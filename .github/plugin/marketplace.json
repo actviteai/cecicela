@@ -6,12 +6,12 @@
   },
   "metadata": {
     "description": "ceciCela marketplace: ceci plans this, cela proves that, trouble fixes what breaks. The bundle and each skill on its own.",
-    "version": "1.3.3"
+    "version": "1.3.4"
   },
   "plugins": [
     {
       "name": "cecicela",
-      "version": "1.3.3",
+      "version": "1.3.4",
       "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. The /ceci job graph with human gates, the /cela evidence gate where a tool names the result, and the /trouble four-roles debug protocol, in one plugin.",
       "source": "./bundle/plugins/cecicela",
       "homepage": "https://github.com/actviteai/cecicela",
