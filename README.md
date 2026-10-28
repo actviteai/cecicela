@@ -31,31 +31,33 @@ graph TD
 
 Zero third-party dependencies. Node.js 22+. GPL-3.0-or-later.
 
-**In short:** ceciCela is an open-source set of **AI agent skills** (`SKILL.md` skills in the Agent Skills format) for **AI coding agents** and **LLM agents**: Claude Code skills, Codex skills, Cursor skills, GitHub Copilot skills, and more. It adds **agentic workflow planning** (a task graph, or DAG, with **human-in-the-loop** approval gates), **verification and evaluation** of every agent change (an evidence gate run by a tool, not an **LLM-as-judge**), and **root-cause analysis** for stuck bugs. It is built for **machine learning** and **MLOps** work as much as for application code: **GPU job scheduling** with CUDA, **model evaluation** gates, data-leakage and regression checks, and reproducible results. See [Machine learning and XGBoost](#machine-learning-and-xgboost).
+**In short:** ceciCela is an open-source set of **AI agent skills** (`SKILL.md` skills in the Agent Skills format) for **AI coding agents** and **LLM agents**: Claude Code skills, Codex skills, Cursor skills, GitHub Copilot skills, and more. It adds **agentic workflow planning** (a task graph, or DAG, with **human-in-the-loop** approval gates), **verification and evaluation** of every agent change (an evidence gate run by a tool, not an **LLM-as-judge**), and **root-cause analysis** for stuck bugs. It is built for **machine learning** and **MLOps** work as much as for application code: **GPU job scheduling** with CUDA, **model evaluation** gates, data-leakage and regression checks, and reproducible results. See [Machine learning advantages](#machine-learning-advantages) and [XGBoost with ceciCela](#xgboost-with-cecicela).
 
 ## <a id="install"></a> Install
 
 ```bash
-npx --yes @actvite/cecicela install --all      # all three, into every harness
+npx --yes @actvite/cecicela install --all      # all of ceciCela, into every harness
 npm install -g @actvite/cecicela               # or keep the CLI: cecicela install | status | update
 ```
 
-`install` writes each skill into the nine coding-agent harnesses ceciCela supports: Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent. Name harnesses to install only those (`--claude --codex`), or skills (`--only trouble`). Restart the agent session, then type `/ceci`, `/cela`, or `/trouble`. Each skill also installs on its own: `npx --yes @actvite/trouble install --all`.
+`install` writes each skill into the nine coding-agent harnesses ceciCela supports: Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent. Name harnesses to install only those (`--claude --codex`). Restart the agent session, then type `/ceci`, `/cela`, or `/trouble`.
+
+**ceciCela installs as one product.** You never get one skill without the others: `npx --yes @actvite/trouble install` (or `@actvite/ceci`, or `@actvite/cela`) hands off to `@actvite/cecicela` and installs all three skills and the front door, the marketplaces list only the `cecicela` plugin, and `cecicela update` completes an older partial install.
 
 | Command | Does |
 | --- | --- |
-| `cecicela install [--all\|--<harness>] [--only ceci,cela,trouble] [--force]` | Installs the skills and the front door; `--force` replaces harness files you edited (yours is kept as a backup) |
+| `cecicela install [--all\|--<harness>] [--force]` | Installs the three skills and the front door; `--force` replaces harness files you edited (yours is kept as a backup) |
 | `cecicela status` | Which skill is installed in which harness |
-| `cecicela update [--force]` | Reinstalls into every harness that already has any of them; `npx --yes @actvite/cecicela@latest update` moves to a newer release |
+| `cecicela update [--force]` | Reinstalls all of ceciCela into every harness that has any part of it; `npx --yes @actvite/cecicela@latest update` moves to a newer release |
 | `cecicela --version` | The bundle version and the exact skill versions it carries |
 
 ### Plugin marketplaces
 
-This repository is a marketplace. It lists the bundle (`cecicela`) and each skill on its own.
+This repository is a marketplace with one plugin, `cecicela`: all three skills and the front door.
 
 ```bash
 claude plugin marketplace add actviteai/cecicela     # or /plugin marketplace add actviteai/cecicela in a session
-claude plugin install cecicela@cecicela               # or ceci@cecicela, cela@cecicela, trouble@cecicela
+claude plugin install cecicela@cecicela
 
 grok plugin marketplace add actviteai/cecicela
 grok plugin install cecicela --trust
@@ -68,7 +70,7 @@ codex plugin marketplace add actviteai/cecicela
 
 **What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`, and the front door `/cecicela:cecicela` (a bare `/cecicela` comes from `cecicela install`). The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
 
-**Hermes Agent:** `hermes skills install https://raw.githubusercontent.com/actviteai/cecicela/main/bundle/hermes/ceci/SKILL.md` (and `cela`), or the hub path `actviteai/cecicela/bundle/hermes/trouble`.
+**Hermes Agent:** `npx --yes @actvite/cecicela install --hermes` writes all four skills under `~/.hermes/skills/software-development/`.
 
 **GitHub Copilot** has no central plugin directory. `cecicela install --copilot` writes the skills to `~/.copilot/skills/` and a `cecicela` custom agent to `~/.copilot/agents/`, so the three show in the agent picker.
 
@@ -87,24 +89,57 @@ Type `cecicela` (or `start`) for the start menu, `help` for every command, `opti
 
 In chat, trouble leads: it runs its `untooled` mode (no files, no commands, confidence capped at 6, the incident stays open until you run the check). ceci becomes a planner that hands `brief.md` and `state.md` back as files. cela becomes a review checklist that says plainly no tool ran and there is no gate. Each states its limits in its first reply, and each ends with the install line for the full product.
 
-## Machine learning and XGBoost
+## Machine learning advantages
 
 Coding agents write training code quickly. They are much worse at knowing whether a model change actually made the model better. A script that trains without error, a notebook that looks right, or a validation score copied from the agent's own summary are all self-grades, and self-grades are what ceciCela removes. For ML work that matters more than anywhere else, because a leaked feature or a lucky seed produces a number that looks like progress.
 
 - **`/ceci` plans the pipeline.** It writes the whole pipeline as a job graph before anything runs: data split, features, training, evaluation against the baseline, and the report. A job starts only when its dependencies are done. Every job that changes code, data, or a model goes through `/cela`.
 - **`/cela` decides when a model change is done.** It accepts a feature, data, or hyperparameter change only when tests the tool runs say so. Each clause of the request ("holdout AUC is not below the baseline", "the encoder is fit on training folds only") is a requirement that must be covered by a named test. The tool runs the tests, records the exit codes and the exact diff it measured, and prints the verdict.
 - **The round limit stops endless tuning.** `cela check` refuses a fourth round, and the same failure twice ends as `STALLED`. An agent cannot keep re-tuning until a seed happens to pass, which is the agent's version of overfitting to the validation set.
+- **Every experiment leaves a record.** `.cela/rounds/<n>.patch` holds the exact diff each check measured, and `.cela/state.jsonl` holds every command, exit code, and verdict. ceci's `log.md` and `events:` say which job ran when. A model change can be reviewed, and reproduced, from what is on disk.
 - **`/trouble` debugs regressions.** When a metric drops and nobody knows why, it lists the possible causes (leakage, a changed split, a new library default, a seed, a data refresh) and ranks them on verbatim evidence. It changes nothing until all four roles agree.
 - **Model jobs are placed on GPUs from your own file.** `ceci resolve-gpu` picks a free device from a preference file you write and prints `CUDA_VISIBLE_DEVICES`. ceci never probes the machine.
+- **People decide what leaves the building.** ceci stops for a human before anything is posted, sent, paid for, or priced, so a model's results are not published or sold on an agent's say-so.
 - **Python ML stacks can call the gate too.** The NVIDIA NeMo Agent Toolkit gets the same gate as Python tools (`cela-nat`, see [cela](packages/cela#nvidia-nemo-agent-toolkit-framework-integration)).
 
-### With XGBoost
+## XGBoost with ceciCela
 
-XGBoost suits this workflow well. Tabular models train in seconds to minutes, so a gate can retrain and score them inside a test. With a fixed `random_state` and a fixed holdout split, the result is repeatable enough to compare against a stored baseline.
+### Why XGBoost fits
 
-1. **Place the training job.** Run `ceci resolve-gpu --work-dir run --gpu-pref gpus.yaml --model xgb-hist`. It prints the `host:device` to store on the job, plus `CUDA_VISIBLE_DEVICES`. Export that variable and train with `xgb.XGBClassifier(device="cuda", tree_method="hist", random_state=0)`. XGBoost uses the device ceci chose, and another job's GPU stays free.
-2. **Write the test as the gate.** A pytest file trains on the fixed split, scores the holdout, and asserts that AUC (or log loss, or RMSE) is no worse than the baseline stored in the repository. Leave a small tolerance, because GPU `hist` training is not guaranteed to match bit for bit across devices. A second test checks for leakage, for example that the target encoder never sees validation rows.
-3. **Let cela decide.**
+- **A gate can afford to retrain it.** Gradient-boosted trees on tabular data train in seconds to minutes, so a test can retrain and score the model on every `cela check`, and the three-round limit keeps the total cost bounded.
+- **Its results repeat.** With `tree_method="hist"`, a fixed `random_state`, and a fixed holdout split, a run is repeatable enough to compare against a stored baseline. On GPU, allow a small tolerance, because `hist` training is not guaranteed to match bit for bit across devices.
+- **It reports numbers a test can assert.** AUC, log loss, or RMSE on the holdout, `best_iteration` from early stopping, and feature importance from `get_booster().get_score(importance_type="gain")` are all plain numbers. A leaked feature often shows up as one feature carrying most of the gain, which a test can catch.
+- **It shares GPUs cleanly.** `device="cuda"` uses the device in `CUDA_VISIBLE_DEVICES`, which is exactly what `ceci resolve-gpu` prints, so two training jobs do not land on the same GPU.
+- **It is the natural model for ceciCela's own data.** `cela export` writes a small tabular dataset, described in step 5 below.
+
+### How to use XGBoost with `/cecicela`
+
+1. **Start from the front door.** Type `/cecicela` and describe the goal, for example "add a merchant feature to the fraud model and prove it does not lower AUC". A multi-step pipeline goes to `/ceci`, a single model change to `/cela`, and a metric that dropped for no clear reason to `/trouble`.
+2. **Place the training job.** ceci runs `ceci resolve-gpu --work-dir run --gpu-pref gpus.yaml --model xgb-hist`. It prints the `host:device` to store on the job, plus `CUDA_VISIBLE_DEVICES`, which it exports for that job only.
+3. **Write the test that is the gate.** Train on the fixed split, score the holdout, and compare against the baseline stored in the repository. Pick the device from the environment, so the same test runs on a laptop CPU:
+
+   ```python
+   # tests/test_model.py
+   import json, os, pathlib
+   import xgboost as xgb
+   from sklearn.metrics import roc_auc_score
+   from src.train import load_split, make_features
+
+   BASELINE = json.loads(pathlib.Path("tests/baseline.json").read_text())
+   DEVICE = "cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu"
+
+   def test_auc_not_below_baseline():
+       X_train, X_hold, y_train, y_hold = load_split(seed=0)
+       features = make_features().fit(X_train, y_train)
+       model = xgb.XGBClassifier(tree_method="hist", device=DEVICE, random_state=0,
+                                 n_estimators=400, learning_rate=0.05, max_depth=6)
+       model.fit(features.transform(X_train), y_train)
+       auc = roc_auc_score(y_hold, model.predict_proba(features.transform(X_hold))[:, 1])
+       assert auc >= BASELINE["auc"] - 0.002
+   ```
+
+   Add a second test for leakage, for example that the target encoder is fit on training rows only, or that no single feature carries most of the gain.
+4. **Let cela decide.**
 
    ```bash
    cela start --risk MODERATE \
@@ -119,8 +154,8 @@ XGBoost suits this workflow well. Tabular models train in seconds to minutes, so
    cela gate        # exit 0 only on COMPLETE
    ```
 
-   The repo oracle fails the check if the agent touched files outside the plan, such as the baseline file or the data. For a bug fix, such as a leak, add `--repro "<test that fails now>"` and use `--risk HIGH`. cela then requires that the test failed before the fix and passes after it.
-4. **Learn from the record.** `cela export --out tasks.jsonl` writes one anonymized row per task: risk, number of requirements, rounds, the Q score and diff size for each round, the gate's verdict, and the reviewer's later outcome (`accepted`, `revised`, `rejected`). That makes a small labeled tabular dataset, and a gradient-boosted tree model such as XGBoost is a natural first model for predicting which agent changes a reviewer will reject.
+   The repo oracle fails the check if the agent touched files outside the plan, such as `tests/baseline.json` or the data. For a bug fix, such as a leak, add `--repro "<test that fails now>"` and use `--risk HIGH`. cela then requires that the test failed before the fix and passes after it.
+5. **Learn from the record.** `cela export --out tasks.jsonl` writes one anonymized row per task: risk, number of requirements, rounds, the Q score and diff size for each round, the gate's verdict, and the reviewer's later outcome (`accepted`, `revised`, `rejected`). That makes a small labeled tabular dataset, and an XGBoost classifier is a natural first model for predicting which agent changes a reviewer will reject.
 
 ## The graph view
 
@@ -182,7 +217,7 @@ packages/
   cela/        @actvite/cela       skill/ (SKILL.md, playbooks, tool/cela.js), bin/, lib/, bridges/, eval/, nemo/
   trouble/     @actvite/trouble    skill/ (SKILL.md, voices.default.yaml, tool/voices.js), bin/, lib/
   cecicela/    @actvite/cecicela   the bundle CLI, the /cecicela front door, the Copilot agent
-bundle/        generated: one plugin per package for Claude Code, Codex, Grok, and Copilot; Hermes copies
+bundle/        generated: the cecicela plugin (all four skills) for Claude Code, Codex, Grok, and Copilot
 chat/          src/ (written by hand) -> pack/ and claude/, chatgpt/, grok/, m365/ (generated)
 .claude-plugin/ .github/plugin/ .grok-plugin/ .agents/plugins/   generated marketplace catalogs
 scripts/       sync, test, stamp, release

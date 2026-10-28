@@ -6,11 +6,11 @@
 
 **ceci is an agent skill that turns a goal into a job graph and runs it with human-in-the-loop gates.** It writes every job to `state.md` before work starts, runs ready jobs in dependency order, stops for a human before contact, posting, payment, or pricing, places GPU jobs from a preference file, and accepts a code, data, or model change only when the [`/cela`](../cela) evidence gate prints `COMPLETE`.
 
-ceci is part of **[ceciCela](https://github.com/actviteai/cecicela)**: *ceci plans this, cela proves that, trouble fixes what breaks.* The bundle installs all three:
+ceci is part of **[ceciCela](https://github.com/actviteai/cecicela)** (`/cecicela`): *ceci plans this, cela proves that, trouble fixes what breaks.* ceciCela installs as one product. Installing ceci installs all of it, `/ceci`, [`/cela`](../cela), [`/trouble`](../trouble), and the `/cecicela` front door, because ceci hands every code, data, or model job to `/cela`:
 
 ```bash
-npx --yes @actvite/cecicela install --all   # /ceci, /cela, and /trouble in every harness
-npx --yes @actvite/ceci install --all       # /ceci on its own
+npx --yes @actvite/cecicela install --all   # /ceci, /cela, /trouble, and /cecicela in every harness
+npx --yes @actvite/ceci install --all       # the same: ceci hands the install to @actvite/cecicela
 ```
 
 ```text
@@ -23,9 +23,14 @@ Zero dependencies. Node.js 22+. GPL-3.0-or-later.
 
 It does not grade its own code, data, or scoring jobs. Those jobs call `/cela` and store the gate token that engine prints. `COMPLETE` is the only token that can finish them.
 
-ceci is standalone. It contains no bot names, project names, hostnames, or environment paths. Anything outside the skill arrives by flag or file on that invocation. If a flag is omitted, the run does not invent the value and does not mention an agent you did not name.
+ceci is self-contained. It contains no bot names, project names, hostnames, or environment paths. Anything outside the skill arrives by flag or file on that invocation. If a flag is omitted, the run does not invent the value and does not mention an agent you did not name.
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
+
+### Changes in 2.4.0 <!-- keep-version -->
+
+- ceciCela installs as one product. `ceci install` hands off to `@actvite/cecicela` and installs `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door together. The marketplaces list only the `cecicela` plugin.
+- A Machine learning section: ML pipelines as job graphs, GPU placement for training jobs, and model changes gated by `/cela`.
 
 ### Changes in 2.3.2 <!-- keep-version -->
 
@@ -108,21 +113,18 @@ packages/ceci/
 ## Requirements
 
 - Node.js 22 or newer. `skill/tool/ceci.js` has no package dependencies. `skill/package.json` sets `"type": "commonjs"` so that file still runs when an ancestor `package.json` sets `"type": "module"`.
-- `/cela` available to the same harness when a job changes code, data, a pipeline, or a model. `@actvite/cecicela` installs both. A `cela` binary on `PATH` is the same engine. ceci does not embed a path to it.
+- `/cela` in the same harness, for jobs that change code, data, a pipeline, or a model. Every install route below puts it there, because ceciCela installs as one product. A `cela` binary on `PATH` is the same engine. ceci does not embed a path to it.
 
 ## Install
 
-Pick one route. Each installs the same skill. `/ceci` is the slash command in every harness except Goose, which loads it with `/skills ceci` or when you ask for ceci by name.
+Pick one route. Each installs all of ceciCela: `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door. `/ceci` is the slash command in every harness except Goose, which loads it with `/skills ceci` or when you ask for ceci by name.
 
 ### npm
 
 ```bash
-# ceci, cela, and trouble together (recommended: ceci calls /cela)
+# all of ceciCela, every harness or the ones you name
 npx --yes @actvite/cecicela install --all
-
-# ceci on its own, every harness or the ones you name
-npx --yes @actvite/ceci install --all
-npx --yes @actvite/ceci install --claude --codex
+npx --yes @actvite/ceci install --claude --codex   # the same install, through the bundle
 
 # Or install the CLI globally
 npm install -g @actvite/ceci
@@ -131,18 +133,18 @@ ceci init --work-dir ./run
 ceci status --work-dir ./run
 ```
 
-`ceci install` replaces an existing ceci skill directory with a fresh copy. Each copy is staged first and renamed into place only after `SKILL.md` is present. With no harness named it installs all nine. Every other `ceci` command (`prep`, `init`, `status`, `event`, `log`, `archive`, `player`, `resolve-gpu`, `help`) goes to `skill/tool/ceci.js`; see [CLI](#cli).
+`ceci install` hands off to the `@actvite/cecicela` bundle: a copy installed next to ceci when there is one, otherwise `npx --yes @actvite/cecicela@latest`. The bundle replaces each existing skill directory with a fresh copy, staged first and renamed into place only after `SKILL.md` is present. With no harness named it installs into all nine. Every other `ceci` command (`prep`, `init`, `status`, `event`, `log`, `archive`, `player`, `resolve-gpu`, `help`) goes to `skill/tool/ceci.js`; see [CLI](#cli).
 
 ### Plugin marketplaces
 
-The ceciCela repository is a plugin marketplace that lists the bundle (`cecicela`) and each skill on its own. In Claude Code:
+The ceciCela repository is a plugin marketplace with one plugin, `cecicela`, which carries all three skills and the front door. In Claude Code:
 
 ```text
 /plugin marketplace add actviteai/cecicela
-/plugin install ceci@cecicela
+/plugin install cecicela@cecicela
 ```
 
-Inside a plugin, Claude Code namespaces skills by plugin name: the full command is `/ceci:ceci` for this plugin, or `/cecicela:ceci` from the bundle. `/ceci` works when no other installed skill claims the name. See the [ceciCela README](https://github.com/actviteai/cecicela#install) for Codex, Grok, Copilot, and Hermes.
+Inside a plugin, Claude Code namespaces skills by plugin name: the full command is `/cecicela:ceci`. `/ceci` works when no other installed skill claims the name. See the [ceciCela README](https://github.com/actviteai/cecicela#install) for Codex, Grok, Copilot, and Hermes.
 
 ## Invoke `/ceci`
 
@@ -659,7 +661,7 @@ npm test                               # the whole repository, from its root
 
 The same skill loads in Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes. Installed trees are real files, never symlinks.
 
-| Harness | `ceci install` writes |
+| Harness | The install writes (the other three skills go beside it) |
 | --- | --- |
 | Claude Code (`--claude`) | `$CLAUDE_HOME/skills/ceci` or `~/.claude/skills/ceci` |
 | Grok (`--grok`) | `$GROK_HOME/skills/ceci` or `~/.grok/skills/ceci` |
@@ -671,7 +673,13 @@ The same skill loads in Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub C
 | Antigravity (`--antigravity`) | `~/.gemini/antigravity-cli/skills/ceci` and `~/.gemini/config/skills/ceci` (`$GEMINI_HOME`) |
 | Hermes (`--hermes`) | `$HERMES_HOME/skills/software-development/ceci` or `~/.hermes/skills/software-development/ceci` |
 
-The Hermes copy drops Claude's `disable-model-invocation` key, keeps the first sentence of the description inside Hermes' 57-character index, and names `scripts/ceci.js`, `scripts/tui.js`, `references/*.md`, and `examples/gpu-prefs.yaml` so a URL install fetches them. The slash command is `/ceci`.
+The Hermes copy drops Claude's `disable-model-invocation` key, keeps the first sentence of the description inside Hermes' 57-character index, and lays the files out as `scripts/ceci.js`, `scripts/tui.js`, `references/*.md`, and `examples/gpu-prefs.yaml`, the layout Hermes expects. The slash command is `/ceci`.
+
+## Machine learning
+
+ceci suits ML pipelines. A training pipeline is a job graph: split, features, training, evaluation against the baseline, and the report, each with a done test and an artifact. `resolve-gpu` places training jobs on the GPUs your preference file allows, and exports `CUDA_VISIBLE_DEVICES` per job, which XGBoost's `device="cuda"` and other CUDA libraries honour. Every job that changes code, data, or a model is finished only when `/cela` prints `COMPLETE`, so a model change is accepted on tests the tool ran, never on the agent's summary of its own score. See [Machine learning advantages](https://github.com/actviteai/cecicela#machine-learning-advantages) and [XGBoost with ceciCela](https://github.com/actviteai/cecicela#xgboost-with-cecicela).
+
+**Keywords:** AI agent skills, agent skills, SKILL.md, Claude Code skills, Codex skills, Cursor skills, GitHub Copilot, LLM agents, agentic AI, agentic workflows, task graph, DAG, job graph, human-in-the-loop, approval gates, agent orchestration, machine learning, MLOps, model evaluation, XGBoost, gradient boosting, tabular data, data leakage, GPU scheduling, CUDA, NVIDIA NeMo Agent Toolkit.
 
 ## Releasing
 

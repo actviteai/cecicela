@@ -490,3 +490,25 @@ test('status reports NeMo from the Python on PATH, best effort', { skip: !POSIX 
   const none = run(['status'], { ...env, PATH: path.join(root, 'empty') });
   assert.match(none.out, /\[✗\] NVIDIA NeMo Agent Toolkit\s*: Not detected \(no python3 or python on PATH\)/);
 });
+
+test('cela install into a chat harness installs all of ceciCela; --nemo alone stays cela-only', () => {
+  const { bundlePlan } = require('../lib/installer');
+  assert.deepEqual(bundlePlan(['install', '--claude']), { args: ['install', '--claude'], nemo: false, force: false, quiet: false });
+  assert.deepEqual(bundlePlan([]).args, ['install', '--all']);
+  assert.deepEqual(bundlePlan(['--all', '--nemo', '--force']), { args: ['install', '--all', '--force'], nemo: true, force: true, quiet: false });
+  for (const own of [['install', '--nemo'], ['init'], ['status'], ['install', '--global-only'], ['--help'], ['gate'], ['install', '--nope'], ['--repo', '.']]) {
+    assert.equal(bundlePlan(own), null, own.join(' '));
+  }
+  const bin = path.join(REPO, 'bin', 'cela.js');
+  const { env } = tempLayout();
+  const res = spawnSync(process.execPath, [bin, 'install', '--claude'], { encoding: 'utf8', env });
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /cela is part of ceciCela/);
+  assert.deepEqual(fs.readdirSync(path.join(env.CLAUDE_HOME, 'skills')).sort(), ['ceci', 'cecicela', 'cela', 'trouble']);
+  assert.ok(fs.existsSync(path.join(env.CELA_HOME, 'skills', 'cela', 'tool', 'cela.js')), 'the cela core');
+  const nemo = tempLayout();
+  const only = spawnSync(process.execPath, [bin, 'install', '--nemo'], { encoding: 'utf8', env: nemo.env });
+  assert.equal(only.status, 0, only.stderr);
+  assert.doesNotMatch(only.stdout, /part of ceciCela/);
+  assert.equal(fs.existsSync(nemo.env.CLAUDE_HOME), false, 'a NeMo-only install writes no skills');
+});

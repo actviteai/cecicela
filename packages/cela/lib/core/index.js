@@ -11,6 +11,7 @@
 module.exports = {
   fsx: require('./fsx'),
   gen: require('./gen'),
+  handoff: require('./handoff'),
   harness: require('./harness'),
   install: require('./install'),
   versions: require('./versions'),

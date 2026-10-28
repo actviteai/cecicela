@@ -15,42 +15,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Productivity"
-    },
-    {
-      "name": "ceci",
-      "source": {
-        "source": "local",
-        "path": "./bundle/plugins/ceci"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
-      "name": "cela",
-      "source": {
-        "source": "local",
-        "path": "./bundle/plugins/cela"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
-      "name": "trouble",
-      "source": {
-        "source": "local",
-        "path": "./bundle/plugins/trouble"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
     }
   ]
 }

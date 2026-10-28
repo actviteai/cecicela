@@ -2,7 +2,7 @@
   "version": 1,
   "plugins": {
     "cecicela": {
-      "version": "1.3.4",
+      "version": "1.4.0",
       "components": {
         "skills": [
           {
@@ -17,39 +17,6 @@
             "name": "cela",
             "description": "Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself."
           },
-          {
-            "name": "trouble",
-            "description": "Use on /trouble, troubleshoot, or stuck debug. Also: debug this, incident, let's Bayesian this, four minds, four roles, nothing I try is fixing this."
-          }
-        ]
-      }
-    },
-    "ceci": {
-      "version": "2.3.3",
-      "components": {
-        "skills": [
-          {
-            "name": "ceci",
-            "description": "Parent skill that maintains a job graph (brief.md, state.md, log.md), enforces human gates, schedules work, places GPU jobs, and calls /cela for evidence. Invoke with /ceci."
-          }
-        ]
-      }
-    },
-    "cela": {
-      "version": "1.0.4",
-      "components": {
-        "skills": [
-          {
-            "name": "cela",
-            "description": "Run the cela evidence-first engineering protocol. Invoke with /cela. A tool measures whether the task is done; the model does not grade itself."
-          }
-        ]
-      }
-    },
-    "trouble": {
-      "version": "1.0.2",
-      "components": {
-        "skills": [
           {
             "name": "trouble",
             "description": "Use on /trouble, troubleshoot, or stuck debug. Also: debug this, incident, let's Bayesian this, four minds, four roles, nothing I try is fixing this."

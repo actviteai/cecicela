@@ -42,12 +42,10 @@ function installCopilotAgent({ homes, force, log }) {
   log(core.fsx.describePlace(core.fsx.placeConfigFile(AGENT_FILE, dest, { force, tag: NAME })));
 }
 
-function install({ harnesses, skills = SKILL_IDS, env = process.env, force = false, log = () => {} }) {
+/** Install /ceci, /cela, /trouble, and the front door: ceciCela installs as one product, never a skill alone. */
+function install({ harnesses, env = process.env, force = false, log = () => {} }) {
   const homes = core.harness.homes(env);
-  for (const id of skills) {
-    if (!SKILLS[id]) throw new Error(`unknown skill ${id}; choose from ${SKILL_IDS.join(', ')}`);
-  }
-  for (const id of skills) {
+  for (const id of SKILL_IDS) {
     const skill = SKILLS[id]();
     log(`==> ${id} ${skill.VERSION}`);
     if (id === 'cela') skill.install({ harnesses, env, force, log });
@@ -56,7 +54,7 @@ function install({ harnesses, skills = SKILL_IDS, env = process.env, force = fal
   log(`==> cecicela ${pkg.version} (front door)`);
   installFrontDoor({ harnesses, homes, log });
   if (harnesses.includes('copilot')) installCopilotAgent({ homes, force, log });
-  return { homes, skills, harnesses };
+  return { homes, harnesses };
 }
 
 /** Rows: harness label and, per skill, whether its SKILL.md is installed there. */
@@ -79,26 +77,10 @@ function formatStatus(rows) {
   return [head, ...lines].join('\n');
 }
 
-/** Reinstall each skill, and the front door, only into the harnesses that already have it. */
+/** Reinstall all of ceciCela into every harness that has any part of it, which also completes a partial install. */
 function update({ env = process.env, force = false, log = () => {} } = {}) {
-  const rows = status(env);
-  const harnesses = rows.filter((row) => Object.values(row.installed).some(Boolean)).map((row) => row.id);
-  if (!harnesses.length) return { harnesses };
-  const homes = core.harness.homes(env);
-  for (const id of SKILL_IDS) {
-    const where = rows.filter((row) => row.installed[id]).map((row) => row.id);
-    if (!where.length) continue;
-    const skill = SKILLS[id]();
-    log(`==> ${id} ${skill.VERSION}`);
-    if (id === 'cela') skill.install({ harnesses: where, env, force, log });
-    else skill.install({ harnesses: where, homes, log });
-  }
-  const front = rows.filter((row) => row.installed[NAME]).map((row) => row.id);
-  if (front.length) {
-    log(`==> cecicela ${pkg.version} (front door)`);
-    installFrontDoor({ harnesses: front, homes, log });
-    if (front.includes('copilot')) installCopilotAgent({ homes, force, log });
-  }
+  const harnesses = status(env).filter((row) => Object.values(row.installed).some(Boolean)).map((row) => row.id);
+  if (harnesses.length) install({ harnesses, env, force, log });
   return { harnesses };
 }
 

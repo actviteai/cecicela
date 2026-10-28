@@ -4,7 +4,7 @@ This repository is archived. The RDAP-Q engine is now **cela**, developed in **[
 
 ```bash
 npx --yes @actvite/cecicela install --all   # /ceci, /cela, and /trouble
-npx --yes @actvite/cela install --all       # /cela alone
+npx --yes @actvite/cela install --all       # the same: ceciCela installs as one product
 ```
 
 The rename is a clean break, with no aliases: the command is `/cela` (and `cela` on the shell), the project directory is `.cela/`, the home is `~/.cela` (`CELA_HOME`), and the NeMo package is `cela-nat` (`cela_nat`). The engine, its oracles, the `state.jsonl` format, and the memory records are unchanged; cela 1.0.0 is the 2.1.0 engine under its new name. <!-- keep-version -->

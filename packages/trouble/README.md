@@ -4,7 +4,7 @@
 
 `/trouble` is an open-source **AI agent skill** for hard debugging: production incidents, debug loops, and "nothing I try is fixing this" bugs. The protocol the model executes is YAML in [`skill/SKILL.md`](skill/SKILL.md): ids defined once, no repeated prose.
 
-trouble is part of **[ceciCela](https://github.com/actviteai/cecicela)**: *ceci plans this, cela proves that, trouble fixes what breaks.* It stands alone; the only link is a suggestion to run `/cela` on the fix it ships.
+trouble is part of **[ceciCela](https://github.com/actviteai/cecicela)** (`/cecicela`): *ceci plans this, cela proves that, trouble fixes what breaks.* ceciCela installs as one product: installing trouble installs [`/ceci`](../ceci), [`/cela`](../cela), `/trouble`, and the `/cecicela` front door together. Once installed, `/trouble` runs by itself on a stuck bug; its only link to the others is a suggestion to run `/cela` on the fix it ships.
 
 Four roles — **the keeper**, **the detective**, **the maintainer**, and **the physicist** — collect verbatim evidence, rank hypotheses with explicit **Bayesian** arithmetic, and **will not apply a fix until they unanimously agree**. Every run ends with a machine-parseable `TROUBLE_VERDICT_BEGIN` / `TROUBLE_VERDICT_END` block that pipelines can gate on.
 
@@ -49,120 +49,103 @@ Lookup order in a coding agent: the project file, then the user file, then the d
 
 ## Install
 
+ceciCela installs as one product, so every route below gives you all of it: `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door.
+
 ```bash
-npx --yes @actvite/cecicela install --all    # ceci, cela, and trouble together
-npx --yes @actvite/trouble install --all     # trouble alone, every harness
+npx --yes @actvite/cecicela install --all    # all of ceciCela, every harness
+npx --yes @actvite/trouble install --all     # the same: trouble hands the install to @actvite/cecicela
 npx --yes @actvite/trouble install --claude --grok
 ```
 
-`trouble install` writes the skill directory into each harness you name (default: all nine): Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent. Restart the agent session after an install; a session that was already open will not see a skill added underneath it.
+`trouble install` hands off to the `@actvite/cecicela` bundle: a copy installed next to trouble when there is one, otherwise `npx --yes @actvite/cecicela@latest`. The bundle writes the skill directories into each harness you name (default: all nine): Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent. Restart the agent session after an install; a session that was already open will not see a skill added underneath it.
 
 ### Plugin marketplaces
 
-The ceciCela repository is a marketplace for Claude Code, Grok, Copilot CLI, and Codex. It lists the bundle (`cecicela`) and each skill on its own, so you can install only `/trouble`:
+The ceciCela repository is a marketplace for Claude Code, Grok, Copilot CLI, and Codex. It lists one plugin, `cecicela`, which carries all three skills and the front door:
 
 ```bash
 claude plugin marketplace add actviteai/cecicela
-claude plugin install trouble@cecicela
+claude plugin install cecicela@cecicela
 
 grok plugin marketplace add actviteai/cecicela
-grok plugin install trouble --trust
+grok plugin install cecicela --trust
 
 copilot plugin marketplace add actviteai/cecicela
-copilot plugin install trouble@cecicela
+copilot plugin install cecicela@cecicela
 
 codex plugin marketplace add actviteai/cecicela
 ```
 
-In Claude Code a plugin's skills are namespaced by the plugin: the full command is `/trouble:trouble` (or `/cecicela:trouble` from the bundle); `/trouble` works when no other installed skill claims the name.
+In Claude Code a plugin's skills are namespaced by the plugin: the full command is `/cecicela:trouble`; `/trouble` works when no other installed skill claims the name.
 
 ### Claude
 
-Claude (claude.ai), not Claude Code, has no git marketplace. Upload a zip of
-the skill folder.
+Claude (claude.ai), not Claude Code, has no git marketplace. Upload the four
+ceciCela skills, each as its own zip.
 
 1. Enable **Code execution and file creation** (Skills stay off without it).
-2. Zip the skill as a folder named `trouble`, so the folder name matches the skill name:
+2. Zip each skill as a folder named after it, so the folder name matches the skill name:
 
 ```bash
-cd cecicela/packages/trouble
-cp -R skill trouble && zip -r trouble.zip trouble && rm -rf trouble
+cd cecicela/packages
+for s in ceci cela trouble cecicela; do
+  mkdir -p "zips/$s" && cp -R "$s/skill/." "zips/$s/" && (cd zips && zip -qr "$s.zip" "$s")
+done
 ```
 
 3. Settings → Capabilities → Skills → **Upload skill**, and upload
-   `trouble.zip`.
-4. Toggle the skill on. Custom uploads are private to that account.
+   `zips/ceci.zip`, `zips/cela.zip`, `zips/trouble.zip`, and `zips/cecicela.zip`.
+4. Toggle all four on. Custom uploads are private to that account.
 
-Organization owners can provision the same zip for everyone: Organization
+Organization owners can provision the same zips for everyone: Organization
 settings → Plugins & skills → Add → Upload a skill. Those also load in Claude
 Code for users who sign in with that Claude account, unless
 `syncClaudeAiSkills` is `false` in Claude Code managed settings.
 
+For a chat without code execution, use the [ceciCela chat packs](https://github.com/actviteai/cecicela/tree/main/chat), which carry all three skills in one Project.
+
 ### Hermes Agent
 
 ```bash
-npx --yes @actvite/trouble install --hermes
+npx --yes @actvite/cecicela install --hermes
 ```
 
-That writes `~/.hermes/skills/software-development/trouble/` (Windows: `%LOCALAPPDATA%\hermes`). Or install from the repository with the Hermes hub, whose identifier is `owner/repo/path-to-skill-dir`:
-
-```bash
-hermes skills install actviteai/cecicela/bundle/hermes/trouble --category software-development --yes
-```
-
-Slash command is `/trouble`. In the desktop app, run `/reload-skills` or restart.
+That writes `ceci/`, `cela/`, `trouble/`, and `cecicela/` under `~/.hermes/skills/software-development/` (Windows: `%LOCALAPPDATA%\hermes`). Slash command is `/trouble`. In the desktop app, run `/reload-skills` or restart.
 
 ### DeepSeek Harness
 
 DeepSeek Harness has **no** git marketplace catalog analogous to
 `.grok-plugin/marketplace.json` or `.claude-plugin/marketplace.json`. Do not
 look for `.deepseek-plugin/marketplace.json` — that file is not a DSH
-interface. DSH discovers `SKILL.md` by copying the skill bundle into a skill
-root (or via `npx skills add` when you want a generic Agent Skills installer).
-
-The skills CLI has no DeepSeek agent. Copy the shipped skill directory:
+interface. DSH discovers `SKILL.md` by copying a skill directory into a skill
+root. Copy all four ceciCela skills from a clone of the repository:
 
 ```bash
 mkdir -p ~/.dsh/skills ~/.agents/skills
-cp -R "$SKILL" ~/.dsh/skills/trouble
-cp -R "$SKILL" ~/.agents/skills/trouble
+for s in ceci cela trouble cecicela; do
+  cp -R "cecicela/packages/$s/skill" ~/.dsh/skills/$s
+  cp -R "cecicela/packages/$s/skill" ~/.agents/skills/$s
+done
 ```
 
-Project-local (highest precedence is `.dsh/skills`):
-
-```bash
-mkdir -p .dsh/skills .agents/skills
-cp -R "$SKILL" .dsh/skills/trouble
-```
-
-Optional Agent Skills CLI (not a DSH marketplace):
-
-```bash
-npx skills add actviteai/cecicela --skill trouble --full-depth
-```
-
-If that installer does not find the nested `SKILL.md`, use the copy commands
-above. Restart the DSH session and invoke `/trouble`.
+Project-local (highest precedence is `.dsh/skills`): the same loop into
+`.dsh/skills/`. Restart the DSH session and invoke `/trouble`.
 
 ### OpenCode
 
 OpenCode reads `.opencode/skills/<name>/SKILL.md`,
 `~/.config/opencode/skills/<name>/SKILL.md`, and the Claude and `.agents`
-skill directories. `metadata.opencode/slash` is `"true"` in this skill, so
-`/trouble` is a TUI command.
-
-```bash
-npx skills add actviteai/cecicela --skill trouble --full-depth -a opencode -g
-```
-
-That writes `~/.config/opencode/skills/trouble/`. Copy equivalent:
+skill directories, so `npx --yes @actvite/cecicela install --claude` already
+makes all four skills visible to it. `metadata.opencode/slash` is `"true"` in
+this skill, so `/trouble` is a TUI command. To use OpenCode's own directory
+instead, copy all four from a clone:
 
 ```bash
 mkdir -p ~/.config/opencode/skills
-cp -R "$SKILL" ~/.config/opencode/skills/trouble
+for s in ceci cela trouble cecicela; do cp -R "cecicela/packages/$s/skill" ~/.config/opencode/skills/$s; done
 ```
 
-Project-local: `.opencode/skills/trouble/`. Start a new session after install.
+Project-local: `.opencode/skills/<name>/`. Start a new session after install.
 
 ### NeMo Agent Toolkit
 
@@ -226,7 +209,7 @@ packages/trouble/
 
 ## Uninstall
 
-Delete the `trouble/` directory under each harness's skills path, or uninstall the marketplace plugin (`claude plugin uninstall trouble@cecicela`, `grok plugin uninstall trouble --confirm`, `copilot plugin uninstall trouble`). Claude uploads are removed in Settings → Skills.
+ceciCela comes out as one product too. Delete the `ceci/`, `cela/`, `trouble/`, and `cecicela/` directories under each harness's skills path, or uninstall the marketplace plugin (`claude plugin uninstall cecicela@cecicela`, `grok plugin uninstall cecicela --confirm`, `copilot plugin uninstall cecicela`). Claude uploads are removed in Settings → Skills.
 
 ## Validate (maintainers)
 
@@ -234,6 +217,12 @@ Delete the `trouble/` directory under each harness's skills path, or uninstall t
 npm test --workspace @actvite/trouble   # structure, voices, install, npm files
 npm test                                # the whole repository
 ```
+
+## Machine learning
+
+Model regressions are the kind of bug trouble is for: the metric dropped, two fixes did not help, and nobody can say why. trouble lists the possible causes (target leakage, a changed train/holdout split, a new library default such as an XGBoost version change, a seed, a data refresh), ranks them with explicit Bayesian arithmetic on quoted evidence, and holds the fix until all four roles agree. Then `/cela` can prove the fix with a test that failed before it and passes after. See [Machine learning advantages](https://github.com/actviteai/cecicela#machine-learning-advantages).
+
+**Keywords:** AI agent skills, agent skills, SKILL.md, Claude Code skills, Codex skills, Cursor skills, GitHub Copilot, LLM agents, agentic AI, agentic workflows, debugging, root-cause analysis, incident response, troubleshooting, Bayesian reasoning, postmortem, machine learning, MLOps, model evaluation, XGBoost, gradient boosting, tabular data, data leakage, GPU scheduling, CUDA, NVIDIA NeMo Agent Toolkit.
 
 ## License
 
