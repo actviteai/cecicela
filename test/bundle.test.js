@@ -164,16 +164,22 @@ test('npm i -g @actvite/cecicela: install puts /ceci, /cela, /trouble, and /ceci
   assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.3\.4 \(ceci 2\.3\.3, cela 1\.0\.4, trouble 1\.0\.2\)/);
 });
 
-test('--only and a single package install just what was asked', () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-only-'));
-  assert.equal(cecicela(['install', '--claude', '--only', 'trouble'], home).status, 0);
-  assert.deepEqual(fs.readdirSync(path.join(home, '.claude', 'skills')).sort(), ['cecicela', 'trouble']);
-  const alone = fs.mkdtempSync(path.join(os.tmpdir(), 'trouble-only-'));
-  const res = spawnSync(process.execPath, [path.join(REPO, 'packages', 'trouble', 'bin', 'trouble.js'), 'install', '--all'], { encoding: 'utf8', env: { ...process.env, HOME: alone, USERPROFILE: alone, LOCALAPPDATA: path.join(alone, "AppData", "Local") } });
+test('installing any one skill package installs all of ceciCela, and --only is refused', () => {
+  const skillBin = (name) => path.join(REPO, 'packages', name, 'bin', `${name}.js`);
+  const alone = fs.mkdtempSync(path.join(os.tmpdir(), 'trouble-install-'));
+  const res = spawnSync(process.execPath, [skillBin('trouble'), 'install', '--claude'], { encoding: 'utf8', env: { ...process.env, HOME: alone, USERPROFILE: alone, LOCALAPPDATA: path.join(alone, "AppData", "Local") } });
   assert.equal(res.status, 0, res.stderr);
-  assert.deepEqual(fs.readdirSync(path.join(alone, '.claude', 'skills')), ['trouble']);
-  assert.equal(fs.existsSync(path.join(alone, '.cela')), false);
-  assert.notEqual(cecicela(['install', '--only', 'nope'], home).status, 0);
+  assert.match(res.stdout, /trouble is part of ceciCela/);
+  assert.deepEqual(fs.readdirSync(path.join(alone, '.claude', 'skills')).sort(), ['ceci', 'cecicela', 'cela', 'trouble']);
+  assert.ok(fs.existsSync(path.join(alone, '.cela', 'skills', 'cela', 'tool', 'cela.js')), 'the cela core comes too');
+  assert.equal(fs.existsSync(path.join(alone, '.grok')), false, 'only the named harness');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-only-'));
+  for (const args of [['install', '--claude', '--only', 'trouble'], ['install', '--only=ceci']]) {
+    const refused = cecicela(args, home);
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /installs \/ceci, \/cela, and \/trouble together/);
+  }
+  assert.deepEqual(fs.readdirSync(home), [], 'a refused install writes nothing');
 });
 
 test('nothing update can find means nothing is written', () => {

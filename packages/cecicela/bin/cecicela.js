@@ -4,7 +4,7 @@
 /**
  * ceciCela: ceci plans this, cela proves that, trouble fixes what breaks.
  *
- *   cecicela install [--all|--<harness> ...] [--only ceci,cela,trouble] [--force]
+ *   cecicela install [--all|--<harness> ...] [--force]
  *   cecicela status
  *   cecicela update [--force]
  *   cecicela --version
@@ -13,17 +13,19 @@
 function usage() {
   const { harness } = require('../lib/core');
   return `Usage:
-  cecicela install [--all] [--<harness> ...] [--only ceci,cela,trouble] [--force]
+  cecicela install [--all] [--<harness> ...] [--force]
   cecicela status
   cecicela update [--force]
   cecicela --version | --help
 
 install writes /ceci, /cela, /trouble, and the /cecicela front door into each
-harness you name (default: --all). --only limits the skills. --force replaces
-harness files you edited (yours is kept as a backup).
+harness you name (default: --all). ceciCela installs as one product: the three
+skills always go in together, and npx @actvite/ceci, @actvite/cela, or
+@actvite/trouble install does the same. --force replaces harness files you
+edited (yours is kept as a backup).
 ${harness.selectorHelp('<skill>')}
 
-update reinstalls into every harness that already has any of the skills.
+update reinstalls all of ceciCela into every harness that has any part of it.
 To move to a newer release: npx --yes @actvite/cecicela@latest update
 
 Then restart the agent session and type /ceci, /cela, or /trouble.
@@ -48,20 +50,14 @@ function main(argv) {
   try {
     if (command === 'install') {
       const picked = harness.parseSelectors(rest);
-      let skills;
       let force = false;
-      for (let i = 0; i < picked.rest.length; i += 1) {
-        const arg = picked.rest[i];
+      for (const arg of picked.rest) {
         if (arg === '--force') force = true;
-        else if (arg === '--only') {
-          skills = String(picked.rest[i + 1] || '').split(',').filter(Boolean);
-          i += 1;
-          if (!skills.length) throw new Error('--only needs a list: ceci,cela,trouble');
-        } else if (arg.startsWith('--only=')) skills = arg.slice(7).split(',').filter(Boolean);
+        else if (arg === '--only' || arg.startsWith('--only=')) throw new Error('--only is gone: ceciCela installs /ceci, /cela, and /trouble together.');
         else throw new Error(`unknown option: ${arg}`);
       }
       const harnesses = picked.harnesses.length ? picked.harnesses : harness.IDS.slice();
-      bundle.install({ harnesses, skills, env: process.env, force, log });
+      bundle.install({ harnesses, env: process.env, force, log });
       log('\nDone. Restart the agent session, then type /ceci, /cela, or /trouble (or /cecicela if you are not sure which).');
       return 0;
     }

@@ -87,13 +87,16 @@ test('npm pack ships the CLI, the front door, the Copilot agent, and the vendore
   assert.deepEqual(files.filter((f) => f.startsWith('test/')), []);
 });
 
-test('update reinstalls only the skills each harness already has', () => {
+test('update installs all of ceciCela into each harness that has any part of it', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-update-'));
   const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local") };
-  assert.equal(run(['install', '--claude', '--only', 'trouble'], env).status, 0);
-  assert.equal(run(['update'], env).status, 0);
-  const skills = fs.readdirSync(path.join(home, '.claude', 'skills')).sort();
-  assert.ok(skills.includes('trouble'));
-  assert.ok(!skills.includes('ceci') && !skills.includes('cela'), skills.join(','));
-  assert.ok(!fs.existsSync(path.join(home, '.cela')), 'update must not install the cela core');
+  // A partial install from before 1.4: trouble alone, in Claude Code only.
+  const core = require('../lib/core');
+  require('@actvite/trouble/lib/skill').install({ harnesses: ['claude'], homes: core.harness.homes(env) });
+  const res = run(['update'], env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /Updated 1 harness\(es\)/);
+  assert.deepEqual(fs.readdirSync(path.join(home, '.claude', 'skills')).sort(), ['ceci', 'cecicela', 'cela', 'trouble']);
+  assert.ok(fs.existsSync(path.join(home, '.cela', 'skills', 'cela', 'tool', 'cela.js')), 'the cela core');
+  assert.equal(fs.existsSync(path.join(home, '.grok')), false, 'harnesses with nothing stay untouched');
 });

@@ -113,3 +113,18 @@ test('a second forced replace keeps the first backup', () => {
   assert.equal(fs.readFileSync(first.backup, 'utf8'), 'mine\n');
   assert.equal(fs.readFileSync(second.backup, 'utf8'), 'mine again\n');
 });
+
+test('handoff runs a co-installed bundle, else npx @actvite/cecicela@latest', () => {
+  const REPO = path.resolve(__dirname, '..', '..', '..');
+  const local = core.handoff.command(['install', '--claude'], { from: path.join(REPO, 'packages', 'trouble') });
+  assert.equal(local[0], process.execPath);
+  assert.deepEqual(local[1], [path.join(REPO, 'packages', 'cecicela', 'bin', 'cecicela.js'), 'install', '--claude']);
+  const away = tmp('core-handoff-');
+  assert.equal(core.handoff.localBundle(away), null);
+  const [file, argv, opts] = core.handoff.command(['install', '--all'], { from: away, platform: 'linux' });
+  assert.equal(file, 'npx');
+  assert.deepEqual(argv, ['--yes', '@actvite/cecicela@latest', 'install', '--all']);
+  assert.equal(opts.shell, false);
+  assert.equal(core.handoff.command(['install'], { from: away, platform: 'win32' })[2].shell, true, 'npx.cmd needs a shell on Windows');
+  assert.match(core.handoff.NOTICE('trouble'), /^trouble is part of ceciCela/);
+});

@@ -4,7 +4,7 @@
 /**
  * npm entry point.
  *
- *   ceci install [--all|--claude|--grok|--codex|...]       copy the skill into harness homes
+ *   ceci install [--all|--claude|--grok|--codex|...]       install all of ceciCela (the bundle) into harness homes
  *   ceci prep|init|status|event|feedback|log|archive|player|resolve-gpu --work-dir PATH  run the skill's tool
  *   ceci help [COMMAND]                                     the tool's usage or one command's page
  */
@@ -23,27 +23,25 @@ function usage() {
   ceci help [COMMAND]        the task commands' usage, or one command's page
   ceci --help | --version
 
-Install writes the skill into each harness you name (default: --all):
-${harness.selectorHelp('ceci')}
+install hands off to @actvite/cecicela: ceciCela installs as one product, so
+/ceci, /cela, /trouble, and the /cecicela front door go into each harness you
+name (default: --all):
+${harness.selectorHelp('<skill>')}
 
-ceci is part of ceciCela: npm i -g @actvite/cecicela installs /ceci, /cela, and /trouble.
+ceci is part of ceciCela: ceci plans this, cela proves that, trouble fixes what breaks.
 `;
 }
 
 function install(argv) {
-  const { harness } = require('../lib/core');
-  const skill = require('../lib/skill');
+  const { handoff, harness } = require('../lib/core');
   const picked = harness.parseSelectors(argv);
   if (picked.rest.some((arg) => arg === '--help' || arg === '-h' || arg === '-help')) {
     process.stdout.write(usage());
     return 0;
   }
   if (picked.rest.length) throw new Error(`unknown option: ${picked.rest[0]}`);
-  const harnesses = picked.harnesses.length ? picked.harnesses : harness.IDS.slice();
-  process.stdout.write(`ceci ${skill.VERSION}\n`);
-  skill.install({ harnesses, homes: harness.homes(process.env), log: (line) => process.stdout.write(`${line}\n`) });
-  process.stdout.write('Restart the agent session, then type /ceci.\n');
-  return 0;
+  process.stdout.write(`${handoff.NOTICE('ceci')}\n`);
+  return handoff.toBundle(['install', ...argv], { from: ROOT });
 }
 
 function main(argv) {

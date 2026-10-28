@@ -186,7 +186,8 @@ function helpText(version) {
 cela: the evidence gate of ceciCela (v${version})
 
 Commands:
-  install          Install the core skill and harness bridges (default)
+  install          Install all of ceciCela (/ceci, /cela, /trouble, /cecicela)
+                   through @actvite/cecicela, plus the cela core (default)
   init             Write workspace bridges into the current repository
   status           Show install status for every harness
 
@@ -195,13 +196,13 @@ Task commands (run inside a repository; see SKILL.md):
   e.g. cela start --risk LOW --files src/a.js --run "npm test"; cela check; cela gate
 
 Options:
-  --all            Install every chat harness (default when none are named)
+  --all            Install into every chat harness (default when none are named)
 ${rows}
   --nemo           NVIDIA NeMo Agent Toolkit: install the core engine and print
                    the pip and workflow setup (no Python environment is changed)
   --repo PATH      Write workspace bridges into PATH
   --hook           With init: add the Claude Code Stop hook to .claude/settings.json
-  --global-only    Install only ~/.cela (or $CELA_HOME)
+  --global-only    Install only ~/.cela (or $CELA_HOME), the cela core
   --force          Replace existing harness files (keeps a .cela-backup)
   --quiet          Suppress the banner and per-file chatter
   --help, -h       Show this help message (-help works too)
@@ -211,12 +212,13 @@ There is no separate update command. Run install again with the same flags.
 Skill trees are replaced after the new copy verifies. Edited harness files
 are kept unless you pass --force.
 
+ceciCela installs as one product: an install into a chat harness writes all
+three skills and the front door, the same as npx @actvite/cecicela install.
+
 Examples:
-  npx @actvite/cela install --claude
-  npx @actvite/cela install --cursor
-  npx @actvite/cela install --hermes
-  npx @actvite/cela@${version} install --all
-  npx @actvite/cecicela install --all      # ceci, cela, and trouble together
+  npx @actvite/cela install --claude       # /ceci, /cela, /trouble, /cecicela in Claude Code
+  npx @actvite/cela install --all
+  npx @actvite/cela install --nemo         # the cela core and the NeMo steps only
   cela init
   cela init --force
   cela status
@@ -340,6 +342,33 @@ function selectedHarnesses(flags) {
   return flags.harnesses.slice();
 }
 
+/**
+ * ceciCela installs as one product: an install that names a chat harness (or
+ * none, meaning all) hands off to the @actvite/cecicela bundle, which writes
+ * /ceci, /cela, /trouble, and /cecicela. Returns the bundle's arguments, or
+ * null when cela handles the command itself: task commands, init, status,
+ * --repo, --global-only, help, version, a NeMo-only install, and any argument
+ * error (runCli reports it). `nemo` says whether cela still installs NeMo after.
+ */
+function bundlePlan(argv) {
+  if (ENGINE_COMMANDS.has(argv[0])) return null;
+  let flags;
+  try {
+    flags = parseArgs(argv);
+  } catch {
+    return null;
+  }
+  if (flags.help || flags.version || flags.hook || flags.repo || flags.globalOnly) return null;
+  if (flags.command && flags.command !== 'install') return null;
+  const harnesses = selectedHarnesses(flags);
+  const chat = harnesses.filter((id) => !FRAMEWORKS.has(id));
+  if (!chat.length) return null;
+  const named = flags.harnesses.filter((id) => !FRAMEWORKS.has(id));
+  const args = ['install', ...(flags.all || !named.length ? ['--all'] : named.map((id) => `--${id}`))];
+  if (flags.force) args.push('--force');
+  return { args, nemo: harnesses.includes('nemo'), force: flags.force, quiet: flags.quiet };
+}
+
 /** For @actvite/cecicela: install the core and the named harnesses, quietly or with a log. */
 function install({ harnesses, env = process.env, force = false, log = () => {}, pkgRoot = path.resolve(__dirname, '..') }) {
   const layout = resolveLayout(env);
@@ -424,6 +453,7 @@ function runCli(argv, options = {}) {
 
 module.exports = {
   FRAMEWORKS,
+  bundlePlan,
   HARNESS_IDS,
   REPO_BRIDGES,
   copyTreeSafe,

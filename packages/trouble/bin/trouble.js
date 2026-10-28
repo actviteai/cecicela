@@ -4,7 +4,7 @@
 /**
  * npm entry point. trouble has no run engine: the protocol is SKILL.md.
  *
- *   trouble install [--all|--<harness> ...]   copy the skill into harness homes
+ *   trouble install [--all|--<harness> ...]   install all of ceciCela (the bundle) into harness homes
  *   trouble status                            where the skill is installed
  *   trouble voices resolve [--project DIR]    the role names /trouble will use here
  *   trouble voices check FILE                 validate a voices.yaml
@@ -23,13 +23,15 @@ function usage() {
   trouble voices check FILE
   trouble --help | --version
 
-Install writes the skill into each harness you name (default: --all):
-${harness.selectorHelp('trouble')}
+install hands off to @actvite/cecicela: ceciCela installs as one product, so
+/ceci, /cela, /trouble, and the /cecicela front door go into each harness you
+name (default: --all):
+${harness.selectorHelp('<skill>')}
 
 Rename the four roles with .trouble/voices.yaml in a project, or ~/.trouble/voices.yaml.
 Start from skill/voices.default.yaml; only who: may change.
 
-trouble is part of ceciCela: npm i -g @actvite/cecicela installs /ceci, /cela, and /trouble.
+trouble is part of ceciCela: ceci plans this, cela proves that, trouble fixes what breaks.
 `;
 }
 
@@ -43,7 +45,7 @@ function main(argv) {
     process.stdout.write(`${require('../package.json').version}\n`);
     return 0;
   }
-  const { harness, install } = require('../lib/core');
+  const { handoff, harness, install } = require('../lib/core');
   const skill = require('../lib/skill');
   if (command === 'install') {
     const picked = harness.parseSelectors(rest);
@@ -51,11 +53,8 @@ function main(argv) {
       process.stderr.write(`unknown option: ${picked.rest[0]}\n`);
       return 1;
     }
-    const harnesses = picked.harnesses.length ? picked.harnesses : harness.IDS.slice();
-    process.stdout.write(`trouble ${skill.VERSION}\n`);
-    skill.install({ harnesses, homes: harness.homes(process.env), log: (line) => process.stdout.write(`${line}\n`) });
-    process.stdout.write('Restart the agent session, then type /trouble.\n');
-    return 0;
+    process.stdout.write(`${handoff.NOTICE('trouble')}\n`);
+    return handoff.toBundle(['install', ...rest], { from: path.join(__dirname, '..') });
   }
   if (command === 'status') {
     process.stdout.write(`${install.formatStatus('trouble', skill.status(harness.homes(process.env)))}\n`);

@@ -45,13 +45,15 @@ test('bin forwards task commands to the skill tool', () => {
   assert.notEqual(ceci(['bogus']).status, 0);
 });
 
-test('bin install writes the skill into the harness home', () => {
+test('bin install writes all of ceciCela into the harness home', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ceci-home-'));
   const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local"), CLAUDE_HOME: path.join(home, 'claude') };
   const res = ceci(['install', '--claude'], env);
   assert.equal(res.status, 0, res.stderr);
   const dest = path.join(home, 'claude', 'skills', 'ceci');
   assert.equal(fs.readFileSync(path.join(dest, 'SKILL.md'), 'utf8'), fs.readFileSync(path.join(ROOT, 'skill', 'SKILL.md'), 'utf8'));
+  assert.deepEqual(fs.readdirSync(path.join(home, 'claude', 'skills')).sort(), ['ceci', 'cecicela', 'cela', 'trouble'], 'ceci installs as part of ceciCela');
+  assert.match(res.stdout, /ceci is part of ceciCela/);
   assert.equal(fs.existsSync(path.join(home, '.grok')), false, 'only the named harness');
   assert.notEqual(ceci(['install', '--nope'], env).status, 0);
 });
