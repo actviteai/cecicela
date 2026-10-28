@@ -16,8 +16,9 @@ npx --yes @actvite/cecicela install --all
 | `cecicela status` | Which skill is installed in which harness |
 | `cecicela update [--force]` | Reinstalls all of ceciCela into every harness that has any part of it |
 | `cecicela --version` | The bundle version and the exact skill versions it carries |
+| `cecicela uninstall --all\|--<harness>\|--dir PATH\|--web` | Removes all of ceciCela, and only what it wrote: everywhere on this machine, from some harnesses, from one project (what `cela init` wrote), or, with `--web`, prints the steps for Claude, ChatGPT, Grok, and Microsoft 365. `--dry-run` lists what would go; `--purge` also deletes the cela memory or the project's `.cela/` |
 
-**ceciCela installs as one product.** `npx --yes @actvite/ceci install`, `@actvite/cela install`, and `@actvite/trouble install` hand off to this package and install all of it. The plugin marketplace at [github.com/actviteai/cecicela](https://github.com/actviteai/cecicela) lists only the `cecicela` plugin.
+**ceciCela installs as one product.** `npx --yes @actvite/ceci install`, `@actvite/cela install`, and `@actvite/trouble install` hand off to this package and install all of it; their `uninstall` removes all of it. The plugin marketplace at [github.com/actviteai/cecicela](https://github.com/actviteai/cecicela) lists only the `cecicela` plugin.
 
 Then restart the agent session and type `/ceci` (plan a goal as a job graph), `/cela` (prove a change with a tool-measured gate), or `/trouble` (debug what earlier attempts did not fix). Not sure which? `/cecicela` offers a start menu: start something new, review what the work dir and your agent's memory already hold, see every command (the help card), or improve your prompt before it runs. After each result it asks once how it landed (good, adjust, retry another way, or report a problem as a GitHub issue that you file), and `ceci feedback` keeps the answer with the plan. In Claude Code, plugin skills are namespaced: `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`.
 

@@ -127,4 +127,34 @@ test('handoff runs a co-installed bundle, else npx @actvite/cecicela@latest', ()
   assert.equal(opts.shell, false);
   assert.equal(core.handoff.command(['install'], { from: away, platform: 'win32' })[2].shell, true, 'npx.cmd needs a shell on Windows');
   assert.match(core.handoff.NOTICE('trouble'), /^trouble is part of ceciCela/);
+  assert.match(core.handoff.UNINSTALL_NOTICE('ceci'), /^ceci is part of ceciCela: uninstalling/);
+});
+
+test('uninstall removes only a skill directory whose SKILL.md names it, once per shared directory', () => {
+  const home = tmp('core-uninstall-');
+  const homes = core.harness.homes({ HOME: home }, 'linux');
+  const write = (dir, name) => {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'SKILL.md'), `---\nname: "${name}"\ndescription: x\n---\nbody\n`);
+  };
+  write(path.join(home, '.agents', 'skills', 'ceci'), 'ceci');
+  write(path.join(home, '.claude', 'skills', 'ceci'), 'other');
+  assert.equal(core.uninstall.skillName(path.join(home, '.agents', 'skills', 'ceci')), 'ceci', 'quoted names are read');
+  const lines = [];
+  const dry = core.uninstall.context({ dryRun: true, log: (l) => lines.push(l) });
+  core.uninstall.removeSkill({ name: 'ceci', harnesses: ['claude', 'codex', 'goose'], homes, ctx: dry });
+  assert.deepEqual(dry.removed, [path.join(home, '.agents', 'skills', 'ceci')], 'Codex and Goose share one directory');
+  assert.deepEqual(dry.kept, [path.join(home, '.claude', 'skills', 'ceci')]);
+  assert.ok(fs.existsSync(path.join(home, '.agents', 'skills', 'ceci')), 'a dry run changes nothing');
+  const ctx = core.uninstall.context();
+  core.uninstall.removeSkill({ name: 'ceci', harnesses: ['codex'], homes, ctx });
+  assert.equal(fs.existsSync(path.join(home, '.agents', 'skills', 'ceci')), false);
+  core.uninstall.removeIfEmpty(path.join(home, '.agents', 'skills'), ctx);
+  assert.equal(fs.existsSync(path.join(home, '.agents', 'skills')), false);
+  const file = path.join(home, 'f.md');
+  fs.writeFileSync(file, 'mine');
+  core.uninstall.removeFile(file, (text) => text === 'ours', ctx);
+  assert.ok(fs.existsSync(file), 'a file ceciCela does not own stays');
+  core.uninstall.removeFile(file, (text) => text === 'mine', ctx);
+  assert.equal(fs.existsSync(file), false);
 });

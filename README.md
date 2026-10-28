@@ -42,7 +42,7 @@ npm install -g @actvite/cecicela               # or keep the CLI: cecicela insta
 
 `install` writes each skill into the nine coding-agent harnesses ceciCela supports: Claude Code, Grok, Codex, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent. Name harnesses to install only those (`--claude --codex`). Restart the agent session, then type `/ceci`, `/cela`, or `/trouble`.
 
-**ceciCela installs as one product.** You never get one skill without the others: `npx --yes @actvite/trouble install` (or `@actvite/ceci`, or `@actvite/cela`) hands off to `@actvite/cecicela` and installs all three skills and the front door, the marketplaces list only the `cecicela` plugin, and `cecicela update` completes an older partial install.
+**ceciCela installs as one product.** You never get one skill without the others: `npx --yes @actvite/trouble install` (or `@actvite/ceci`, or `@actvite/cela`) hands off to `@actvite/cecicela` and installs all three skills and the front door, the marketplaces list only the `cecicela` plugin, and `cecicela update` completes an older partial install. `cecicela uninstall` takes all of it out again (`ceci`, `cela`, and `trouble uninstall` do the same).
 
 | Command | Does |
 | --- | --- |
@@ -50,6 +50,7 @@ npm install -g @actvite/cecicela               # or keep the CLI: cecicela insta
 | `cecicela status` | Which skill is installed in which harness |
 | `cecicela update [--force]` | Reinstalls all of ceciCela into every harness that has any part of it; `npx --yes @actvite/cecicela@latest update` moves to a newer release |
 | `cecicela --version` | The bundle version and the exact skill versions it carries |
+| `cecicela uninstall --all\|--<harness>\|--dir PATH\|--web` | Removes all of ceciCela, and only what it wrote: everywhere on this machine, from some harnesses, from one project (what `cela init` wrote), or, with `--web`, prints the steps for Claude, ChatGPT, Grok, and Microsoft 365. `--dry-run` lists what would go; `--purge` also deletes the cela memory or the project's `.cela/` |
 
 ### Plugin marketplaces
 
@@ -67,6 +68,8 @@ copilot plugin install cecicela@cecicela
 
 codex plugin marketplace add actviteai/cecicela
 ```
+
+To remove the plugin: `claude plugin uninstall cecicela@cecicela`, `grok plugin uninstall cecicela --confirm`, or `copilot plugin uninstall cecicela`.
 
 **What people type.** Claude Code namespaces a plugin's skills by the plugin name: from the bundle the full commands are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`, and the front door `/cecicela:cecicela` (a bare `/cecicela` comes from `cecicela install`). The short `/ceci` works when no other installed skill claims the name. Every other host takes the skill name as it is.
 

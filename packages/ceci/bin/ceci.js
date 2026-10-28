@@ -5,6 +5,7 @@
  * npm entry point.
  *
  *   ceci install [--all|--claude|--grok|--codex|...]       install all of ceciCela (the bundle) into harness homes
+ *   ceci uninstall --all|--<harness>|--dir PATH|--web      remove all of ceciCela (the bundle)
  *   ceci prep|init|status|event|feedback|log|archive|player|resolve-gpu --work-dir PATH  run the skill's tool
  *   ceci help [COMMAND]                                     the tool's usage or one command's page
  */
@@ -19,6 +20,7 @@ function usage() {
   const { harness } = require('../lib/core');
   return `Usage:
   ceci install [--all] [--<harness> ...]
+  ceci uninstall --all | --<harness> ... | --dir PATH | --web
   ceci prep|init|status|event|feedback|log|archive|player|resolve-gpu --work-dir PATH [...]
   ceci help [COMMAND]        the task commands' usage, or one command's page
   ceci --help | --version
@@ -27,6 +29,9 @@ install hands off to @actvite/cecicela: ceciCela installs as one product, so
 /ceci, /cela, /trouble, and the /cecicela front door go into each harness you
 name (default: --all):
 ${harness.selectorHelp('<skill>')}
+uninstall hands off the same way and removes all four together:
+  --all | --<harness> ... | --dir PATH | --web [--purge] [--dry-run]
+  (cecicela --help explains each)
 
 ceci is part of ceciCela: ceci plans this, cela proves that, trouble fixes what breaks.
 `;
@@ -54,6 +59,11 @@ function main(argv) {
   if (command === '--version' || command === '-v') {
     process.stdout.write(`${require('../package.json').version}\n`);
     return 0;
+  }
+  if (command === 'uninstall') {
+    const { handoff } = require('../lib/core');
+    process.stdout.write(`${handoff.UNINSTALL_NOTICE('ceci')}\n`);
+    return handoff.toBundle(['uninstall', ...rest], { from: ROOT });
   }
   if (command === 'install') {
     try {

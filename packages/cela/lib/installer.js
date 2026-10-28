@@ -190,6 +190,8 @@ Commands:
                    through @actvite/cecicela, plus the cela core (default)
   init             Write workspace bridges into the current repository
   status           Show install status for every harness
+  uninstall        Remove all of ceciCela through @actvite/cecicela:
+                   --all | --<harness> | --dir PATH | --web [--purge] [--dry-run]
 
 Task commands (run inside a repository; see SKILL.md):
   start, plan, req, cover, check, gate, claim, note, state, outcome, memory, export, protocol, hook-stop
@@ -369,6 +371,119 @@ function bundlePlan(argv) {
   return { args, nemo: harnesses.includes('nemo'), force: flags.force, quiet: flags.quiet };
 }
 
+/** A /cela bridge or command cela wrote, at any version: the global command's Fallback line differs, the rest does not. */
+function ownsBridge(text) {
+  return /^# cela \d/.test(text) && text.includes('read the cela skill');
+}
+
+/** Remove a cela file and the proposed copy (`<file>.cela`) a kept install left beside it. */
+function removeBridge(dest, ctx) {
+  core.uninstall.removeFile(dest, ownsBridge, ctx);
+  core.uninstall.removeFile(`${dest}.${TAG}`, ownsBridge, ctx);
+}
+
+/**
+ * Take the cela Stop hook out of .claude/settings.json, keeping every other
+ * setting and hook; the previous file is saved as settings.json.cela-backup.
+ * A file left empty is removed. A file that is not JSON is reported and kept.
+ */
+function removeStopHook(dest, ctx) {
+  if (!exists(dest)) return;
+  assertRegularFile(dest, dest);
+  const current = fs.readFileSync(dest, 'utf8');
+  let settings;
+  try {
+    settings = JSON.parse(current);
+  } catch {
+    settings = null;
+  }
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    if (current.includes('hook-stop')) {
+      ctx.kept.push(dest);
+      ctx.log(`    ! kept ${dest} (not JSON; remove the cela Stop hook by hand)`);
+    }
+    return;
+  }
+  const ours = STOP_HOOK.hooks.Stop[0].hooks[0].command;
+  const stop = (settings.hooks && Array.isArray(settings.hooks.Stop)) ? settings.hooks.Stop : [];
+  const kept = stop
+    .map((entry) => (Array.isArray(entry.hooks) ? { ...entry, hooks: entry.hooks.filter((h) => h.command !== ours) } : entry))
+    .filter((entry) => !Array.isArray(entry.hooks) || entry.hooks.length > 0);
+  const before = stop.reduce((n, entry) => n + (Array.isArray(entry.hooks) ? entry.hooks.length : 0), 0);
+  const after = kept.reduce((n, entry) => n + (Array.isArray(entry.hooks) ? entry.hooks.length : 0), 0);
+  if (before === after) return;
+  if (kept.length) settings.hooks.Stop = kept;
+  else delete settings.hooks.Stop;
+  if (Object.keys(settings.hooks).length === 0) delete settings.hooks;
+  ctx.removed.push(`${dest} (cela Stop hook)`);
+  if (Object.keys(settings).length === 0) {
+    if (!ctx.dryRun) fs.unlinkSync(dest);
+    ctx.log(`    - ${ctx.dryRun ? 'would remove' : 'removed'} ${dest} (it held only the cela Stop hook)`);
+    return;
+  }
+  if (ctx.dryRun) {
+    ctx.log(`    - would remove the cela Stop hook from ${dest}`);
+    return;
+  }
+  const backup = freeBackupName(`${dest}.${TAG}-backup`);
+  assertRegularFile(backup, backup);
+  fs.writeFileSync(backup, current);
+  fs.writeFileSync(dest, `${JSON.stringify(settings, null, 2)}\n`);
+  ctx.log(`    - removed the cela Stop hook from ${dest} (backup: ${backup})`);
+}
+
+/**
+ * For @actvite/cecicela: remove cela from the named harnesses (skill trees
+ * and the Claude /cela command). With `everywhere`, also the engine in the
+ * core home; `purge` deletes the whole core home, memory included.
+ */
+function uninstall({ harnesses, env = process.env, everywhere = false, purge = false, ctx }) {
+  const layout = resolveLayout(env);
+  const chat = harnesses.filter((id) => !FRAMEWORKS.has(id));
+  core.uninstall.removeSkill({ name: NAME, harnesses: chat, homes: layout, ctx });
+  for (const id of chat) {
+    for (const [, dest] of harnessFiles(id, layout, '')) removeBridge(dest, ctx);
+  }
+  if (!everywhere) return layout;
+  if (purge && isCelaHome(layout)) {
+    core.uninstall.removeTree(layout.cela, ctx);
+  } else {
+    if (purge && exists(layout.cela)) {
+      ctx.kept.push(layout.cela);
+      ctx.log(`    ! kept ${layout.cela} (it does not look like a cela home; --purge deletes only one)`);
+    }
+    core.uninstall.removeSkillDir(path.join(layout.cela, 'skills', NAME), NAME, ctx);
+    core.uninstall.removeIfEmpty(path.join(layout.cela, 'skills'), ctx);
+  }
+  return layout;
+}
+
+/**
+ * --purge deletes $CELA_HOME whole, so it must be one: not the home directory
+ * or a filesystem root (CELA_HOME=$HOME would otherwise take everything), and
+ * holding only what cela creates there.
+ */
+function isCelaHome(layout) {
+  const dir = path.resolve(layout.cela);
+  if (!exists(dir) || !fs.statSync(dir).isDirectory()) return false;
+  if (dir === path.resolve(layout.home) || dir === path.parse(dir).root) return false;
+  const entries = fs.readdirSync(dir);
+  return entries.length > 0 && entries.every((name) => ['memory', 'projects', 'registry', 'skills'].includes(name));
+}
+
+/** Undo `cela init` in directory `dir`: skill trees, bridges, the Stop hook, and with `purge` the .cela/ records. */
+function uninstallRepo(dir, { purge = false, ctx }) {
+  const abs = path.resolve(dir);
+  if (!exists(abs) || !fs.statSync(abs).isDirectory()) throw new Error(`directory does not exist: ${abs}`);
+  for (const [relDest] of REPO_BRIDGES) removeBridge(path.join(abs, relDest), ctx);
+  for (const rel of [path.join('.agents', 'skills', NAME), path.join('.claude', 'skills', NAME)]) {
+    core.uninstall.removeSkillDir(path.join(abs, rel), NAME, ctx);
+  }
+  removeStopHook(path.join(abs, '.claude', 'settings.json'), ctx);
+  if (purge) core.uninstall.removeTree(path.join(abs, '.cela'), ctx);
+  return abs;
+}
+
 /** For @actvite/cecicela: install the core and the named harnesses, quietly or with a log. */
 function install({ harnesses, env = process.env, force = false, log = () => {}, pkgRoot = path.resolve(__dirname, '..') }) {
   const layout = resolveLayout(env);
@@ -460,6 +575,8 @@ module.exports = {
   harnessFiles,
   harnessTreeDests,
   install,
+  ownsBridge,
+  removeStopHook,
   parseArgs,
   placeConfigFile,
   publishTree,
@@ -467,4 +584,6 @@ module.exports = {
   resolveLayout,
   runCli,
   statusRows,
+  uninstall,
+  uninstallRepo,
 };

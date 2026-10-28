@@ -9,6 +9,10 @@ const pkgRoot = path.resolve(__dirname, '..');
 const options = { pkgRoot, cwd: process.cwd(), env: process.env };
 
 function main(argv) {
+  if (argv[0] === 'uninstall') {
+    process.stdout.write(`${handoff.UNINSTALL_NOTICE('cela')}\n`);
+    return handoff.toBundle(argv, { from: pkgRoot, env: process.env });
+  }
   const plan = bundlePlan(argv);
   if (!plan) return runCli(argv, options);
   if (!plan.quiet) process.stdout.write(`${handoff.NOTICE('cela')}\n`);

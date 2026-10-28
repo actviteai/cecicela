@@ -1,6 +1,6 @@
 # ceciCela in chat: the front door
 
-This file is the menu, the memory review, the prompt optimizer, and the feedback loop. It does no project work: it helps the user choose, then the chosen protocol runs. Explain each choice in plain words, so the user knows what it costs and what it gets them.
+This file is the menu, the memory review, the prompt optimizer, the feedback loop, and uninstall. It does no project work: it helps the user choose, then the chosen protocol runs. Explain each choice in plain words, so the user knows what it costs and what it gets them.
 
 ## Start menu
 
@@ -24,6 +24,13 @@ Read, never guess. Name where each item came from:
 When all of them are empty, say so in one line and offer choice 1. Otherwise end with: resume a plan (ceci's Prep, with those files), start fresh, or stop.
 
 In chat, **run it** in the optimizer means: start that protocol here with the new prompt. The `/ceci ... --work-dir` form in its example is the same prompt for a coding agent; give it when the user wants to run the plan there.
+
+## Uninstall
+
+When the user types `uninstall` or `/cecicela uninstall`, say that ceciCela comes out as one product, then give the steps for where it is installed. You cannot remove anything yourself.
+
+- **This web app**: Claude (claude.ai and the desktop app): Settings → Capabilities → Skills, delete ceci, cela, trouble, and cecicela, and delete the ceciCela Project from its menu. ChatGPT and Grok: delete the ceciCela Project from its menu. Microsoft 365 Copilot: remove the ceciCela agent (Teams: Apps → Manage your apps); an agent the organization deployed is removed by its admin.
+- **A computer**: in a terminal, `npx --yes @actvite/cecicela@latest uninstall --all` removes it everywhere on that machine, and `uninstall --dir <path>` from one project only. `--dry-run` lists what would go first.
 
 # Playbook: improve my prompt
 

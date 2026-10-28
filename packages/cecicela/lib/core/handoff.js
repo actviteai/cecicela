@@ -4,7 +4,8 @@
 /**
  * ceciCela installs as one product. `ceci install`, `cela install`, and
  * `trouble install` hand off to the @actvite/cecicela bundle, which writes
- * /ceci, /cela, /trouble, and the /cecicela front door together.
+ * /ceci, /cela, /trouble, and the /cecicela front door together; `uninstall`
+ * hands off the same way and removes them together.
  *
  * A bundle that resolves from the calling package (a global install of
  * @actvite/cecicela, or this monorepo's workspaces) runs directly. Otherwise
@@ -46,5 +47,6 @@ function toBundle(args, { from, env = process.env, stdio = 'inherit' } = {}) {
 }
 
 const NOTICE = (skill) => `${skill} is part of ceciCela: installing /ceci, /cela, /trouble, and the /cecicela front door together.`;
+const UNINSTALL_NOTICE = (skill) => `${skill} is part of ceciCela: uninstalling /ceci, /cela, /trouble, and the /cecicela front door together.`;
 
-module.exports = { BUNDLE, NOTICE, command, localBundle, toBundle };
+module.exports = { BUNDLE, NOTICE, UNINSTALL_NOTICE, command, localBundle, toBundle };

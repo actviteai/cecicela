@@ -16,6 +16,7 @@ Just describe what you need. Or type:
   optimize <text>     rewrite a request so the right protocol gets what it needs; you run it, edit it, or keep yours
   memories            what the files here and this app's memory hold about your ceciCela work
   feedback            how the last result landed: good, adjust, retry, or report a problem
+  uninstall           how to remove ceciCela from this app (and from a computer)
   help ceci | help trouble | help cela | help graph | help feedback
 ```
 

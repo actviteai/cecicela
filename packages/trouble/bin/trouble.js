@@ -5,6 +5,7 @@
  * npm entry point. trouble has no run engine: the protocol is SKILL.md.
  *
  *   trouble install [--all|--<harness> ...]   install all of ceciCela (the bundle) into harness homes
+ *   trouble uninstall --all|--dir PATH|...    remove all of ceciCela (the bundle)
  *   trouble status                            where the skill is installed
  *   trouble voices resolve [--project DIR]    the role names /trouble will use here
  *   trouble voices check FILE                 validate a voices.yaml
@@ -18,6 +19,7 @@ function usage() {
   const { harness } = require('../lib/core');
   return `Usage:
   trouble install [--all] [--<harness> ...]
+  trouble uninstall --all | --<harness> ... | --dir PATH | --web
   trouble status
   trouble voices resolve [--project DIR]
   trouble voices check FILE
@@ -27,6 +29,9 @@ install hands off to @actvite/cecicela: ceciCela installs as one product, so
 /ceci, /cela, /trouble, and the /cecicela front door go into each harness you
 name (default: --all):
 ${harness.selectorHelp('<skill>')}
+uninstall hands off the same way and removes all four together:
+  --all | --<harness> ... | --dir PATH | --web [--purge] [--dry-run]
+  (cecicela --help explains each)
 
 Rename the four roles with .trouble/voices.yaml in a project, or ~/.trouble/voices.yaml.
 Start from skill/voices.default.yaml; only who: may change.
@@ -55,6 +60,10 @@ function main(argv) {
     }
     process.stdout.write(`${handoff.NOTICE('trouble')}\n`);
     return handoff.toBundle(['install', ...rest], { from: path.join(__dirname, '..') });
+  }
+  if (command === 'uninstall') {
+    process.stdout.write(`${handoff.UNINSTALL_NOTICE('trouble')}\n`);
+    return handoff.toBundle(['uninstall', ...rest], { from: path.join(__dirname, '..') });
   }
   if (command === 'status') {
     process.stdout.write(`${install.formatStatus('trouble', skill.status(harness.homes(process.env)))}\n`);

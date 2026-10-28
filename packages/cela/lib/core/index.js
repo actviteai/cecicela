@@ -14,5 +14,6 @@ module.exports = {
   handoff: require('./handoff'),
   harness: require('./harness'),
   install: require('./install'),
+  uninstall: require('./uninstall'),
   versions: require('./versions'),
 };

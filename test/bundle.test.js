@@ -182,6 +182,22 @@ test('installing any one skill package installs all of ceciCela, and --only is r
   assert.deepEqual(fs.readdirSync(home), [], 'a refused install writes nothing');
 });
 
+test('uninstalling through any one skill package removes all of ceciCela', () => {
+  const skillBin = (name) => path.join(REPO, 'packages', name, 'bin', `${name}.js`);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'trouble-uninstall-'));
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, 'AppData', 'Local') };
+  for (const key of ['CLAUDE_HOME', 'CELA_HOME']) delete env[key];
+  assert.equal(spawnSync(process.execPath, [skillBin('trouble'), 'install', '--claude'], { encoding: 'utf8', env }).status, 0);
+  const res = spawnSync(process.execPath, [skillBin('trouble'), 'uninstall', '--claude'], { encoding: 'utf8', env });
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /trouble is part of ceciCela: uninstalling/);
+  assert.deepEqual(fs.readdirSync(path.join(home, '.claude', 'skills')), []);
+  const bare = spawnSync(process.execPath, [skillBin('trouble'), 'uninstall'], { encoding: 'utf8', env });
+  assert.equal(bare.status, 2, 'the bundle refuses an uninstall with no target');
+  assert.match(bare.stderr, /uninstall needs a target/);
+  assert.match(spawnSync(process.execPath, [skillBin('trouble'), '--help'], { encoding: 'utf8' }).stdout, /trouble uninstall --all/);
+});
+
 test('nothing update can find means nothing is written', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cecicela-empty-'));
   const res = cecicela(['update'], home);

@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * The ceciCela bundle: install, status, and update for /ceci, /cela, and
- * /trouble together, plus the thin /cecicela front-door skill.
+ * The ceciCela bundle: install, status, update, and uninstall for /ceci,
+ * /cela, and /trouble together, plus the thin /cecicela front-door skill.
  *
  * Each skill installs itself through its own package (@actvite/ceci,
  * @actvite/cela, @actvite/trouble): this module only chooses which ones and
@@ -84,4 +84,69 @@ function update({ env = process.env, force = false, log = () => {} } = {}) {
   return { harnesses };
 }
 
-module.exports = { AGENT_FILE, NAME, ROOT, SKILL_DIR, SKILL_IDS, formatStatus, install, status, update, versions };
+/** The Copilot agent the bundle wrote, at any version. */
+function ownsAgent(text) {
+  return /^name: cecicela$/m.test(text) && text.includes('ceciCela front door');
+}
+
+// The web apps keep uploaded skills and Projects in the user's account, out of
+// reach of a command line: uninstall --web prints these steps instead.
+const WEB_STEPS = [
+  'ceciCela in a web app is removed there, by hand; this command cannot reach your account.',
+  '  Claude (claude.ai and the desktop app): Settings → Capabilities → Skills, delete ceci, cela,',
+  '    trouble, and cecicela. A ceciCela Project: open it and delete it from its menu.',
+  '  ChatGPT: delete the ceciCela Project from its menu.',
+  '  Grok: delete the ceciCela Project from its menu.',
+  '  Microsoft 365 Copilot: remove the ceciCela agent (Teams: Apps → Manage your apps); an agent',
+  '    your organization deployed is removed by its admin.',
+];
+
+const PLUGIN_UNINSTALL = {
+  claude: 'claude plugin uninstall cecicela@cecicela',
+  grok: 'grok plugin uninstall cecicela --confirm',
+  copilot: 'copilot plugin uninstall cecicela',
+};
+
+/** Every harness skill directory, rooted in project directory `dir` (.claude/skills, .agents/skills, ...). */
+function projectHomes(dir) {
+  return core.harness.homes({ HOME: dir }, 'linux');
+}
+
+/**
+ * Remove ceciCela, and only what it installed. `harnesses`: the agent homes
+ * to clear (every one of them also clears the cela engine in $CELA_HOME).
+ * `dir`: a project directory, cleared of `cela init`'s files and any
+ * ceciCela skill directory. `purge` also deletes the cela memory home or the
+ * project's .cela/. Returns the context: what was removed and what was kept.
+ */
+function uninstall({ harnesses = [], dir = null, env = process.env, purge = false, dryRun = false, log = () => {} }) {
+  if (dir) {
+    const abs = path.resolve(dir);
+    if (!core.fsx.exists(abs) || !require('fs').statSync(abs).isDirectory()) throw new Error(`directory does not exist: ${abs}`);
+  }
+  const ctx = core.uninstall.context({ dryRun, log });
+  const names = [...SKILL_IDS, NAME];
+  if (harnesses.length) {
+    const homes = core.harness.homes(env);
+    const everywhere = core.harness.IDS.every((id) => harnesses.includes(id));
+    log(`==> ${everywhere ? 'every harness' : harnesses.map((id) => core.harness.byId(id).label).join(', ')}`);
+    for (const name of names) {
+      if (name === 'cela') SKILLS.cela().uninstall({ harnesses, env, everywhere, purge, ctx });
+      else core.uninstall.removeSkill({ name, harnesses, homes, ctx });
+    }
+    if (harnesses.includes('copilot')) {
+      const agent = path.join(homes.copilot, 'agents', 'cecicela.agent.md');
+      core.uninstall.removeFile(agent, ownsAgent, ctx);
+      core.uninstall.removeFile(`${agent}.${NAME}`, ownsAgent, ctx);
+    }
+  }
+  if (dir) {
+    const abs = path.resolve(dir);
+    log(`==> ${abs}`);
+    for (const name of names) core.uninstall.removeSkill({ name, harnesses: core.harness.IDS, homes: projectHomes(abs), ctx });
+    SKILLS.cela().uninstallRepo(abs, { purge, ctx });
+  }
+  return ctx;
+}
+
+module.exports = { AGENT_FILE, NAME, PLUGIN_UNINSTALL, ROOT, SKILL_DIR, SKILL_IDS, WEB_STEPS, formatStatus, install, ownsAgent, status, uninstall, update, versions };

@@ -209,7 +209,16 @@ packages/trouble/
 
 ## Uninstall
 
-ceciCela comes out as one product too. Delete the `ceci/`, `cela/`, `trouble/`, and `cecicela/` directories under each harness's skills path, or uninstall the marketplace plugin (`claude plugin uninstall cecicela@cecicela`, `grok plugin uninstall cecicela --confirm`, `copilot plugin uninstall cecicela`). Claude uploads are removed in Settings → Skills.
+ceciCela comes out as one product too, and only what it wrote is removed:
+
+```bash
+npx --yes @actvite/cecicela@latest uninstall --all --dry-run   # list what would go
+npx --yes @actvite/cecicela@latest uninstall --all             # everywhere on this machine
+npx --yes @actvite/cecicela@latest uninstall --dir ./my-repo   # one project: what cela init wrote
+npx --yes @actvite/cecicela@latest uninstall --web             # the steps for Claude, ChatGPT, Grok, Microsoft 365
+```
+
+`trouble uninstall` does the same. The cela memory (`~/.cela`) and a project's `.cela/` stay unless you add `--purge`. A marketplace plugin is removed with `claude plugin uninstall cecicela@cecicela`, `grok plugin uninstall cecicela --confirm`, or `copilot plugin uninstall cecicela`. Claude uploads are removed in Settings → Capabilities → Skills.
 
 ## Validate (maintainers)
 

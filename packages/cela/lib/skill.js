@@ -20,8 +20,18 @@ function install({ harnesses, env = process.env, force = false, log = () => {} }
   return harnesses.map((id) => ({ id, dest: core.harness.skillDests(id, layout, NAME)[0] }));
 }
 
+/** Removes cela from the named harnesses; `everywhere` also takes the engine out of the core home ($CELA_HOME). */
+function uninstall({ harnesses, env = process.env, everywhere = false, purge = false, ctx }) {
+  return installer.uninstall({ harnesses, env, everywhere, purge, ctx });
+}
+
+/** Undoes `cela init` in one directory. */
+function uninstallRepo(dir, { purge = false, ctx }) {
+  return installer.uninstallRepo(dir, { purge, ctx });
+}
+
 function status(homes = core.harness.homes()) {
   return core.install.status(NAME, homes);
 }
 
-module.exports = { NAME, ROOT, SKILL_DIR, VERSION, install, status };
+module.exports = { NAME, ROOT, SKILL_DIR, VERSION, install, status, uninstall, uninstallRepo };
