@@ -1,8 +1,10 @@
 # ceciCela
 
-> ceci plans this, cela proves that, trouble fixes what breaks. ceciCela is three agent skills for Claude Code, Codex, Grok, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent: /ceci turns a goal into a job graph with human gates before contact, posting, payment, or pricing; /cela is an evidence gate where a bundled tool runs the checks and names the result, so the model never grades itself; /trouble is a four-roles debug protocol with Bayesian ranking and a unanimous gate before any fix.
+> ceci plans this, cela proves that, trouble fixes what breaks. ceciCela is three agent skills for Claude Code, Codex, Grok, Cline, Goose, Cursor, GitHub Copilot, Google Antigravity, and Hermes Agent, with machine learning (MLOps, XGBoost) as a first-class use: /ceci turns a goal into a job graph with human gates before contact, posting, payment, or pricing; /cela is an evidence gate where a bundled tool runs the checks and names the result, so the model never grades itself; /trouble is a four-roles debug protocol with Bayesian ranking and a unanimous gate before any fix.
 
-Install all three for every harness: `npx --yes @actvite/cecicela install --all`. Each also installs alone: `npx --yes @actvite/ceci install --all`, `npx --yes @actvite/cela install --all`, `npx --yes @actvite/trouble install --all`. Zero dependencies, Node.js 22+, GPL-3.0-or-later.
+Install for every harness: `npx --yes @actvite/cecicela install --all`. ceciCela installs as one product: `npx --yes @actvite/ceci install`, `@actvite/cela install`, and `@actvite/trouble install` hand off to the bundle and install all three skills plus the /cecicela front door, and the marketplaces list only the `cecicela` plugin. Zero dependencies, Node.js 22+, GPL-3.0-or-later.
+
+Machine learning: ceciCela keeps coding agents from grading their own model changes. /ceci plans ML pipelines as job graphs and places GPU training jobs (CUDA_VISIBLE_DEVICES); /cela accepts a data, feature, or model change only when tests the tool runs pass, such as holdout AUC not below a stored baseline; /trouble ranks the causes of metric regressions. It works well with XGBoost (fast tabular retraining inside a test gate, `device="cuda"` on the GPU ceci chose); `cela export` produces a labeled tabular dataset of agent tasks.
 
 Claude Code plugin: `/plugin marketplace add actviteai/cecicela` then `/plugin install cecicela@cecicela` (skills are `/cecicela:ceci`, `/cecicela:cela`, `/cecicela:trouble`)
 Grok: `grok plugin marketplace add actviteai/cecicela` then `grok plugin install cecicela --trust`
@@ -11,7 +13,7 @@ Codex: `codex plugin marketplace add actviteai/cecicela`
 
 ## Docs
 
-- [README](https://github.com/actviteai/cecicela/blob/main/README.md): install routes, the three skills, the chat packs, the graph view, releasing
+- [README](https://github.com/actviteai/cecicela/blob/main/README.md): install routes, the three skills, the chat packs, machine learning advantages, XGBoost with ceciCela, the graph view, releasing
 - [ceci](https://github.com/actviteai/cecicela/blob/main/packages/ceci/README.md): job graph, state.md, human gates, GPU placement, events, graph view
 - [cela](https://github.com/actviteai/cecicela/blob/main/packages/cela/README.md): the evidence gate, oracles, task log and memory, NeMo Agent Toolkit
 - [trouble](https://github.com/actviteai/cecicela/blob/main/packages/trouble/README.md): the four-roles protocol, renaming the roles, hosts

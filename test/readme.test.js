@@ -41,3 +41,46 @@ test('the README links the video, the channel, the issue tracker, and every pack
   assert.match(README, /^## Feedback$/m);
   assert.match(README, /\(see \[Feedback\]\(#feedback\)\)/);
 });
+
+test('the READMEs cover machine learning and XGBoost with ceciCela', () => {
+  for (const rel of ['README.md', 'packages/cecicela/README.md']) {
+    const text = read(rel);
+    assert.match(text, /^## Machine learning advantages$/m, rel);
+    assert.match(text, /^## XGBoost with ceciCela$/m, rel);
+    assert.match(text, /How to use/, rel);
+    assert.match(text, /device="cuda"/, rel);
+  }
+  assert.match(README, /^### How to use XGBoost with `\/cecicela`$/m);
+  assert.match(README, /def test_auc_not_below_baseline\(\):/);
+  for (const name of ['ceci', 'cela', 'trouble']) assert.match(read(`packages/${name}/README.md`), /^## (<a id="machine-learning"><\/a> )?Machine learning$/m, name);
+});
+
+test('each skill README says it is part of ceciCela and installs all of it', () => {
+  for (const name of ['ceci', 'cela', 'trouble']) {
+    const text = read(`packages/${name}/README.md`);
+    assert.match(text, new RegExp(`${name} is part of \\*\\*\\[ceciCela\\]\\(https://github\\.com/actviteai/cecicela\\)\\*\\* \\(\`/cecicela\`\\)`), name);
+    assert.match(text, new RegExp(`[Ii]nstalling ${name} installs`), name);
+  }
+});
+
+test('no doc offers a skill without the rest of ceciCela', () => {
+  const docs = ['README.md', 'llms.txt', ...['ceci', 'cela', 'trouble', 'cecicela'].map((n) => `packages/${n}/README.md`), ...['ceci', 'rdapq', 'trouble'].map((n) => `docs/archive/${n}.README.md`)];
+  for (const rel of docs) {
+    const text = read(rel);
+    assert.doesNotMatch(text, /--only/, rel);
+    assert.doesNotMatch(text, /\b(ceci|cela|trouble)@cecicela\b/, rel);
+    assert.doesNotMatch(text, /bundle\/hermes/, rel);
+    assert.doesNotMatch(text, /(installs?|install) (alone|on its own)|\/(ceci|cela|trouble) (alone|on its own)|each skill on its own/i, rel);
+  }
+});
+
+test('every package carries AI agent skill and machine learning keywords', () => {
+  for (const name of ['ceci', 'cela', 'trouble', 'cecicela']) {
+    const { keywords, description } = JSON.parse(read(`packages/${name}/package.json`));
+    for (const word of ['agent-skills', 'ai-agent-skills', 'skill-md', 'llm', 'machine-learning', 'mlops', 'xgboost']) assert.ok(keywords.includes(word), `${name}: ${word}`);
+    if (name !== 'cecicela') assert.match(description, /Part of ceciCela: installing it installs \/ceci, \/cela, \/trouble, and \/cecicela together\./, name);
+    const readme = read(`packages/${name}/README.md`);
+    assert.match(readme, /\*\*Keywords:\*\* AI agent skills,.*machine learning, MLOps,.*XGBoost/, name);
+  }
+  assert.match(read('llms.txt'), /Machine learning: .*XGBoost/);
+});

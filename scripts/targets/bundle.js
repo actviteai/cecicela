@@ -57,6 +57,7 @@ function readme(plugin) {
   if (!spec.description.includes(TAGLINE)) lines.push(`> ${TAGLINE}`, '');
   lines.push(spec.description, '', '## Skills', '');
   for (const skill of spec.skills) lines.push(`- ${SKILL_LINES[skill]}`);
+  lines.push('', '## For machine learning', '', 'ceciCela keeps an agent from grading its own model changes. /ceci plans an ML pipeline as a job graph and places GPU training jobs from your preference file; /cela accepts a data, feature, or model change only when tests the tool runs pass (for example, holdout AUC not below a stored baseline); /trouble ranks the causes of a metric regression on evidence. It suits XGBoost well: a gate can retrain and score it inside a test, and `device=\"cuda\"` uses the GPU ceci chose. Walkthrough: https://github.com/actviteai/cecicela#xgboost-with-cecicela');
   lines.push('', '## Install', '', 'In Claude Code:', '', '```', `/plugin install ${plugin} --marketplace actviteai/cecicela`, '```', '', 'In claude.ai, the desktop app, or Cowork, add it from **Customize > Plugins**.');
   if (has('ceci')) {
     lines.push('', '## What ceci asks when it starts', '');

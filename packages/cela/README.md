@@ -12,9 +12,9 @@ Harnesses: Cursor, OpenAI Codex, Claude Code, GitHub Copilot, Grok Build, Google
 
 > **cela** — an evidence-first protocol and skill for AI coding agents (research-driven adaptive planning with quality gates). A bundled tool runs the checks and names the result, so the model never grades its own work.
 
-cela is part of **[ceciCela](https://github.com/actviteai/cecicela)**: *ceci plans this, cela proves that, trouble fixes what breaks.* [`/ceci`](../ceci) calls `/cela` on every job that changes code, data, or a model, and stores the token it prints. cela also works on its own: `cela start ... · cela check · cela gate`.
+cela is part of **[ceciCela](https://github.com/actviteai/cecicela)** (`/cecicela`): *ceci plans this, cela proves that, trouble fixes what breaks.* [`/ceci`](../ceci) calls `/cela` on every job that changes code, data, or a model, and stores the token it prints. ceciCela installs as one product: installing cela installs `/ceci`, `/cela`, [`/trouble`](../trouble), and the `/cecicela` front door together. Once installed, `/cela` also runs by itself for a single change: `cela start ... · cela check · cela gate`.
 
-This is cela **1.0.4**, the first release under this name. The engine, its oracles, the `state.jsonl` format, and the memory records carry over unchanged from the protocol's 2.1 line; only the names moved (`/cela`, `cela`, `.cela/`, `~/.cela`, `CELA_HOME`, `cela_nat`). Old project directories are left alone: a new `cela start` (or `cela init`) begins a `.cela/` beside them.
+cela 1.0.0 was the first release under this name. <!-- keep-version --> The engine, its oracles, the `state.jsonl` format, and the memory records carry over unchanged from the protocol's 2.1 line; only the names moved (`/cela`, `cela`, `.cela/`, `~/.cela`, `CELA_HOME`, `cela_nat`). Old project directories are left alone: a new `cela start` (or `cela init`) begins a `.cela/` beside them.
 
 ---
 
@@ -70,22 +70,22 @@ With `init --hook`, Claude Code also gets a Stop hook: while an cela task's gate
 
 Node.js 22 or newer.
 
-`install` writes your user files for a harness. `init` writes a project's files. `status` shows what is installed. There is no `update` command: run the same install again.
+`install` writes your user files for a harness. ceciCela installs as one product, so an install into any chat harness hands off to the `@actvite/cecicela` bundle and writes `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door, plus the cela core. It uses a bundle installed next to cela when there is one, otherwise `npx --yes @actvite/cecicela@latest`. `init` writes a project's files. `status` shows where cela is installed. There is no `update` command: run the same install again, or `cecicela update`.
 
 ```bash
-npx --yes @actvite/cecicela install --all     # ceci, cela, and trouble together
-npx --yes @actvite/cela install --claude      # cela alone, one harness
-npx --yes @actvite/cela install               # cela alone, all nine chat harnesses (same as --all)
-npx --yes @actvite/cela install --global-only # the core only: ~/.cela
+npx --yes @actvite/cecicela install --all     # all of ceciCela, every harness
+npx --yes @actvite/cela install --claude      # the same install, one harness, through the bundle
+npx --yes @actvite/cela install               # all nine chat harnesses (same as --all)
+npx --yes @actvite/cela install --global-only # the cela core only: ~/.cela, no harness skills
 npx --yes @actvite/cela install --nemo        # NeMo Agent Toolkit: the engine, then the pip step it prints
 npx --yes @actvite/cela init                  # the current project (--hook, --force, --repo <dir>)
 npx --yes @actvite/cela status
-npm install -g @actvite/cela && cela install --claude
+npm install -g @actvite/cecicela && cecicela install --claude   # keeps the cela and cecicela CLIs
 ```
 
 What the flags mean:
 
-- **Harness flags.** `--cursor`, `--codex`, `--claude`, `--copilot`, `--grok`, `--antigravity`, `--goose`, `--cline`, `--hermes`, `--nemo`. No flag, or `--all`, installs the nine chat harnesses; NeMo is a framework and is only set up when you name it. Do not pass harness flags to `init`.
+- **Harness flags.** `--cursor`, `--codex`, `--claude`, `--copilot`, `--grok`, `--antigravity`, `--goose`, `--cline`, `--hermes`, `--nemo`. No flag, or `--all`, installs into the nine chat harnesses. NeMo is a framework, not a skill harness: it is set up only when you name it, and `install --nemo` alone sets up only cela's engine for it. Do not pass harness flags to `init`.
 - **Edited files are kept.** A harness file that differs from the packaged copy stays as it is, and the packaged copy is written beside it as `<file>.cela`. Diff that sidecar. `--force` saves yours as `<file>.cela-backup` and writes the new one. Skill trees are staged and renamed into place only after `SKILL.md` is present, so a failed update does not delete a working install.
 - **Update keeps** `$CELA_HOME/memory/`, `$CELA_HOME/projects/`, and a repository's `<repo>/.cela/`. `npm install` updates the CLI package only; run `cela install` again afterward. Start a new harness session after an update so it does not keep the previous `SKILL.md` in context.
 - **`--global-only`** writes `$CELA_HOME` (default `~/.cela`): `skills/cela/`, plus empty `memory/`, `projects/`, and `registry/`.
@@ -110,15 +110,9 @@ The harness table is shared with ceci and trouble (it lives in the repository's 
 
 `init` writes every bridge in the table plus `.claude/commands/cela.md`, and the skill trees `.agents/skills/cela/` (Cursor, Codex, Copilot, Antigravity, Goose) and `.claude/skills/cela/` (Claude Code, Cline). Every bridge is [`bridges/project.md`](bridges/project.md); the Claude command is [`bridges/claude/commands/cela.md`](bridges/claude/commands/cela.md). User installs never add always-on global rules for harnesses that load skills on demand, so cela stays out of sessions that do not invoke it. The one global bridge, the Claude command, points at the installed core under `$CELA_HOME`.
 
-**Plugin marketplace.** The ceciCela repository is a marketplace: `/plugin marketplace add actviteai/cecicela`, then `/plugin install cela@cecicela` (or the whole bundle, `cecicela@cecicela`).
+**Plugin marketplace.** The ceciCela repository is a marketplace with one plugin, the bundle: `/plugin marketplace add actviteai/cecicela`, then `/plugin install cecicela@cecicela`. In Claude Code the command is then `/cecicela:cela`, or `/cela` when nothing else claims the name.
 
-**Hermes Agent.** Hermes skills are user-wide, so `--hermes` writes only the skill tree, with a Hermes frontmatter (`description` that opens with the trigger sentence, `platforms`, `metadata.hermes.tags`, and `requires_toolsets: [terminal]` because the engine runs through the terminal tool). The body names the engine as `${HERMES_SKILL_DIR}/tool/cela.js`, which Hermes expands to the installed path. Hermes can also install the skill straight from the repository, without Node.js for the installer (the engine still needs Node 22 to run):
-
-```bash
-hermes skills install https://raw.githubusercontent.com/actviteai/cecicela/main/bundle/hermes/cela/SKILL.md --category software-development
-```
-
-That copy is `bundle/hermes/cela/`: the same SKILL.md body with the engine at `scripts/cela.js` and the playbooks under `references/`, because a URL install copies only files SKILL.md names under those directories. It is generated by the repository's `npm run sync`, and `npm test` fails if it drifts.
+**Hermes Agent.** Hermes skills are user-wide, so `--hermes` writes only the skill tree, with a Hermes frontmatter (`description` that opens with the trigger sentence, `platforms`, `metadata.hermes.tags`, and `requires_toolsets: [terminal]` because the engine runs through the terminal tool). The body names the engine as `${HERMES_SKILL_DIR}/tool/cela.js`, which Hermes expands to the installed path. Install for Hermes with `npx --yes @actvite/cecicela install --hermes`, which writes all four skills. There is no single-skill URL install, because ceciCela installs as one product.
 
 ### <a id="nvidia-nemo-agent-toolkit-framework-integration"></a> NeMo Agent Toolkit
 
@@ -277,6 +271,14 @@ Set the <code>CELA_HOME</code> environment variable:
 <pre><code>export CELA_HOME=/custom/path/.cela</code></pre>
 Per-harness homes use <code>AGENTS_HOME</code> (Codex), <code>CURSOR_HOME</code>, <code>GROK_HOME</code>, <code>COPILOT_HOME</code>, <code>CLAUDE_HOME</code>, <code>CLINE_HOME</code>, <code>GEMINI_HOME</code>, and <code>HERMES_HOME</code>.
 </details>
+
+---
+
+## <a id="machine-learning"></a> Machine learning
+
+cela gates data, feature, and model changes the same way it gates code. Each clause of the request, such as "holdout AUC is not below the stored baseline" or "the target encoder is fit on training folds only", is a requirement covered by a named test. `check` runs those tests, and `gate` exits 0 only on `COMPLETE`. The repo oracle catches an agent that edits the baseline or the data instead of the model, and the round limit stops endless hyperparameter tuning. `export` turns past tasks into a labeled tabular dataset (the gate's verdict and the reviewer's outcome), a natural first dataset for an XGBoost classifier. The XGBoost walkthrough, with a test file, is in [XGBoost with ceciCela](https://github.com/actviteai/cecicela#xgboost-with-cecicela). Python stacks reach the same gate through [NeMo Agent Toolkit](#nvidia-nemo-agent-toolkit-framework-integration).
+
+**Keywords:** AI agent skills, agent skills, SKILL.md, Claude Code skills, Codex skills, Cursor skills, GitHub Copilot, LLM agents, agentic AI, agentic workflows, AI code verification, evidence gate, quality gates, evals, LLM-as-judge alternative, test-driven agents, machine learning, MLOps, model evaluation, XGBoost, gradient boosting, tabular data, data leakage, GPU scheduling, CUDA, NVIDIA NeMo Agent Toolkit.
 
 ---
 

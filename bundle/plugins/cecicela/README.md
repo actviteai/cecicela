@@ -9,6 +9,10 @@ ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. The /cec
 - `/cela` is the evidence gate. A bundled tool runs your checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work.
 - `/trouble` is a four-roles debug protocol: collect verbatim evidence, rank hypotheses, and hold the fix until every role agrees.
 
+## For machine learning
+
+ceciCela keeps an agent from grading its own model changes. /ceci plans an ML pipeline as a job graph and places GPU training jobs from your preference file; /cela accepts a data, feature, or model change only when tests the tool runs pass (for example, holdout AUC not below a stored baseline); /trouble ranks the causes of a metric regression on evidence. It suits XGBoost well: a gate can retrain and score it inside a test, and `device="cuda"` uses the GPU ceci chose. Walkthrough: https://github.com/actviteai/cecicela#xgboost-with-cecicela
+
 ## Install
 
 In Claude Code:

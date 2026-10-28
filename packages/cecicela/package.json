@@ -1,7 +1,7 @@
 {
   "name": "@actvite/cecicela",
   "version": "1.3.4",
-  "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. Installs the /ceci job-graph skill, the /cela evidence gate, and the /trouble four-roles debug protocol into Claude Code, Codex, Grok, Cline, Goose, Cursor, Copilot, Antigravity, and Hermes.",
+  "description": "ceciCela: ceci plans this, cela proves that, trouble fixes what breaks. Installs, as one product, the /ceci job-graph skill, the /cela evidence gate, and the /trouble four-roles debug protocol into Claude Code, Codex, Grok, Cline, Goose, Cursor, Copilot, Antigravity, and Hermes.",
   "type": "commonjs",
   "main": "lib/bundle.js",
   "bin": {
@@ -50,7 +50,8 @@
     "mlops",
     "xgboost",
     "gpu-scheduling",
-    "root-cause-analysis"
+    "root-cause-analysis",
+    "model-evaluation"
   ],
   "dependencies": {
     "@actvite/ceci": "2.3.3",
