@@ -16,8 +16,8 @@ const REPO = path.resolve(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), 'utf8');
 const json = (rel) => JSON.parse(read(rel));
 const pkg = (name) => json(`packages/${name}/package.json`);
-const PLUGINS = ['cecicela', 'ceci', 'cela', 'trouble'];
-const SKILLS_OF = { cecicela: ['cecicela', 'ceci', 'cela', 'trouble'], ceci: ['ceci'], cela: ['cela'], trouble: ['trouble'] };
+const PLUGINS = ['cecicela'];
+const SKILLS_OF = { cecicela: ['cecicela', 'ceci', 'cela', 'trouble'] };
 const CATALOGS = ['.claude-plugin/marketplace.json', '.grok-plugin/marketplace.json', '.github/plugin/marketplace.json', '.agents/plugins/marketplace.json'];
 
 function sourcePath(entry) {
@@ -35,7 +35,7 @@ function tree(dir, prefix = '') {
   return out.sort();
 }
 
-test('every catalog lists the bundle and each skill, pointing at a plugin with its SKILL.md files', () => {
+test('every catalog lists only the cecicela bundle, pointing at a plugin with all four SKILL.md files', () => {
   for (const rel of CATALOGS) {
     const catalog = json(rel);
     assert.equal(catalog.name, 'cecicela', rel);
@@ -77,7 +77,7 @@ test('plugin manifests carry the package versions, the license, and the actvite 
     }
     for (const rel of CATALOGS.slice(0, 3)) assert.equal(json(rel).plugins.find((p) => p.name === plugin).version, version, `${rel} ${plugin}`);
   }
-  assert.equal(json('bundle/plugins/trouble/.codex-plugin/plugin.json').skills, './skills/');
+  assert.equal(json('bundle/plugins/cecicela/.codex-plugin/plugin.json').skills, './skills/');
 });
 
 test('the bundle records the exact skill versions it was built from, matching its npm dependencies', () => {
@@ -124,17 +124,17 @@ test('plugin tool code names no remote host and no credential', () => {
   }
 });
 
-test('the Hermes copies are valid URL installs', () => {
-  const ceciHermes = require(path.join(REPO, 'packages/ceci/lib/hermes'));
-  const celaHermes = require(path.join(REPO, 'packages/cela/lib/hermes'));
-  assert.deepEqual(ceciHermes.checkFrontmatter(read('bundle/hermes/ceci/SKILL.md')), []);
-  assert.deepEqual(celaHermes.checkFrontmatter(read('bundle/hermes/cela/SKILL.md'), pkg('cela').version), []);
-  for (const skill of ['ceci', 'cela']) {
-    const hub = read(`bundle/hermes/${skill}/SKILL.md`);
-    for (const rel of tree(path.join(REPO, 'bundle', 'hermes', skill))) if (rel !== 'SKILL.md') assert.ok(hub.includes(rel), `${skill}: SKILL.md must name ${rel}`);
-    assert.doesNotMatch(hub, /\btool\/|\bplaybooks\//, skill);
+test('no skill is published on its own: one plugin, and no Hermes URL copies', () => {
+  assert.deepEqual(fs.readdirSync(path.join(REPO, 'bundle', 'plugins')), ['cecicela']);
+  assert.equal(fs.existsSync(path.join(REPO, 'bundle', 'hermes')), false);
+  assert.deepEqual(Object.keys(json('.grok-plugin/plugin-index.json').plugins), ['cecicela']);
+});
+
+test('the bundle plugin carries AI agent skill and machine learning keywords', () => {
+  for (const rel of ['plugin.json', '.claude-plugin/plugin.json', '.codex-plugin/plugin.json']) {
+    const { keywords } = json(`bundle/plugins/cecicela/${rel}`);
+    for (const word of ['agent-skills', 'ai-agent-skills', 'skill-md', 'llm', 'machine-learning', 'mlops', 'xgboost']) assert.ok(keywords.includes(word), `${rel}: ${word}`);
   }
-  assert.equal(read('bundle/hermes/cela/scripts/cela.js'), read('packages/cela/skill/tool/cela.js'));
 });
 
 function cecicela(args, home) {

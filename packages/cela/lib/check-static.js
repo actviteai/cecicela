@@ -48,10 +48,6 @@ need('skill/README.md', /SKILL\.md` is the instruction source/, 'README must poi
   const hermes = require('../lib/hermes');
   const rendered = hermes.renderInstalled(read('skill/SKILL.md'), pkg.version);
   for (const problem of hermes.checkFrontmatter(rendered, pkg.version)) failures.push(`Hermes SKILL.md render: ${problem}`);
-  // The URL-install copy (bundle/hermes/cela) is rendered and drift-checked by the root `npm run sync`.
-  const hub = hermes.renderHub(read('skill/SKILL.md'), pkg.version);
-  for (const problem of hermes.checkFrontmatter(hub, pkg.version)) failures.push(`Hermes URL-install render: ${problem}`);
-  if (/\btool\/|\bplaybooks\//.test(hub)) failures.push('the Hermes URL-install render must name scripts/ and references/, which a URL install copies');
 }
 
 // NeMo Agent Toolkit: nemo/ wraps engine commands as tools, so its

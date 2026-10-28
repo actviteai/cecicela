@@ -4,21 +4,20 @@
  * The plugin and marketplace files every coding-agent host reads, rendered
  * from packages/<skill>/skill and the package.json versions.
  *
- *   bundle/plugins/<p>/               one plugin per package: cecicela (all four
- *                                     skills) and ceci, cela, trouble alone. Each has
+ *   bundle/plugins/cecicela/          the one plugin: all four skills, with
  *                                     plugin.json (Grok, Copilot), .claude-plugin/plugin.json,
  *                                     .codex-plugin/plugin.json, and skills/<skill>/ as
  *                                     real files: hosts copy the directory and drop
  *                                     symlinks that leave it.
  *   bundle/plugins/cecicela/bundle.json  the exact skill versions the bundle was built from
- *   bundle/hermes/<skill>/            Hermes URL and hub installs (scripts/, references/)
  *   .claude-plugin/marketplace.json   Claude Code: /plugin marketplace add actviteai/cecicela
  *   .github/plugin/marketplace.json   GitHub Copilot CLI
  *   .grok-plugin/marketplace.json     Grok (+ plugin-index.json for its browser)
  *   .agents/plugins/marketplace.json  Codex
  *
- * The catalogs list the bundle and each skill on its own, so someone who only
- * wants /trouble can install just that.
+ * ceciCela installs as one product: the catalogs list only the bundle, never a
+ * skill on its own. Hermes has no bundle install, so it is reached through
+ * `npx @actvite/cecicela install --hermes`, which writes all four skills.
  */
 
 const path = require('path');
@@ -36,28 +35,7 @@ const PLUGINS = {
     display: 'ceciCela',
     short: 'Plan, prove, and debug: /ceci, /cela, /trouble',
     description: `ceciCela: ${TAGLINE} The /ceci job graph with human gates, the /cela evidence gate where a tool names the result, and the /trouble four-roles debug protocol, in one plugin.`,
-    keywords: ['cecicela', 'ceci', 'cela', 'trouble', 'job-graph', 'quality-gates', 'evidence-first', 'debugging', 'agent-skills'],
-  },
-  ceci: {
-    skills: ['ceci'],
-    display: 'ceci',
-    short: 'Goal to job graph, with human gates',
-    description: 'ceci turns a goal into a job graph, runs ready jobs in dependency order, stops at human gates before contact, posting, payment, or pricing, places GPU jobs, and gates code changes with /cela. Part of ceciCela.',
-    keywords: ['ceci', 'cecicela', 'job-graph', 'dag', 'human-in-the-loop', 'approval-gates', 'gpu-scheduling'],
-  },
-  cela: {
-    skills: ['cela'],
-    display: 'cela',
-    short: 'Evidence gate: a tool names the result',
-    description: 'cela is an evidence-first protocol for AI coding agents. A bundled tool runs the checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work. Part of ceciCela.',
-    keywords: ['cela', 'cecicela', 'quality-gates', 'evidence-first', 'testing', 'agent-skills'],
-  },
-  trouble: {
-    skills: ['trouble'],
-    display: '/trouble',
-    short: 'Four-roles debug protocol for stuck incidents',
-    description: 'Stop looping on a bug you cannot close. /trouble is a four-roles debug protocol that collects verbatim evidence, ranks hypotheses with Bayesian math, and refuses a fix until the roles unanimously agree. Part of ceciCela.',
-    keywords: ['trouble', 'cecicela', 'debugging', 'troubleshooting', 'incident-response', 'bayesian', 'four-roles'],
+    keywords: ['cecicela', 'ceci', 'cela', 'trouble', 'agent-skills', 'ai-agent-skills', 'skill-md', 'ai-agents', 'llm', 'agentic-ai', 'job-graph', 'human-in-the-loop', 'quality-gates', 'evidence-first', 'evals', 'debugging', 'root-cause-analysis', 'machine-learning', 'mlops', 'xgboost', 'gpu-scheduling'],
   },
 };
 
@@ -132,28 +110,6 @@ function pluginFiles(plugin) {
   return files;
 }
 
-function hermesFiles(skill) {
-  if (skill === 'ceci') return require(path.join(REPO, 'packages', 'ceci', 'lib', 'skill')).hermesFiles();
-  if (skill === 'cela') {
-    const fs = require('fs');
-    const hermes = require(path.join(REPO, 'packages', 'cela', 'lib', 'hermes'));
-    const dir = skillDir('cela');
-    const files = new Map();
-    files.set('SKILL.md', { text: hermes.renderHub(fs.readFileSync(path.join(dir, 'SKILL.md'), 'utf8'), version('cela')), exec: false });
-    files.set('scripts/cela.js', { text: fs.readFileSync(path.join(dir, 'tool', 'cela.js'), 'utf8'), exec: false });
-    // Keeps the engine CommonJS when an ancestor package.json sets "type": "module".
-    files.set('scripts/package.json', { text: fs.readFileSync(path.join(dir, 'package.json'), 'utf8'), exec: false });
-    for (const name of fs.readdirSync(path.join(dir, 'playbooks')).sort()) {
-      files.set(`references/${name}`, { text: fs.readFileSync(path.join(dir, 'playbooks', name), 'utf8'), exec: false });
-    }
-    return files;
-  }
-  // trouble and the front door install as they are: a hub install copies the directory.
-  const files = core.fsx.readTree(skillDir(skill));
-  for (const file of files.values()) file.exec = false;
-  return files;
-}
-
 function entry(plugin) {
   return { name: plugin, version: version(plugin), description: PLUGINS[plugin].description, source: `./bundle/plugins/${plugin}` };
 }
@@ -161,7 +117,7 @@ function entry(plugin) {
 function catalogs() {
   const names = Object.keys(PLUGINS);
   const files = new Map();
-  const description = `ceciCela marketplace: ${TAGLINE} The bundle and each skill on its own.`;
+  const description = `ceciCela marketplace: ${TAGLINE} One plugin with all three skills and the /cecicela front door.`;
   files.set('.claude-plugin/marketplace.json', {
     text: json({
       name: 'cecicela',
@@ -219,11 +175,8 @@ function targets() {
   for (const plugin of Object.keys(PLUGINS)) {
     out.push({ out: `bundle/plugins/${plugin}`, why: 'plugin hosts copy the directory and drop symlinks that leave it', modes: true, files: pluginFiles(plugin) });
   }
-  for (const skill of ['cecicela', ...SKILLS]) {
-    out.push({ out: `bundle/hermes/${skill}`, why: 'raw GitHub URLs do not follow it', modes: false, files: hermesFiles(skill) });
-  }
   out.push({ out: '', why: 'the catalogs are rendered from package versions', modes: false, sweep: false, files: catalogs() });
   return out;
 }
 
-module.exports = { PLUGINS, catalogs, hermesFiles, pluginFiles, targets };
+module.exports = { PLUGINS, catalogs, pluginFiles, targets };

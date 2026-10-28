@@ -15,11 +15,23 @@
     "ceci",
     "cela",
     "trouble",
+    "agent-skills",
+    "ai-agent-skills",
+    "skill-md",
+    "ai-agents",
+    "llm",
+    "agentic-ai",
     "job-graph",
+    "human-in-the-loop",
     "quality-gates",
     "evidence-first",
+    "evals",
     "debugging",
-    "agent-skills"
+    "root-cause-analysis",
+    "machine-learning",
+    "mlops",
+    "xgboost",
+    "gpu-scheduling"
   ],
   "skills": "skills/"
 }

@@ -1,6 +1,6 @@
 {
   "name": "cecicela",
-  "description": "ceciCela marketplace: ceci plans this, cela proves that, trouble fixes what breaks. The bundle and each skill on its own.",
+  "description": "ceciCela marketplace: ceci plans this, cela proves that, trouble fixes what breaks. One plugin with all three skills and the /cecicela front door.",
   "owner": {
     "name": "actvite",
     "email": "chuck@actvite.com"
@@ -26,85 +26,23 @@
         "ceci",
         "cela",
         "trouble",
+        "agent-skills",
+        "ai-agent-skills",
+        "skill-md",
+        "ai-agents",
+        "llm",
+        "agentic-ai",
         "job-graph",
-        "quality-gates",
-        "evidence-first",
-        "debugging",
-        "agent-skills"
-      ]
-    },
-    {
-      "name": "ceci",
-      "version": "2.3.3",
-      "description": "ceci turns a goal into a job graph, runs ready jobs in dependency order, stops at human gates before contact, posting, payment, or pricing, places GPU jobs, and gates code changes with /cela. Part of ceciCela.",
-      "source": {
-        "type": "local",
-        "path": "./bundle/plugins/ceci"
-      },
-      "category": "development",
-      "author": {
-        "name": "actvite",
-        "email": "chuck@actvite.com",
-        "url": "https://actvite.com"
-      },
-      "homepage": "https://github.com/actviteai/cecicela",
-      "keywords": [
-        "ceci",
-        "cecicela",
-        "job-graph",
-        "dag",
         "human-in-the-loop",
-        "approval-gates",
-        "gpu-scheduling"
-      ]
-    },
-    {
-      "name": "cela",
-      "version": "1.0.4",
-      "description": "cela is an evidence-first protocol for AI coding agents. A bundled tool runs the checks and names the result (COMPLETE, STALLED, BLOCKED, MISSING_TEST), so the model never grades its own work. Part of ceciCela.",
-      "source": {
-        "type": "local",
-        "path": "./bundle/plugins/cela"
-      },
-      "category": "development",
-      "author": {
-        "name": "actvite",
-        "email": "chuck@actvite.com",
-        "url": "https://actvite.com"
-      },
-      "homepage": "https://github.com/actviteai/cecicela",
-      "keywords": [
-        "cela",
-        "cecicela",
         "quality-gates",
         "evidence-first",
-        "testing",
-        "agent-skills"
-      ]
-    },
-    {
-      "name": "trouble",
-      "version": "1.0.2",
-      "description": "Stop looping on a bug you cannot close. /trouble is a four-roles debug protocol that collects verbatim evidence, ranks hypotheses with Bayesian math, and refuses a fix until the roles unanimously agree. Part of ceciCela.",
-      "source": {
-        "type": "local",
-        "path": "./bundle/plugins/trouble"
-      },
-      "category": "development",
-      "author": {
-        "name": "actvite",
-        "email": "chuck@actvite.com",
-        "url": "https://actvite.com"
-      },
-      "homepage": "https://github.com/actviteai/cecicela",
-      "keywords": [
-        "trouble",
-        "cecicela",
+        "evals",
         "debugging",
-        "troubleshooting",
-        "incident-response",
-        "bayesian",
-        "four-roles"
+        "root-cause-analysis",
+        "machine-learning",
+        "mlops",
+        "xgboost",
+        "gpu-scheduling"
       ]
     }
   ]
