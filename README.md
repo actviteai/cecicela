@@ -254,7 +254,7 @@ The first release, with the retirement of the old packages and repositories, fol
 
 ## Where it came from
 
-ceciCela supersedes three repositories, now archived: [actviteai/ceci](https://github.com/actviteai/ceci) (ceci 1.x), [actviteai/rdapq](https://github.com/actviteai/rdapq) (the RDAP-Q engine, now cela; `@actvite/rdapq` 2.1.0 was its last release under that name, and the package has since been unpublished from npm; the unscoped `rdap-q` stays, deprecated), and [actviteai/trouble](https://github.com/actviteai/trouble). cela 1.0.0 is that engine renamed: its oracles, `state.jsonl` format, and memory records are unchanged. trouble's four voices are now generic roles you can rename. The notices are in [`docs/archive/`](docs/archive). <!-- keep-version -->
+ceciCela supersedes two repositories, now archived: [actviteai/ceci](https://github.com/actviteai/ceci) (ceci 1.x) and [actviteai/trouble](https://github.com/actviteai/trouble). trouble's four voices are now generic roles you can rename. The notices are in [`docs/archive/`](docs/archive). <!-- keep-version -->
 
 ## Security, conduct, license
 

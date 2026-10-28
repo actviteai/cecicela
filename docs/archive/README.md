@@ -5,5 +5,4 @@ The READMEs that replace the old repositories' READMEs in their final commit, on
 | Repository | Notice |
 | --- | --- |
 | actviteai/ceci | [ceci.README.md](ceci.README.md) |
-| actviteai/rdapq | [rdapq.README.md](rdapq.README.md) |
 | actviteai/trouble | [trouble.README.md](trouble.README.md) |

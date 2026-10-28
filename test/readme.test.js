@@ -64,7 +64,7 @@ test('each skill README says it is part of ceciCela and installs all of it', () 
 });
 
 test('no doc offers a skill without the rest of ceciCela', () => {
-  const docs = ['README.md', 'llms.txt', ...['ceci', 'cela', 'trouble', 'cecicela'].map((n) => `packages/${n}/README.md`), ...['ceci', 'rdapq', 'trouble'].map((n) => `docs/archive/${n}.README.md`)];
+  const docs = ['README.md', 'llms.txt', ...['ceci', 'cela', 'trouble', 'cecicela'].map((n) => `packages/${n}/README.md`), ...['ceci', 'trouble'].map((n) => `docs/archive/${n}.README.md`)];
   for (const rel of docs) {
     const text = read(rel);
     assert.doesNotMatch(text, /--only/, rel);

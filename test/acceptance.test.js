@@ -29,8 +29,9 @@ test('git is available and the tree is tracked (these checks read git ls-files)'
   assert.ok(res.stdout.split('\n').length > 100);
 });
 
-test('nothing in packages, bundle, or chat names the old protocol', () => {
-  const hits = trackedText(['packages', 'bundle', 'chat']).filter(({ text }) => /rdap/i.test(text)).map(({ rel }) => rel);
+test('nothing in the repository names the retired protocol', () => {
+  const hits = trackedText(['.']).filter(({ rel }) => rel !== 'test/acceptance.test.js')
+    .filter(({ text }) => /rdap/i.test(text)).map(({ rel }) => rel);
   assert.deepEqual(hits, []);
 });
 
@@ -98,8 +99,8 @@ test('Node only: no Python outside the optional NeMo package', () => {
   assert.deepEqual(py.filter((rel) => !rel.startsWith('packages/cela/nemo/')), []);
 });
 
-test('the three old repositories have an archive notice ready', () => {
-  for (const name of ['ceci', 'rdapq', 'trouble']) {
+test('the old repositories have an archive notice ready', () => {
+  for (const name of ['ceci', 'trouble']) {
     const notice = fs.readFileSync(path.join(REPO, 'docs', 'archive', `${name}.README.md`), 'utf8');
     assert.match(notice, /https:\/\/github\.com\/actviteai\/cecicela/);
     assert.match(notice, /archived/i);
