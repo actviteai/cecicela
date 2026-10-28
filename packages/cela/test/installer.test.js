@@ -506,9 +506,39 @@ test('cela install into a chat harness installs all of ceciCela; --nemo alone st
   assert.match(res.stdout, /cela is part of ceciCela/);
   assert.deepEqual(fs.readdirSync(path.join(env.CLAUDE_HOME, 'skills')).sort(), ['ceci', 'cecicela', 'cela', 'trouble']);
   assert.ok(fs.existsSync(path.join(env.CELA_HOME, 'skills', 'cela', 'tool', 'cela.js')), 'the cela core');
+  const removed = spawnSync(process.execPath, [bin, 'uninstall', '--claude'], { encoding: 'utf8', env });
+  assert.equal(removed.status, 0, removed.stderr);
+  assert.match(removed.stdout, /cela is part of ceciCela: uninstalling/);
+  assert.deepEqual(fs.readdirSync(path.join(env.CLAUDE_HOME, 'skills')), [], 'cela uninstall removes all of ceciCela');
+  assert.equal(fs.existsSync(path.join(env.CLAUDE_HOME, 'commands', 'cela.md')), false, 'and the /cela command');
+  assert.match(spawnSync(process.execPath, [bin, '--help'], { encoding: 'utf8' }).stdout, /uninstall {8}Remove all of ceciCela/);
   const nemo = tempLayout();
   const only = spawnSync(process.execPath, [bin, 'install', '--nemo'], { encoding: 'utf8', env: nemo.env });
   assert.equal(only.status, 0, only.stderr);
   assert.doesNotMatch(only.stdout, /part of ceciCela/);
   assert.equal(fs.existsSync(nemo.env.CLAUDE_HOME), false, 'a NeMo-only install writes no skills');
+});
+
+test('uninstall: a settings.json that is not JSON is kept, and --purge deletes only a real cela home', () => {
+  const core = require('../lib/core');
+  const { removeStopHook, uninstall } = require('../lib/installer');
+  const { root, env } = tempLayout();
+  const settings = path.join(root, 'settings.json');
+  fs.writeFileSync(settings, '{ "hooks": cela.js hook-stop, broken');
+  const ctx = core.uninstall.context();
+  removeStopHook(settings, ctx);
+  assert.deepEqual(ctx.kept, [settings]);
+  assert.equal(fs.readFileSync(settings, 'utf8'), '{ "hooks": cela.js hook-stop, broken');
+
+  fs.writeFileSync(path.join(env.HOME, 'notes.txt'), 'mine\n');
+  const homeAsCela = { ...env, CELA_HOME: env.HOME };
+  const guarded = core.uninstall.context();
+  uninstall({ harnesses: [], env: homeAsCela, everywhere: true, purge: true, ctx: guarded });
+  assert.ok(fs.existsSync(path.join(env.HOME, 'notes.txt')), 'CELA_HOME=$HOME is never purged');
+  assert.deepEqual(guarded.kept, [env.HOME]);
+
+  fs.mkdirSync(path.join(env.CELA_HOME, 'memory'), { recursive: true });
+  const purged = core.uninstall.context();
+  uninstall({ harnesses: [], env, everywhere: true, purge: true, ctx: purged });
+  assert.equal(fs.existsSync(env.CELA_HOME), false);
 });

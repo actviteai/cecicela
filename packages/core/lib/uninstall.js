@@ -1,0 +1,105 @@
+'use strict';
+
+/**
+ * Remove what ceciCela installed, and only that.
+ *
+ *   const ctx = context({ dryRun, log });
+ *   removeSkill({ name, harnesses, homes, ctx });
+ *   removeFile(dest, owns, ctx);
+ *
+ * A skill directory goes only when its SKILL.md names that skill; a file only
+ * when `owns(text)` says ceciCela wrote it. Anything else is reported and
+ * kept. A symlink is unlinked, never followed into. With `dryRun` nothing
+ * changes and the log says what would go. `ctx.removed` and `ctx.kept` list
+ * the paths.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const harness = require('./harness');
+
+function context({ dryRun = false, log = () => {} } = {}) {
+  return { dryRun, log, removed: [], kept: [] };
+}
+
+function lstat(target) {
+  try {
+    return fs.lstatSync(target);
+  } catch {
+    return null;
+  }
+}
+
+/** The `name:` in a SKILL.md frontmatter (following a symlinked directory), or null. */
+function skillName(dir) {
+  let text;
+  try {
+    text = fs.readFileSync(path.join(dir, 'SKILL.md'), 'utf8');
+  } catch {
+    return null;
+  }
+  const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+  const name = front && /^name:\s*["']?([^"'\r\n]+?)["']?\s*$/m.exec(front[1]);
+  return name ? name[1] : null;
+}
+
+function drop(target, stat, ctx) {
+  if (!ctx.dryRun) {
+    if (stat.isSymbolicLink() || !stat.isDirectory()) fs.unlinkSync(target);
+    else fs.rmSync(target, { recursive: true, force: true });
+  }
+  ctx.removed.push(target);
+  ctx.log(`    - ${ctx.dryRun ? 'would remove' : 'removed'} ${target}${stat.isSymbolicLink() ? ' (link only)' : ''}`);
+}
+
+function keep(target, why, ctx) {
+  ctx.kept.push(target);
+  ctx.log(`    ! kept ${target} (${why})`);
+}
+
+/** Remove skill directory `dest` if its SKILL.md names `name`. */
+function removeSkillDir(dest, name, ctx) {
+  const stat = lstat(dest);
+  if (!stat) return;
+  if (stat.isSymbolicLink() || stat.isDirectory()) {
+    if (skillName(dest) === name) return drop(dest, stat, ctx);
+    return keep(dest, `its SKILL.md does not name ${name}`, ctx);
+  }
+  keep(dest, 'not a directory', ctx);
+}
+
+/** Remove skill `name` from every directory the harnesses read; a shared directory once. */
+function removeSkill({ name, harnesses, homes, ctx }) {
+  const seen = new Set();
+  for (const id of harnesses) {
+    for (const dest of harness.skillDests(id, homes, name)) {
+      if (seen.has(dest)) continue;
+      seen.add(dest);
+      removeSkillDir(dest, name, ctx);
+    }
+  }
+}
+
+/** Remove file `dest` if `owns(text)` is true. */
+function removeFile(dest, owns, ctx) {
+  const stat = lstat(dest);
+  if (!stat) return;
+  if (!stat.isFile()) return keep(dest, 'not a regular file', ctx);
+  if (!owns(fs.readFileSync(dest, 'utf8'))) return keep(dest, 'not ceciCela\'s, or edited', ctx);
+  drop(dest, stat, ctx);
+}
+
+/** Remove a whole directory (--purge). */
+function removeTree(dest, ctx) {
+  const stat = lstat(dest);
+  if (stat) drop(dest, stat, ctx);
+}
+
+/** Remove `dir` if it is an empty directory, so an uninstall leaves no empty skills/ behind. */
+function removeIfEmpty(dir, ctx) {
+  const stat = lstat(dir);
+  if (!stat || !stat.isDirectory() || ctx.dryRun) return;
+  if (fs.readdirSync(dir).length === 0) fs.rmdirSync(dir);
+}
+
+module.exports = { context, removeFile, removeIfEmpty, removeSkill, removeSkillDir, removeTree, skillName };

@@ -61,6 +61,7 @@ Front door
   /cecicela memories         what the work dir and this host remember about your ceciCela work
   /cecicela feedback         how the last result landed: good, adjust, retry, or report a problem
   /cecicela status | install | update
+  /cecicela uninstall        remove ceciCela: everywhere, from one directory, or from the web apps
 
 While ceci runs, type any time
   budget low|medium|creator     how often the view updates (low: fewest tokens)
@@ -82,5 +83,11 @@ After every result (a ceci run handing back, a trouble verdict, a cela review, a
 - `/cecicela status`: run `cecicela status` if the command exists, and show where each skill is installed. If it does not exist, say the bundle CLI is not installed.
 - `/cecicela install`: tell the user to run `npx --yes @actvite/cecicela install --all` in a terminal, then restart the agent session. Do not run an install yourself.
 - `/cecicela update`: tell the user to run `npx --yes @actvite/cecicela@latest update`, then restart the session.
+- `/cecicela uninstall`: ask where, with the host's question tool, then give the matching step. Uninstall always removes /ceci, /cela, /trouble, and /cecicela together, and only what ceciCela wrote.
+  1. **Everywhere on this machine**: every agent's skills folder, the Claude `/cela` command, and the cela engine. Run `npx --yes @actvite/cecicela@latest uninstall --all` in a terminal. `--dry-run` first lists what would go; the cela memory (`~/.cela`) is kept unless `--purge` is added.
+  2. **Just one directory**: what `cela init` wrote in a project (its bridges, skill folders, and the Claude Code Stop hook). Ask for the path (the current directory if the user says so), then run `npx --yes @actvite/cecicela@latest uninstall --dir <path>`. Its `.cela/` records are kept unless `--purge` is added.
+  3. **Just the web apps**: a command line cannot reach them. Give these steps: Claude (claude.ai and the desktop app): Settings → Capabilities → Skills, delete ceci, cela, trouble, and cecicela, and delete a ceciCela Project from its menu. ChatGPT and Grok: delete the ceciCela Project from its menu. Microsoft 365 Copilot: remove the ceciCela agent (Teams: Apps → Manage your apps); an agent the organization deployed is removed by its admin. `npx --yes @actvite/cecicela uninstall --web` prints the same steps.
+
+  After choice 1 or 2, also restart the agent session. If ceciCela came from a marketplace plugin, `claude plugin uninstall cecicela@cecicela` (or `grok plugin uninstall cecicela --confirm`, `copilot plugin uninstall cecicela`) removes that. Do not run any of these yourself.
 
 Never install, update, or remove anything on the user's machine from this skill.

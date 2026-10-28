@@ -12,7 +12,7 @@ If something is broken now, use trouble. If two fit, ask one short question. If 
 
 ## Start
 
-On the first message of a conversation that names no task, or when the user types `cecicela`, `/cecicela`, `start`, or `menu`, read the cecicela skill and offer its start menu: 1 start something new, 2 review what is remembered (the files here and this app's memory), 3 see all options, 4 improve my prompt. `optimize <text>` and `memories` go straight to 4 and 2. A first message that names a task skips the menu.
+On the first message of a conversation that names no task, or when the user types `cecicela`, `/cecicela`, `start`, or `menu`, read the cecicela skill and offer its start menu: 1 start something new, 2 review what is remembered (the files here and this app's memory), 3 see all options, 4 improve my prompt. `optimize <text>` and `memories` go straight to 4 and 2. `uninstall` gives its uninstall steps. A first message that names a task skips the menu.
 
 ## Help
 

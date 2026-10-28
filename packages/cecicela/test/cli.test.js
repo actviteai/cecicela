@@ -62,6 +62,8 @@ test('the front door offers a start menu, a help card, prompt tuning, and feedba
   for (const choice of ['Start something new', 'Review what is remembered', 'See all options', 'Improve my prompt']) assert.ok(skill.includes(`**${choice}**`), choice);
   const card = skill.match(/## Help card\n[\s\S]*?```text\n([\s\S]*?)```/)[1];
   for (const cmd of ['/ceci <goal>', '/cela <task>', '/trouble <error>', '/cecicela optimize', '/cecicela memories', '/cecicela feedback', 'budget low|medium|creator', 'animate chat|terminal|off', 'ceci help']) assert.ok(card.includes(cmd), cmd);
+  assert.ok(card.includes('/cecicela uninstall'), 'the help card lists uninstall');
+  for (const step of ['uninstall --all', 'uninstall --dir <path>', 'Settings → Capabilities → Skills', 'Do not run any of these yourself']) assert.ok(skill.includes(step), step);
   assert.match(skill, /--budget low\|medium\|creator/);
   assert.match(skill, /Read, never guess/);
   const optimize = fs.readFileSync(path.join(ROOT, 'skill', 'playbooks', 'optimize.md'), 'utf8');

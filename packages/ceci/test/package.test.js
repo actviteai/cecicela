@@ -58,6 +58,17 @@ test('bin install writes all of ceciCela into the harness home', () => {
   assert.notEqual(ceci(['install', '--nope'], env).status, 0);
 });
 
+test('bin uninstall removes all of ceciCela through the bundle', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ceci-home-'));
+  const env = { ...process.env, HOME: home, USERPROFILE: home, LOCALAPPDATA: path.join(home, "AppData", "Local"), CLAUDE_HOME: path.join(home, 'claude') };
+  assert.equal(ceci(['install', '--claude'], env).status, 0);
+  const res = ceci(['uninstall', '--claude'], env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /ceci is part of ceciCela: uninstalling/);
+  assert.deepEqual(fs.readdirSync(path.join(home, 'claude', 'skills')), []);
+  assert.match(ceci(['--help']).stdout, /ceci uninstall --all/);
+});
+
 test('npm pack ships the skill, the vendored core, and no tests', () => {
   const res = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32' });
   assert.equal(res.status, 0, res.stderr);
