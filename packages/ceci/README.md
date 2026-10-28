@@ -27,6 +27,10 @@ ceci is self-contained. It contains no bot names, project names, hostnames, or e
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.5.0 <!-- keep-version -->
+
+- `ceci uninstall` hands off to `@actvite/cecicela` and removes all of ceciCela, and only what it wrote: `--all` (everywhere on this machine), `--<harness>`, `--dir PATH` (one project), or `--web` (the steps for the web apps). `--dry-run` lists what would go.
+
 ### Changes in 2.4.0 <!-- keep-version -->
 
 - ceciCela installs as one product. `ceci install` hands off to `@actvite/cecicela` and installs `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door together. The marketplaces list only the `cecicela` plugin.

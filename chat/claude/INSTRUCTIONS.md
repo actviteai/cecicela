@@ -59,4 +59,4 @@ When state needs to matter for more than one conversation, or a job needs a test
 
 That is the funnel working, not a limitation to hide.
 
-Pack: ceciCela 1.4.0.
+Pack: ceciCela 1.5.0.

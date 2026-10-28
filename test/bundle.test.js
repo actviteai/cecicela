@@ -88,10 +88,10 @@ test('the bundle records the exact skill versions it was built from, matching it
     assert.equal(deps[`@actvite/${skill}`], pkg(skill).version, `@actvite/cecicela pins @actvite/${skill} exactly`);
   }
   assert.equal(built.version, pkg('cecicela').version);
-  assert.equal(pkg('ceci').version, '2.4.0', '@actvite/ceci 1.0.0 and 2.0.0 are already on npm');
-  assert.equal(pkg('cecicela').version, '1.4.0', '@actvite/cecicela 1.0.0 is already on npm');
-  assert.equal(pkg('cela').version, '1.1.0', '@actvite/cela 1.0.0 is already on npm');
-  assert.equal(pkg('trouble').version, '1.1.0', '@actvite/trouble 1.0.0 is already on npm');
+  assert.equal(pkg('ceci').version, '2.5.0', '@actvite/ceci 1.0.0 and 2.0.0 are already on npm');
+  assert.equal(pkg('cecicela').version, '1.5.0', '@actvite/cecicela 1.0.0 is already on npm');
+  assert.equal(pkg('cela').version, '1.2.0', '@actvite/cela 1.0.0 is already on npm');
+  assert.equal(pkg('trouble').version, '1.2.0', '@actvite/trouble 1.0.0 is already on npm');
 });
 
 test('plugin skill copies are real files, byte for byte the package skill', () => {
@@ -161,7 +161,7 @@ test('npm i -g @actvite/cecicela: install puts /ceci, /cela, /trouble, and /ceci
   const update = cecicela(['update'], home);
   assert.equal(update.status, 0, update.stderr);
   assert.match(update.stdout, /Updated 9 harness\(es\)/);
-  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.4\.0 \(ceci 2\.4\.0, cela 1\.1\.0, trouble 1\.1\.0\)/);
+  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.5\.0 \(ceci 2\.5\.0, cela 1\.2\.0, trouble 1\.2\.0\)/);
 });
 
 test('installing any one skill package installs all of ceciCela, and --only is refused', () => {
