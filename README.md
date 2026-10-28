@@ -31,6 +31,8 @@ graph TD
 
 Zero third-party dependencies. Node.js 22+. GPL-3.0-or-later.
 
+**In short:** ceciCela is an open-source set of **AI agent skills** (`SKILL.md` skills in the Agent Skills format) for **AI coding agents** and **LLM agents**: Claude Code skills, Codex skills, Cursor skills, GitHub Copilot skills, and more. It adds **agentic workflow planning** (a task graph, or DAG, with **human-in-the-loop** approval gates), **verification and evaluation** of every agent change (an evidence gate run by a tool, not an **LLM-as-judge**), and **root-cause analysis** for stuck bugs. It is built for **machine learning** and **MLOps** work as much as for application code: **GPU job scheduling** with CUDA, **model evaluation** gates, data-leakage and regression checks, and reproducible results. See [Machine learning and XGBoost](#machine-learning-and-xgboost).
+
 ## <a id="install"></a> Install
 
 ```bash
@@ -44,7 +46,8 @@ npm install -g @actvite/cecicela               # or keep the CLI: cecicela insta
 | --- | --- |
 | `cecicela install [--all\|--<harness>] [--only ceci,cela,trouble] [--force]` | Installs the skills and the front door; `--force` replaces harness files you edited (yours is kept as a backup) |
 | `cecicela status` | Which skill is installed in which harness |
-| `cecicela update` | Reinstalls into every harness that already has any of them; `npx --yes @actvite/cecicela@latest update` moves to a newer release |
+| `cecicela update [--force]` | Reinstalls into every harness that already has any of them; `npx --yes @actvite/cecicela@latest update` moves to a newer release |
+| `cecicela --version` | The bundle version and the exact skill versions it carries |
 
 ### Plugin marketplaces
 
@@ -83,6 +86,41 @@ The chat versions are the free entry point. A Project pack puts a router in the 
 Type `cecicela` (or `start`) for the start menu, `help` for every command, `optimize <your request>` to tighten a prompt before it runs, and `feedback` to say how the last result landed.
 
 In chat, trouble leads: it runs its `untooled` mode (no files, no commands, confidence capped at 6, the incident stays open until you run the check). ceci becomes a planner that hands `brief.md` and `state.md` back as files. cela becomes a review checklist that says plainly no tool ran and there is no gate. Each states its limits in its first reply, and each ends with the install line for the full product.
+
+## Machine learning and XGBoost
+
+Coding agents write training code quickly. They are much worse at knowing whether a model change actually made the model better. A script that trains without error, a notebook that looks right, or a validation score copied from the agent's own summary are all self-grades, and self-grades are what ceciCela removes. For ML work that matters more than anywhere else, because a leaked feature or a lucky seed produces a number that looks like progress.
+
+- **`/ceci` plans the pipeline.** It writes the whole pipeline as a job graph before anything runs: data split, features, training, evaluation against the baseline, and the report. A job starts only when its dependencies are done. Every job that changes code, data, or a model goes through `/cela`.
+- **`/cela` decides when a model change is done.** It accepts a feature, data, or hyperparameter change only when tests the tool runs say so. Each clause of the request ("holdout AUC is not below the baseline", "the encoder is fit on training folds only") is a requirement that must be covered by a named test. The tool runs the tests, records the exit codes and the exact diff it measured, and prints the verdict.
+- **The round limit stops endless tuning.** `cela check` refuses a fourth round, and the same failure twice ends as `STALLED`. An agent cannot keep re-tuning until a seed happens to pass, which is the agent's version of overfitting to the validation set.
+- **`/trouble` debugs regressions.** When a metric drops and nobody knows why, it lists the possible causes (leakage, a changed split, a new library default, a seed, a data refresh) and ranks them on verbatim evidence. It changes nothing until all four roles agree.
+- **Model jobs are placed on GPUs from your own file.** `ceci resolve-gpu` picks a free device from a preference file you write and prints `CUDA_VISIBLE_DEVICES`. ceci never probes the machine.
+- **Python ML stacks can call the gate too.** The NVIDIA NeMo Agent Toolkit gets the same gate as Python tools (`cela-nat`, see [cela](packages/cela#nvidia-nemo-agent-toolkit-framework-integration)).
+
+### With XGBoost
+
+XGBoost suits this workflow well. Tabular models train in seconds to minutes, so a gate can retrain and score them inside a test. With a fixed `random_state` and a fixed holdout split, the result is repeatable enough to compare against a stored baseline.
+
+1. **Place the training job.** Run `ceci resolve-gpu --work-dir run --gpu-pref gpus.yaml --model xgb-hist`. It prints the `host:device` to store on the job, plus `CUDA_VISIBLE_DEVICES`. Export that variable and train with `xgb.XGBClassifier(device="cuda", tree_method="hist", random_state=0)`. XGBoost uses the device ceci chose, and another job's GPU stays free.
+2. **Write the test as the gate.** A pytest file trains on the fixed split, scores the holdout, and asserts that AUC (or log loss, or RMSE) is no worse than the baseline stored in the repository. Leave a small tolerance, because GPU `hist` training is not guaranteed to match bit for bit across devices. A second test checks for leakage, for example that the target encoder never sees validation rows.
+3. **Let cela decide.**
+
+   ```bash
+   cela start --risk MODERATE \
+     --task "add a target-encoded merchant feature to the XGBoost fraud model" \
+     --req "holdout AUC is not below the stored baseline" \
+     --req "the target encoder is fit on training folds only" \
+     --files src/features.py,src/train.py,tests/test_model.py,tests/test_leakage.py \
+     --run "pytest -q tests"
+   cela cover R1 tests/test_model.py "test_auc_not_below_baseline"
+   cela cover R2 tests/test_leakage.py "test_encoder_fit_on_train_only"
+   cela check
+   cela gate        # exit 0 only on COMPLETE
+   ```
+
+   The repo oracle fails the check if the agent touched files outside the plan, such as the baseline file or the data. For a bug fix, such as a leak, add `--repro "<test that fails now>"` and use `--risk HIGH`. cela then requires that the test failed before the fix and passes after it.
+4. **Learn from the record.** `cela export --out tasks.jsonl` writes one anonymized row per task: risk, number of requirements, rounds, the Q score and diff size for each round, the gate's verdict, and the reviewer's later outcome (`accepted`, `revised`, `rejected`). That makes a small labeled tabular dataset, and a gradient-boosted tree model such as XGBoost is a natural first model for predicting which agent changes a reviewer will reject.
 
 ## The graph view
 
@@ -188,3 +226,5 @@ ceciCela supersedes three repositories, now archived: [actviteai/ceci](https://g
 Report vulnerabilities privately; see [SECURITY.md](SECURITY.md). Code of conduct: be chill, be cool, treat others as you would want to be treated; see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ceciCela is free software: you can redistribute it and modify it under the terms of the [GNU General Public License v3.0](LICENSE), or (at your option) any later version (`GPL-3.0-or-later`).
+
+**Keywords:** AI agent skills, agent skills, SKILL.md, Claude Code skills, Claude Code plugin, Codex skills, Cursor skills, GitHub Copilot agent, Grok, Cline, Goose, Google Antigravity, Hermes Agent, AI coding agent, LLM agents, agentic AI, agentic workflows, agent orchestration, task graph, DAG, human-in-the-loop, approval gates, quality gates, evidence gate, AI code verification, AI evaluation, evals, reproducibility, root-cause analysis, debugging, incident response, Bayesian reasoning, machine learning, MLOps, model evaluation, XGBoost, gradient boosting, tabular data, data leakage, GPU scheduling, CUDA, NVIDIA NeMo Agent Toolkit.
