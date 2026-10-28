@@ -24,7 +24,6 @@ const { REPO, PUBLISHED, SKILLS, pkg } = require('./lib/repo');
 
 const WIN = process.platform === 'win32';
 const DIST = path.join(REPO, 'dist');
-const RDAPQ_NOTICE = 'rdap-q is now cela, part of ceciCela: npx @actvite/cecicela install --all';
 const npm = (args, opts = {}) => spawnSync('npm', args, { cwd: REPO, encoding: 'utf8', shell: WIN, ...opts });
 
 function parseArgs(argv) {
@@ -165,14 +164,12 @@ function writePlan(rows, tested) {
     'Deprecate the superseded packages (once all four are live):',
     '',
     '```bash',
-    `npm deprecate @actvite/rdapq "${RDAPQ_NOTICE}"`,
-    `npm deprecate rdap-q "${RDAPQ_NOTICE}"   # the unscoped original`,
     'npm deprecate "@actvite/ceci@<2.0.0" "superseded by @actvite/ceci 2.x in ceciCela: npx @actvite/cecicela install --all"',
     '# optional: hide each placeholder',
     ...rows.map((r) => `npm deprecate ${pkg(r.name).name}@0.0.0-stage "placeholder; install ${pkg(r.name).version} or later"`),
     '```',
     '',
-    'Then replace each old repository\'s README with its notice in `docs/archive/`, and archive actviteai/ceci, actviteai/rdapq, and actviteai/trouble on GitHub.',
+    'Then replace each old repository\'s README with its notice in `docs/archive/`, and archive actviteai/ceci and actviteai/trouble on GitHub.',
     '',
     '## Tarball contents',
     '',
