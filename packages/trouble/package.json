@@ -1,6 +1,6 @@
 {
   "name": "@actvite/trouble",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Four-roles debug protocol for stuck incidents and debug loops: verbatim evidence, Bayesian ranking of hypotheses, and no fix until four configurable roles unanimously agree. Ends with a machine-parseable TROUBLE_VERDICT. Claude Code, Codex, Grok, Copilot, Cline, Goose, Cursor, Antigravity, and Hermes. Invoke with /trouble. Part of ceciCela: installing it installs /ceci, /cela, /trouble, and /cecicela together.",
   "type": "commonjs",
   "main": "lib/skill.js",

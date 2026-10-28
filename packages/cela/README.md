@@ -215,8 +215,8 @@ The agent never reads or rewrites task files; the tool appends to them. That spl
 `eval/` measures whether cela helps instead of asserting it. Eight small Node tasks (bug fixes, features, a refactor, and two traps whose visible tests pass on a naive fix) each ship hidden tests and a reference solution. `node eval/run.js --self-test` proves the hidden tests fail on the starting code and pass on the reference; `npm test` runs it.
 
 ```bash
-node eval/run.js --agents claude:claude-sonnet-5-5,claude:claude-haiku-4-5-20251001 --conditions none,lean,full --reps 2 --out eval/results/1.0.4
-node eval/report.js eval/results/1.0.4 --write
+node eval/run.js --agents claude:claude-sonnet-5-5,claude:claude-haiku-4-5-20251001 --conditions none,lean,full --reps 2 --out eval/results/1.1.0
+node eval/report.js eval/results/1.1.0 --write
 ```
 
 The headline number is the **false-DONE rate**: runs that ended with "STATUS: DONE" while the hidden tests fail. Agents run with a scoped tool allowlist (read, edit, `node`, `npm test`, `git`) and project settings only.

@@ -27,6 +27,11 @@ ceci is self-contained. It contains no bot names, project names, hostnames, or e
 
 The instruction source is [`skill/SKILL.md`](skill/SKILL.md). This file is the operator's manual. The playbooks are the rules an agent reads while a run is in progress.
 
+### Changes in 2.4.0 <!-- keep-version -->
+
+- ceciCela installs as one product. `ceci install` hands off to `@actvite/cecicela` and installs `/ceci`, `/cela`, `/trouble`, and the `/cecicela` front door together. The marketplaces list only the `cecicela` plugin.
+- A Machine learning section: ML pipelines as job graphs, GPU placement for training jobs, and model changes gated by `/cela`.
+
 ### Changes in 2.3.2 <!-- keep-version -->
 
 - `ceci init` adds a `.gitignore` to a work dir it creates inside a git repo, so the plan stays out of commits. A work dir that already exists is left as it is; delete the file to commit the plan.

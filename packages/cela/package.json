@@ -1,6 +1,6 @@
 {
   "name": "@actvite/cela",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "The evidence gate of ceciCela: an evidence-first protocol and skill for AI coding agents. A bundled tool runs the checks and names the result, so the model never grades itself. Claude Code, Codex, Grok, Copilot, Antigravity, Goose, Cline, Cursor, Hermes, and NeMo. Invoke with /cela. Part of ceciCela: installing it installs /ceci, /cela, /trouble, and /cecicela together.",
   "type": "commonjs",
   "main": "lib/skill.js",

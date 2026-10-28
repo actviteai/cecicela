@@ -1,6 +1,6 @@
 {
   "name": "@actvite/ceci",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "Agent skill for Claude Code, Codex, Grok, Cline, Goose, Cursor, Copilot, Antigravity, and Hermes that turns a goal into a job graph, runs ready jobs in dependency order, stops at human gates before contact, posting, payment, or pricing, places GPU jobs, and gates code changes with /cela. Invoke with /ceci. Part of ceciCela: installing it installs /ceci, /cela, /trouble, and /cecicela together.",
   "type": "commonjs",
   "main": "lib/skill.js",
