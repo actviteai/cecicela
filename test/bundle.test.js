@@ -89,7 +89,7 @@ test('the bundle records the exact skill versions it was built from, matching it
   }
   assert.equal(built.version, pkg('cecicela').version);
   assert.equal(pkg('ceci').version, '2.3.3', '@actvite/ceci 1.0.0 and 2.0.0 are already on npm');
-  assert.equal(pkg('cecicela').version, '1.3.3', '@actvite/cecicela 1.0.0 is already on npm');
+  assert.equal(pkg('cecicela').version, '1.3.4', '@actvite/cecicela 1.0.0 is already on npm');
   assert.equal(pkg('cela').version, '1.0.4', '@actvite/cela 1.0.0 is already on npm');
   assert.equal(pkg('trouble').version, '1.0.2', '@actvite/trouble 1.0.0 is already on npm');
 });
@@ -161,7 +161,7 @@ test('npm i -g @actvite/cecicela: install puts /ceci, /cela, /trouble, and /ceci
   const update = cecicela(['update'], home);
   assert.equal(update.status, 0, update.stderr);
   assert.match(update.stdout, /Updated 9 harness\(es\)/);
-  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.3\.3 \(ceci 2\.3\.3, cela 1\.0\.4, trouble 1\.0\.2\)/);
+  assert.match(cecicela(['--version'], home).stdout, /^cecicela 1\.3\.4 \(ceci 2\.3\.3, cela 1\.0\.4, trouble 1\.0\.2\)/);
 });
 
 test('--only and a single package install just what was asked', () => {
